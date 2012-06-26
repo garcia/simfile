@@ -15,7 +15,8 @@ def main():
         log.info('processing ' + simfile)
         # Create a backup of the file
         if cfg['adjustoffset']['backup']:
-            shutil.copy2(simfile, simfile + cfg['adjustoffset']['extension'])
+            shutil.copy2(simfile, simfile + '.' + 
+                         cfg['adjustoffset']['extension'])
         sf = Simfile(simfile)
         with open(simfile, 'w') as output:
             for param in sf.params:

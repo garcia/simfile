@@ -18,6 +18,7 @@ config_structure = {
     },
     'adjustoffset': {
         'backup': bool,
+        'extension': str,
         'amount': str,
     }
 }
