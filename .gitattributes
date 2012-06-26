@@ -1,1 +1,5 @@
-text eol=lf
+*.txt text
+*.py text
+*.ini text
+
+* text=auto
