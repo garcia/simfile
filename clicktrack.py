@@ -42,7 +42,8 @@ def get_hardest_chart(sf):
         for game in ('dance', 'pump', 'ez2'):
             for sd in ('single', 'double'):
                 try:
-                    chart = sf.get_notes(diff, stepstype=(game + '-' + sd))
+                    chart = sf.get_chart(difficulty=diff,
+                                         stepstype=(game + '-' + sd))
                     log.info('Using %s-%s %s chart' % (game, sd, diff))
                     return chart
                 except (MultiInstanceError, NoChartError):
@@ -68,9 +69,11 @@ def parse_timing_data(data):
 
 def main():
     global cfg, log
+    processed_anything = False
     for simfile in find_simfiles(sys.argv[1:],
                                  cfg['synctools']['extensions'],
                                  unique=True):
+        processed_anything = True
         log.warning('Processing ' + simfile)
         subdir = os.path.dirname(simfile)
         sf = Simfile(simfile)
@@ -83,8 +86,9 @@ def main():
         chart = get_hardest_chart(sf)
         if not chart:
             log.warning('Unable to find any dance, pump, or ez2 charts')
+            # Get whatever the first chart is
             try:
-                chart = sf.get_notes_positional(0)
+                chart = sf.get_chart(index=0)
                 log.info('Using %s %s chart' % (chart['stepstype'],
                                               chart['difficulty']))
             except IndexError:
@@ -143,7 +147,7 @@ def main():
         current_click, click_type = clicks.pop(0) # the next beat to locate
         while len(bpms) > 1:
             bpm_start = min(bpms.keys())
-            bpm_value = bpms.pop(min(bpms.keys()))
+            bpm_value = bpms.pop(bpm_start)
             bpm_end = min(bpms.keys())
             beat_length = 60. / bpm_value * sample_rate
             while current_click <= bpm_end:
@@ -204,6 +208,8 @@ def main():
         clicks_h.close()
         log.info('Done.')
     # Wait for user input
+    if not processed_anything:
+        log.info('No simfiles were found.')
     if cfg['synctools']['delayed_exit']:
         while True:
             sys.stdout.write('Press R to rerun, ' +
@@ -236,3 +242,4 @@ if __name__ == '__main__':
     if cfg['synctools']['delayed_exit']:
         sys.stdout.write('Press any key to continue...')
         getch()
+        sys.stdout.write('\n')

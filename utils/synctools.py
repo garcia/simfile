@@ -8,6 +8,8 @@ config_structure = {
         'global_offset': float,
         'delayed_exit': bool,
         'extensions': str,
+        'backup': bool,
+        'backup_extension': str,
     },
     'clicktrack': {
         'metronome': bool,
@@ -17,10 +19,15 @@ config_structure = {
         'amplitude': float,
     },
     'adjustoffset': {
-        'backup': bool,
-        'extension': str,
         'amount': str,
-    }
+    },
+    'formatter': {
+        'in_file': str,
+        'out_file': str,
+    },
+    'magicstops': {
+        'margin': float,
+    },
 }
 
 
@@ -73,8 +80,10 @@ def find_simfiles(paths, extensions, unique=False):
     """
     simfiles = []
     for path in paths:
+        # glob tries to parse square braces and that's not what we want
+        glob_safe_path = path.replace('[', '[[]')
         for ext in extensions:
-            simfiles_in_cwd = glob(os.path.join(path, '*.' + ext))
+            simfiles_in_cwd = glob(os.path.join(glob_safe_path, '*.' + ext))
             # No simfiles in current directory
             if len(simfiles_in_cwd) == 0:
                 for subdir in iglob(os.path.join(path, '*')):

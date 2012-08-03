@@ -14,11 +14,11 @@ def main():
     for simfile in find_simfiles(sys.argv[1:], cfg['synctools']['extensions']):
         log.info('processing ' + simfile)
         # Create a backup of the file
-        if cfg['adjustoffset']['backup']:
+        if cfg['synctools']['backup']:
             shutil.copy2(simfile, simfile + '.' + 
-                         cfg['adjustoffset']['extension'])
+                         cfg['synctools']['backup_extension'])
         sf = Simfile(simfile)
-        with open(simfile, 'w') as output:
+        with codecs.open(simfile, 'w', 'utf-8') as output:
             for param in sf.params:
                 if param[0].upper() == 'OFFSET':
                     # Process offset
@@ -27,7 +27,7 @@ def main():
                     log.info('%s -> %s' % (str(offset), str(offset2)))
                     # Rewrite parameter
                     param[1] = str(offset2)
-                output.write(str(param) + '\n')
+                output.write(unicode(param) + '\n')
 
 if __name__ == '__main__':
     # TODO: this should be shared among all the tools
@@ -46,3 +46,4 @@ if __name__ == '__main__':
     if cfg['synctools']['delayed_exit']:
         sys.stdout.write('Press any key to continue...')
         getch()
+        sys.stdout.write('\n')
