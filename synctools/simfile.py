@@ -115,15 +115,6 @@ class Simfile(object):
                 if line:
                     notes[-1].append(line)
         return notes
- 
-    def _chart_to_dict(self, param):
-        """Converts a NOTES parameter to a dictionary."""
-        return {'stepstype': param[1],
-                'description': param[2],
-                'difficulty': param[3],
-                'meter': int(param[4]),
-                'radar': param[5],
-                'notes': self._notes(param[6])}
     
     def get_chart(self, difficulty=None, stepstype=None, meter=None,
                   description=None, index=None):
@@ -166,7 +157,12 @@ class Simfile(object):
                     hint = 'which description'
                 raise MultiInstanceError('Ambiguous parameters (%s?)' % hint)
             # Give the enumerated values names
-            chart = self._chart_to_dict(param)
+            chart = {'stepstype': param[1],
+                     'description': param[2],
+                     'difficulty': param[3],
+                     'meter': int(param[4]),
+                     'radar': param[5],
+                     'notes': self._notes(param[6])}
             if index != None:
                 if i == index:
                     return chart
