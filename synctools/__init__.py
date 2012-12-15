@@ -9,7 +9,7 @@ import traceback
 from simfile import Simfile
 from utils import getch
 
-__all__ = ['get_config', 'find_simfiles', 'main_iterator']
+__all__ = ['get_config', 'find_simfiles', 'backup', 'main_iterator']
 
 class GetConfig(object):
 
@@ -49,12 +49,6 @@ class GetConfig(object):
 	_config = None
 
 	def get_config(self, reload=False):
-		"""Fetches preferences.ini as a nested dictionary.
-		
-		The top-level dictionary maps sections and the second-level dictionaries
-		map the options for the respective section.
-		
-		"""
 		# If we've already parsed the configuration file, return it
 		if (not reload and self._config):
 			return self._config
@@ -84,7 +78,13 @@ class GetConfig(object):
 _get_config = GetConfig()
 
 def get_config(*args, **kwargs):
-	return _get_config.get_config(*args, **kwargs)
+    """Fetches preferences.ini as a nested dictionary.
+    
+    The top-level dictionary maps sections and the second-level dictionaries
+    map the options for the respective section.
+    
+    """
+    return _get_config.get_config(*args, **kwargs)
 
 
 def find_simfiles(paths, extensions, unique=False):
@@ -124,14 +124,30 @@ def find_simfiles(paths, extensions, unique=False):
 
 
 def backup(simfile):
+    """Backup the given simfile.
+    
+    This function does nothing if backups are turned off in the configuration
+    file. Otherwise, it copies the .sm to a file in the same directory with the
+    extension given in backup_extension.
+    
+    """
     cfg = get_config()
     if cfg['synctools']['backup']:
         shutil.copy2(simfile.filename, simfile.filename + '.' + 
                      cfg['synctools']['backup_extension'])
-    
-    
+
+
 def main_iterator(callback, paths, rerunnable=False, recursed=False):
-    """Call a function for each simfile found in the given paths."""
+    """Call a function for each simfile found in the given paths.
+    
+    The callback is called multiple times with a Simfile as the sole
+    argument. Its return value is ignored. If delayed_exit is turned on in
+    the configuration file and rerunnable is True, the user will be given
+    the option to rerun the script after completion. Otherwise the script
+    will simply say "Press any key to continue..." if delayed_exit is
+    enabled.
+    
+    """
     cfg = get_config()
     log = logging.getLogger('synctools')
     if not recursed:
