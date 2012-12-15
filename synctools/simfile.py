@@ -1,6 +1,9 @@
 import codecs
+import os
 
-from synctools import enum
+from utils import enum
+
+__all__ = ['MultiInstanceError', 'NoChartError', 'Param', 'Notes', 'Simfile']
 
 # Special exceptions
 class MultiInstanceError(Exception): pass
@@ -20,10 +23,12 @@ class Notes(list):
         return '\n,\n'.join(['\n'.join(m) for m in self])
 
 
-class Simfile:
+class Simfile(object):
     # TODO: support for .SSC, .DWI, etc.
     # This will probably involve separating the MSD parser from this code
+    
     states = enum('NEXT_PARAM', 'READ_VALUE', 'COMMENT')
+    
     def __init__(self, simfile):
         """Read and parse the given simfile.
         
@@ -31,7 +36,9 @@ class Simfile:
         MsdFile.cpp fairly closely.
         
         """
-        self.simfile = simfile
+        self.filename = simfile
+        self.dirname = os.path.dirname(simfile)
+		
         with codecs.open(simfile, encoding='utf-8') as simfile_h:
             sf = simfile_h.read()
         state = self.states.NEXT_PARAM
