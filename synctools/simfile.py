@@ -91,7 +91,7 @@ class Simfile(object):
         """
         identifier = identifier.upper()
         if identifier == 'NOTES':
-            raise MultiInstanceError('Cannot get a multi-instance identifier')
+            raise MultiInstanceError('Use get_chart for notedata')
         found_param = None
         for param in self.params:
             if param[0].upper() == identifier:
