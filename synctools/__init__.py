@@ -39,11 +39,20 @@ class GetConfig(object):
 		'magicstops': {
 			'margin': float,
 		},
-		'sm2itg': {
-			'amount': float,
-			'graphics': bool,
-			'out_dir': str,
+		'rename': {
+			'keep_other_files': bool,
+            'directory': str,
+            'simfile': str,
+            'music': str,
+            'background': str,
+            'banner': str,
+            'cdtitle': str,
+            'lyricspath': str,
 		},
+        'resynthesize': {
+            'input': str,
+            'output': str,
+        },
 	}
 
 	_config = None
