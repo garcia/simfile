@@ -4,38 +4,62 @@ from resynthesis import *
 
 __all__ = ['DanceSingle', 'TechnoSingle8', 'gametypes']
 
-class DanceSingle(object):
+class GameType(object):
+    # Common attributes
+    h1 = -1
+    h2 = -1
+    last_used = 'j'
+    jack = False
+    drill = False
+    ambiguous = False
+    
+    def __init__(self, silent=False):
+        if silent:
+            self.log = logging.getLogger('synctools.silent')
+            self.log.setLevel('CRITICAL')
+        else:
+            self.log = logging.getLogger('synctools')
+    
+    def reset_attrs(self):
+        self.jack = False
+        self.drill = False
+        self.ambiguous = False
+    
+    def is_hold(self, f):
+        # Includes rolls because they're basically the same for our purposes
+        return (self.P <= f < self.P * 2) or (self.P * 3 <= f < self.P * 4)
+    
+    def is_roll(self, f):
+        return f >= self.P * 3
+    
+    def is_tail(self, f):
+        return self.P * 2 <= f < self.P * 3
+    
+    def load_state(self, state):
+        self.l = state.real_l
+        self.r = state.real_r
+        self.h1 = state.real_h1
+        self.h2 = state.real_h2
+        self.last_used = state.last_used
+        self.jack = state.jack
+        self.drill = state.drill
+        self.ambiguous = state.ambiguous
+
+class DanceSingle(GameType):
     # Constants
     L, D, U, R = xrange(4)
     P = 4
     # Attributes
     l = L
     r = R
-    h1 = -1
-    h2 = -1
-    last_used = 'j'
-    jack = False
-    
-    def __init__(self):
-        self.log = logging.getLogger('synctools')
-    
-    def _is_hold(self, f):
-        # Includes rolls because they're basically the same for our purposes
-        return f in (4, 5, 6, 7, 12, 13, 14, 15)
-    
-    def _is_roll(self, f):
-        return f >= 12
-    
-    def _is_tail(self, f):
-        return 8 <= f < 12
     
     def tap(self, arrow):
-        self.jack = False
+        self.reset_attrs()
         panel = arrow % self.P
         # Hands
-        if self._is_hold(self.r) and self._is_hold(self.l):
+        if self.is_hold(self.r) and self.is_hold(self.l):
             # Three holds and a tap
-            if self._is_hold(self.h1):
+            if self.is_hold(self.h1):
                 self.h2 = arrow
             # Two holds and a tap
             else:
@@ -47,12 +71,12 @@ class DanceSingle(object):
         # Last used left foot
         elif self.last_used == 'l':
             # One-footing or jack
-            if self._is_hold(self.r) or self.l == panel:
+            if self.is_hold(self.r) or self.l == panel:
                 self.l = arrow
                 self.jack = True
             # Crossover or double-step (always assume double-step)
             elif arrow == self.L:
-                if self._is_hold(self.l):
+                if self.is_hold(self.l):
                     self.r = arrow
                     self.last_used = 'r'
                 else:
@@ -60,17 +84,20 @@ class DanceSingle(object):
                     self.l = arrow
             # Alternating feet
             else:
+                # Drill
+                if self.r == panel:
+                    self.drill = True
                 self.r = arrow
                 self.last_used = 'r'
         # Last used right foot
         elif self.last_used == 'r':
             # One-footing or jack
-            if self._is_hold(self.l) or self.r == panel:
+            if self.is_hold(self.l) or self.r == panel:
                 self.r = arrow
                 self.jack = True
             # Crossover or double-step (always assume double-step)
             elif arrow == self.R:
-                if self._is_hold(self.r):
+                if self.is_hold(self.r):
                     self.l = arrow
                     self.last_used = 'l'
                 else:
@@ -78,15 +105,18 @@ class DanceSingle(object):
                     self.r = arrow
             # Alternating feet
             else:
+                # Drill
+                if self.l == panel:
+                    self.drill = True
                 self.l = arrow
                 self.last_used = 'l'
         # Last used both (jump)
         elif self.last_used == 'j':
             # One hold
-            if self._is_hold(self.l):
+            if self.is_hold(self.l):
                 self.r = arrow
                 self.last_used = 'r'
-            elif self._is_hold(self.r):
+            elif self.is_hold(self.r):
                 self.l = arrow
                 self.last_used = 'l'
             # Unambiguous
@@ -102,17 +132,20 @@ class DanceSingle(object):
                 self.log.warn("Semi-ambiguous tap")
                 self.l = arrow
                 self.last_used = 'l'
+                self.ambiguous = True
             elif (self.r == self.R and self.l == self.U and panel == self.D or
                   self.r == self.R and self.l == self.D and panel == self.U):
                 self.log.warn("Semi-ambiguous tap")
                 self.r = arrow
                 self.last_used = 'r'
+                self.ambiguous = True
             # Completely ambiguous (i.e. LR jump followed by U/D tap)
             else:
                 self.log.warn("Ambiguous tap")
                 # Arbitrary values
                 self.l = arrow
                 self.last_used = 'l'
+                self.ambiguous = True
     
     def hold(self, arrow):
         self.tap(arrow + self.P)
@@ -121,7 +154,7 @@ class DanceSingle(object):
         self.tap(arrow + self.P * 3)
     
     def tail(self, arrow):
-        self.jack = False
+        self.reset_attrs()
         # Left tail
         if self.l / self.P in (1, 3) and self.l % self.P == arrow:
             self.l = self.l % self.P + self.P * 2
@@ -135,11 +168,11 @@ class DanceSingle(object):
             self.log.warn("Unmatched tail")
     
     def jump(self, arrow1, arrow2):
-        self.jack = False
+        self.reset_attrs()
         panel1 = arrow1 % self.P
         panel2 = arrow2 % self.P
         # Hands (probably actually bracketing but oh well)
-        if self._is_hold(self.r) or self._is_hold(self.l):
+        if self.is_hold(self.r) or self.is_hold(self.l):
             self.h1 = arrow1
             self.h2 = arrow2
             self.last_used = 'h'
@@ -165,6 +198,7 @@ class DanceSingle(object):
         # Ambiguous U/D jump
         else:
             self.log.warn("Ambiguous jump")
+            self.ambiguous = True
             # Arbitrary values
             self.l = arrow1
             self.r = arrow2
@@ -173,33 +207,33 @@ class DanceSingle(object):
     def state(self, readable=False):
         l = r = ''
         # Left tail
-        if self._is_tail(self.l):
+        if self.is_tail(self.l):
             l = 'tail'
             self.l %= self.P
             # Immediately following right event
             if self.last_used == 'r':
-                if self._is_hold(self.r):
-                    if self._is_roll(self.r):
+                if self.is_hold(self.r):
+                    if self.is_roll(self.r):
                         r = 'roll'
                     else:
                         r = 'hold'
-                elif self._is_tail(self.r):
+                elif self.is_tail(self.r):
                     r = 'tail'
                     self.last_used = 'j'
                 else:
                     r = 'tap'
         # Right tail
-        elif self._is_tail(self.r):
+        elif self.is_tail(self.r):
             r = 'tail'
             self.r %= self.P
             # Immediately following left event
             if self.last_used == 'l':
-                if self._is_hold(self.l):
-                    if self._is_roll(self.l):
+                if self.is_hold(self.l):
+                    if self.is_roll(self.l):
                         l = 'roll'
                     else:
                         l = 'hold'
-                elif self._is_tail(self.l):
+                elif self.is_tail(self.l):
                     l = 'tail'
                     self.last_used = 'j'
                 else:
@@ -211,19 +245,19 @@ class DanceSingle(object):
             r = 'tap'
         elif self.last_used == 'l':
             l = 'tap'
-        if self._is_hold(self.l):
-            if self._is_roll(self.l):
+        if self.is_hold(self.l):
+            if self.is_roll(self.l):
                 l = 'roll'
             else:
                 l = 'hold'
-        if self._is_hold(self.r):
-            if self._is_roll(self.r):
+        if self.is_hold(self.r):
+            if self.is_roll(self.r):
                 r = 'roll'
             else:
                 r = 'hold'
         if readable:
             return '%s %s' % (self.STATES[l], self.STATES[r])
-        return ResynthesisState(l, r, self.h1, self.h2)
+        return ResynthesisState(self, l, r)
         
     def parse_row(self, row):
         # No taps
@@ -263,7 +297,7 @@ class DanceSingle(object):
         return self.state()
 
 
-class TechnoSingle8(object):
+class TechnoSingle8(GameType):
     # Constants
     LD, L, LU, D, U, RU, R, RD = xrange(8)
     LS = (LD, L, LU)
@@ -273,31 +307,14 @@ class TechnoSingle8(object):
     # Attributes
     l = L
     r = R
-    h1 = -1
-    h2 = -1
-    last_used = 'j'
-    jack = False
-    
-    def __init__(self):
-        self.log = logging.getLogger('synctools')
-    
-    def _is_hold(self, f):
-        # Includes rolls because they're basically the same for our purposes
-        return (8 <= f < 16) or (24 <= f < 32)
-    
-    def _is_roll(self, f):
-        return f >= 24
-    
-    def _is_tail(self, f):
-        return 16 <= f < 24
     
     def tap(self, arrow):
-        self.jack = False
+        self.reset_attrs()
         panel = arrow % self.P
         # Hands
-        if self._is_hold(self.r) and self._is_hold(self.l):
+        if self.is_hold(self.r) and self.is_hold(self.l):
             # Three holds and a tap
-            if self._is_hold(self.h1):
+            if self.is_hold(self.h1):
                 self.h2 = arrow
             # Two holds and a tap
             else:
@@ -309,13 +326,13 @@ class TechnoSingle8(object):
         # Last used left foot
         elif self.last_used == 'l':
             # One-footing or jack
-            if self._is_hold(self.r) or self.l == panel:
+            if self.is_hold(self.r) or self.l == panel:
                 self.l = arrow
                 self.jack = True
             # Crossover or double-step (always assume double-step)
             elif (arrow in self.LS and self.l not in self.LS or
                   arrow in self.UD and self.l in self.RS):
-                if self._is_hold(self.l):
+                if self.is_hold(self.l):
                     self.r = arrow
                     self.last_used = 'r'
                 else:
@@ -323,18 +340,21 @@ class TechnoSingle8(object):
                     self.l = arrow
             # Alternating feet
             else:
+                # Drill
+                if self.r == panel:
+                    self.drill = True
                 self.r = arrow
                 self.last_used = 'r'
         # Last used right foot
         elif self.last_used == 'r':
             # One-footing or jack
-            if self._is_hold(self.l) or self.r == panel:
+            if self.is_hold(self.l) or self.r == panel:
                 self.r = arrow
                 self.jack = True
             # Crossover or double-step (always assume double-step)
             elif (arrow in self.RS and self.r not in self.RS or
                   arrow in self.UD and self.r in self.LS):
-                if self._is_hold(self.r):
+                if self.is_hold(self.r):
                     self.l = arrow
                     self.last_used = 'l'
                 else:
@@ -342,15 +362,18 @@ class TechnoSingle8(object):
                     self.r = arrow
             # Alternating feet
             else:
+                # Drill
+                if self.l == panel:
+                    self.drill = True
                 self.l = arrow
                 self.last_used = 'l'
         # Last used both (jump)
         elif self.last_used == 'j':
             # One hold
-            if self._is_hold(self.l):
+            if self.is_hold(self.l):
                 self.r = arrow
                 self.last_used = 'r'
-            elif self._is_hold(self.r):
+            elif self.is_hold(self.r):
                 self.l = arrow
                 self.last_used = 'l'
             # Unambiguous
@@ -369,14 +392,17 @@ class TechnoSingle8(object):
                 self.log.warn("Semi-ambiguous tap")
                 self.l = arrow
                 self.last_used = 'l'
+                self.ambiguous = True
             elif (self.r in self.RS and self.l == self.U and panel == self.D or
                   self.r in self.RS and self.l == self.D and panel == self.U):
                 self.log.warn("Semi-ambiguous tap")
                 self.r = arrow
                 self.last_used = 'r'
+                self.ambiguous = True
             # Completely ambiguous (e.g. LR jump followed by U/D tap)
             else:
                 self.log.warn("Ambiguous tap")
+                self.ambiguous = True
                 # Arbitrary values
                 self.l = arrow
                 self.last_used = 'l'
@@ -388,7 +414,7 @@ class TechnoSingle8(object):
         self.tap(arrow + self.P * 3)
     
     def tail(self, arrow):
-        self.jack = False
+        self.reset_attrs()
         # Left tail
         if self.l / self.P in (1, 3) and self.l % self.P == arrow:
             self.l = self.l % self.P + self.P * 2
@@ -402,11 +428,11 @@ class TechnoSingle8(object):
             self.log.warn("Unmatched tail")
     
     def jump(self, arrow1, arrow2):
-        self.jack = False
+        self.reset_attrs()
         panel1 = arrow1 % self.P
         panel2 = arrow2 % self.P
         # Hands (probably actually bracketing but oh well)
-        if self._is_hold(self.r) or self._is_hold(self.l):
+        if self.is_hold(self.r) or self.is_hold(self.l):
             self.h1 = arrow1
             self.h2 = arrow2
             self.last_used = 'h'
@@ -434,6 +460,7 @@ class TechnoSingle8(object):
         # Ambiguous U/D jump
         else:
             self.log.warn("Ambiguous jump")
+            self.ambiguous = True
             # Arbitrary values
             self.l = arrow1
             self.r = arrow2
@@ -442,33 +469,33 @@ class TechnoSingle8(object):
     def state(self, readable=False):
         l = r = ''
         # Left tail
-        if self._is_tail(self.l):
+        if self.is_tail(self.l):
             l = 'tail'
             self.l %= self.P
             # Immediately following right event
             if self.last_used == 'r':
-                if self._is_hold(self.r):
-                    if self._is_roll(self.r):
+                if self.is_hold(self.r):
+                    if self.is_roll(self.r):
                         r = 'roll'
                     else:
                         r = 'hold'
-                elif self._is_tail(self.r):
+                elif self.is_tail(self.r):
                     r = 'tail'
                     self.last_used = 'j'
                 else:
                     r = 'tap'
         # Right tail
-        elif self._is_tail(self.r):
+        elif self.is_tail(self.r):
             r = 'tail'
             self.r %= self.P
             # Immediately following left event
             if self.last_used == 'l':
-                if self._is_hold(self.l):
-                    if self._is_roll(self.l):
+                if self.is_hold(self.l):
+                    if self.is_roll(self.l):
                         l = 'roll'
                     else:
                         l = 'hold'
-                elif self._is_tail(self.l):
+                elif self.is_tail(self.l):
                     l = 'tail'
                     self.last_used = 'j'
                 else:
@@ -480,19 +507,19 @@ class TechnoSingle8(object):
             r = 'tap'
         elif self.last_used == 'l':
             l = 'tap'
-        if self._is_hold(self.l):
-            if self._is_roll(self.l):
+        if self.is_hold(self.l):
+            if self.is_roll(self.l):
                 l = 'roll'
             else:
                 l = 'hold'
-        if self._is_hold(self.r):
-            if self._is_roll(self.r):
+        if self.is_hold(self.r):
+            if self.is_roll(self.r):
                 r = 'roll'
             else:
                 r = 'hold'
         if readable:
             return '%s %s' % (self.STATES[l], self.STATES[r])
-        return ResynthesisState(l, r, self.h1, self.h2)
+        return ResynthesisState(self, l, r)
         
     def parse_row(self, row):
         # No taps
