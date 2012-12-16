@@ -2,12 +2,7 @@ import logging
 
 from resynthesis import *
 
-__all__ = ['gametypes', 'DanceSingle', 'TechnoSingle8']
-
-gametypes = {
-    'dance-single': DanceSingle,
-    'techno-single8': TechnoSingle8,
-}
+__all__ = ['DanceSingle', 'TechnoSingle8', 'gametypes']
 
 class DanceSingle(object):
     # Constants
@@ -535,3 +530,8 @@ class TechnoSingle8(object):
         else:
             raise ResynthesisError()
         return self.state()
+
+gametypes = {
+    'dance-single': DanceSingle,
+    'techno-single8': TechnoSingle8,
+}

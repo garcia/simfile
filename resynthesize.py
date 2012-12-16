@@ -17,10 +17,12 @@ __all__ = ['resynthesize']
 def resynthesize(simfile):
     log = logging.getLogger('synctools')
     cfg = synctools.get_config()
+    intype = cfg['resynthesize']['input']
+    outtype = cfg['resynthesize']['output']
     # Retrieve the hardest dance-single chart
     for d in ('Challenge', 'Hard', 'Medium', 'Easy', 'Beginner', 'Edit'):
         try:
-            chart = simfile.get_chart(difficulty=d, stepstype='techno-single8')
+            chart = simfile.get_chart(difficulty=d, stepstype=intype)
             log.info('Using %s chart' % d)
             break
         except (MultiInstanceError, NoChartError):
@@ -29,7 +31,8 @@ def resynthesize(simfile):
         log.error('This simfile does not have any single charts; aborting')
         return
     # Abstract the chart down to foot motions
-    synth_in = TechnoSingle8()
+    synth_in = gametypes[intype]()
+    synth_out = gametypes[outtype]()
     for m, measure in enumerate(chart['notes']):
         for r, row in enumerate(measure):
             row = row.replace('M', '0')
