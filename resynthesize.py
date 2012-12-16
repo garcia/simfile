@@ -20,7 +20,7 @@ def resynthesize(simfile):
     # Retrieve the hardest dance-single chart
     for d in ('Challenge', 'Hard', 'Medium', 'Easy', 'Beginner', 'Edit'):
         try:
-            chart = simfile.get_chart(difficulty=d, stepstype='dance-single')
+            chart = simfile.get_chart(difficulty=d, stepstype='techno-single8')
             log.info('Using %s chart' % d)
             break
         except (MultiInstanceError, NoChartError):
@@ -29,7 +29,7 @@ def resynthesize(simfile):
         log.error('This simfile does not have any single charts; aborting')
         return
     # Abstract the chart down to foot motions
-    synth_in = DanceSingle()
+    synth_in = TechnoSingle8()
     for m, measure in enumerate(chart['notes']):
         for r, row in enumerate(measure):
             row = row.replace('M', '0')
@@ -41,8 +41,8 @@ def resynthesize(simfile):
                 continue
             if not state:
                 continue
-            log.debug('%s %s %s %s %s' %
-                (state, b.l, b.r, b.last_used, b.jack))
+            log.debug('%s %s %s %s %s' % (state, synth_in.l, synth_in.r,
+                synth_in.last_used, synth_in.jack))
             # Now let's make magic happen.
             
             
