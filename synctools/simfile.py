@@ -27,6 +27,7 @@ class Simfile(object):
     # TODO: support for .SSC, .DWI, etc.
     # This will probably involve separating the MSD parser from this code
     
+    DEFAULT_RADAR = u'0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0'
     states = enum('NEXT_PARAM', 'READ_VALUE', 'COMMENT')
     
     def __init__(self, simfile):
@@ -201,7 +202,7 @@ class Simfile(object):
                 'notes': self._notes(chart[6])}
         
     def set_chart(self, notes, difficulty=None, stepstype=None, meter=None,
-                  description=None, index=None):
+                  description=None, index=None, radar=None):
         """Change a chart from or add a chart to the simfile.
         
         The arguments are identical to those of get_chart, with the exception
@@ -222,13 +223,15 @@ class Simfile(object):
         except NoChartError:
             if not stepstype:
                 raise ValueError("Must specify stepstype when adding a chart")
-            chart = Param(['NOTES',
-                           stepstype,
-                           description or u'synctools',
-                           difficulty or u'Edit',
-                           unicode(meter) if meter else u'1',
-                           u'0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0',
-                           u''])
+            chart = Param([
+                'NOTES',
+                stepstype,
+                unicode(description) if description else u'synctools',
+                unicode(difficulty) if difficulty else u'Edit',
+                unicode(meter) if meter else u'1',
+                unicode(radar) if radar else self.DEFAULT_RADAR,
+                u''
+            ])
         chart[6] = unicode(Notes(notes))
         if chart not in self.params:
             self.params.append(chart)
