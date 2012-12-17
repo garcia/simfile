@@ -50,6 +50,7 @@ def synthesize_row(synth_in, synth_out, row, pos, blacklist=[]):
 def resynthesize(simfile):
     log = logging.getLogger('synctools')
     cfg = synctools.get_config()
+    synctools.backup(simfile)
     intype = cfg['resynthesize']['input']
     outtype = cfg['resynthesize']['output']
     # Retrieve the hardest dance-single chart
@@ -106,7 +107,10 @@ def resynthesize(simfile):
         for row in measure:
             new_measure.append(rows_out.pop(0))
         new_chart.append(new_measure)
-    log.info(new_chart)
+    simfile.set_chart(new_chart, difficulty='Edit', stepstype=outtype,
+                      meter=chart['meter'], description='Resynthesized',
+                      radar=chart['radar'])
+    simfile.save()
 
 
 if __name__ == '__main__':
