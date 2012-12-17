@@ -20,7 +20,7 @@ class Param(list):
 
 class Notes(list):
     def __str__(self):
-        return '\n,\n'.join(['\n'.join(m) for m in self])
+        return '\n,\n'.join(['\n'.join(m) for m in self]) + '\n'
 
 
 class Simfile(object):
@@ -80,7 +80,7 @@ class Simfile(object):
         self.params = params
     
     def get(self, identifier):
-        """Retrieve the value(s) following the identifier.
+        """Retrieve the value(s) denoted by (and including) the identifier.
         
         Raises KeyError if there is no such identifier and
         MultiInstanceError if multiple parameters begin with the identifier
@@ -102,7 +102,23 @@ class Simfile(object):
             return found_param
         else:
             raise KeyError('No such identifier')
-
+    
+    def get_string(self, identifier):
+        """Retrieve the data following the identifier as a single string."""
+        return ":".join(self.get(identifier)[1:])
+    
+    def set(self, identifier, *values):
+        # If the identifier already exists, edit it
+        try:
+            param = self.get(identifier)
+        # Otherwise, create a new one
+        except KeyError:
+            param = Param([unicode(identifier), u''])
+        param[1:] = [unicode(v) for v in values]
+        # Add the parameter if it was just created
+        if param not in self.params:
+            self.params.append(param)
+    
     def _notes(self, notedata):
         """Converts a string of note data into a nested list."""
         notes = []
@@ -114,17 +130,11 @@ class Simfile(object):
                     line = line.split('//', '1')[0]
                 if line:
                     notes[-1].append(line)
-        return notes
+        return Notes(notes)
     
-    def get_chart(self, difficulty=None, stepstype=None, meter=None,
+    def get_raw_chart(self, difficulty=None, stepstype=None, meter=None,
                   description=None, index=None):
-        """Retrieve the specified chart.
-        
-        difficulty, stepstype, meter, and/or description can all be
-        specified to narrow a search for a specific chart. If the 'index'
-        parameter is omitted, there must be exactly one chart that fits the
-        given parameters. Otherwise, the <index>th matching chart is
-        returned.
+        """Retrieve the specified chart as an ordinary parameter.
         
         Raises MultiInstanceError in ambiguous cases, NoChartError if no
         chart matched the given parameters, and IndexError if an invalid
@@ -149,20 +159,14 @@ class Simfile(object):
             # Already found a chart that fits the parameters
             if chart and index == None:
                 hint = 'which index'
-                if chart['stepstype'] != param[1]:
+                if chart[1] != param[1]:
                     hint = 'which stepstype'
-                elif chart['meter'] != int(param[4]):
+                elif chart[4] != int(param[4]):
                     hint = 'which meter'
-                elif chart['description'] != param[2]:
+                elif chart[2] != param[2]:
                     hint = 'which description'
                 raise MultiInstanceError('Ambiguous parameters (%s?)' % hint)
-            # Give the enumerated values names
-            chart = {'stepstype': param[1],
-                     'description': param[2],
-                     'difficulty': param[3],
-                     'meter': int(param[4]),
-                     'radar': param[5],
-                     'notes': self._notes(param[6])}
+            chart = param
             if index != None:
                 if i == index:
                     return chart
@@ -172,3 +176,66 @@ class Simfile(object):
         if index != None:
             raise IndexError('Only %s charts fit the given parameters' % i)
         return chart
+    
+    def get_chart(self, difficulty=None, stepstype=None, meter=None,
+                  description=None, index=None):
+        """Retrieve the specified chart.
+        
+        difficulty, stepstype, meter, and/or description can all be
+        specified to narrow a search for a specific chart. If the 'index'
+        parameter is omitted, there must be exactly one chart that fits the
+        given parameters. Otherwise, the <index>th matching chart is
+        returned.
+        
+        Raises any error that get_raw_chart might raise.
+        
+        """
+        chart = self.get_raw_chart(difficulty, stepstype, meter, description,
+            index)
+        # Give the enumerated values names
+        return {'stepstype': chart[1],
+                'description': chart[2],
+                'difficulty': chart[3],
+                'meter': int(chart[4]),
+                'radar': chart[5],
+                'notes': self._notes(chart[6])}
+        
+    def set_chart(self, notes, difficulty=None, stepstype=None, meter=None,
+                  description=None, index=None):
+        """Change a chart from or add a chart to the simfile.
+        
+        The arguments are identical to those of get_chart, with the exception
+        of the required 'notes' argument at the beginning and the optional
+        'radar' argument at the end. The 'stepstype' argument is required when
+        adding a new chart, but not when editing an existing chart (assuming
+        the other given parameters are sufficiently unambiguous). The 'radar'
+        argument is only used when adding a chart.
+        
+        Raises any error that get_raw_chart might raise, except for
+        NoChartError.
+        
+        """
+        found_chart = False
+        try:
+            chart = self.get_raw_chart(difficulty, stepstype, meter,
+                                       description, index)
+        except NoChartError:
+            if not stepstype:
+                raise ValueError("Must specify stepstype when adding a chart")
+            chart = Param(['NOTES',
+                           stepstype,
+                           description or u'synctools',
+                           difficulty or u'Edit',
+                           unicode(meter) if meter else u'1',
+                           u'0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0',
+                           u''])
+        chart[6] = unicode(Notes(notes))
+        if chart not in self.params:
+            self.params.append(chart)
+    
+    def save(self):
+        with codecs.open(self.filename, 'w', 'utf-8') as output:
+            output.write(unicode(self))
+    
+    def __str__(self):
+        return '\n'.join(unicode(param) for param in self.params)
