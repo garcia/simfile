@@ -25,6 +25,7 @@ def synthesize_row(synth_in, synth_out, row, pos, blacklist=[]):
         return default
     if not state:
         return default
+    log.debug('\t' + str(state))
     # Get all possible matching patterns
     elements = row.replace('0', '')
     if len(elements) > synth_out.P:
@@ -38,6 +39,7 @@ def synthesize_row(synth_in, synth_out, row, pos, blacklist=[]):
         choice = options.pop()
         try:
             new_state = synth_out.parse_row(choice)
+            log.debug('\t' + str(new_state))
             if new_state != state:
                 raise resynthesis.ResynthesisError()
             chosen.append(choice)
@@ -75,7 +77,7 @@ def resynthesize(simfile):
     pos = -1
     while r < len(rows_in):
         row = rows_in[r]
-        log.debug("Row %s: %s" % (r, row))
+        log.debug("Row %s\t%s" % (r, row))
         # Mines currently aren't supported; remove them
         row = row.replace('M', '0')
         # Let's make magic happen
@@ -91,16 +93,22 @@ def resynthesize(simfile):
             options.append(opt)
             synth_out.parse_row(rows_out[-1])
             states.append((synth_in.state(), synth_out.state()))
-            log.debug("\t" + rows_out[-1])
+            log.debug("\tGoing with " + rows_out[-1])
             r += 1
         else:
             log.debug("\tNo options found; rewinding")
             r -= 1
+            if r == -1:
+                log.error("I give up")
+                return
             old_states = states.pop()
             synth_in.load_state(old_states[0])
             synth_out.load_state(old_states[1])
             rows_out.pop()
+        synth_in.load_state(states[-2][0])
+        log.debug("Old input state: %s" % synth_in.state())
         synth_in.parse_row(row)
+        log.debug("New input state: %s" % synth_in.state())
     new_chart = Notes()
     for measure in chart['notes']:
         new_measure = []

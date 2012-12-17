@@ -12,6 +12,7 @@ class GameType(object):
     jack = False
     drill = False
     ambiguous = False
+    error = False
     
     def __init__(self, silent=False):
         if silent:
@@ -24,6 +25,7 @@ class GameType(object):
         self.jack = False
         self.drill = False
         self.ambiguous = False
+        self.error = False
     
     def is_hold(self, f):
         # Includes rolls because they're basically the same for our purposes
@@ -44,6 +46,7 @@ class GameType(object):
         self.jack = state.jack
         self.drill = state.drill
         self.ambiguous = state.ambiguous
+        self.error = state.error
 
 class DanceSingle(GameType):
     # Constants
@@ -148,6 +151,11 @@ class DanceSingle(GameType):
                 self.ambiguous = True
     
     def hold(self, arrow):
+        if (self.is_hold(self.l) and self.l % self.P == arrow or
+                self.is_hold(self.r) and self.r % self.P == arrow):
+            self.log.warn("Double hold")
+            self.error = True
+            return
         self.tap(arrow + self.P)
     
     def roll(self, arrow):
@@ -408,6 +416,11 @@ class TechnoSingle8(GameType):
                 self.last_used = 'l'
     
     def hold(self, arrow):
+        if (self.is_hold(self.l) and self.l % self.P == arrow or
+                self.is_hold(self.r) and self.r % self.P == arrow):
+            self.log.warn("Double hold")
+            self.error = True
+            return
         self.tap(arrow + self.P)
     
     def roll(self, arrow):
@@ -426,6 +439,7 @@ class TechnoSingle8(GameType):
         # Hold wasn't found
         else:
             self.log.warn("Unmatched tail")
+            self.error = True
     
     def jump(self, arrow1, arrow2):
         self.reset_attrs()

@@ -17,6 +17,7 @@ class ResynthesisState(object):
         self.jack = gametype.jack
         self.drill = gametype.drill
         self.ambiguous = gametype.ambiguous
+        self.error = gametype.error
     
     def __str__(self):
         return " ".join((str(n).ljust(4) for n in (
@@ -25,9 +26,10 @@ class ResynthesisState(object):
             self.h1,
             self.h2,
             self.last_used,
-            'J' if self.jack else '-',
-            'D' if self.drill else '-',
-            'A' if self.ambiguous else '-',
+            'J' if self.jack else '' +
+            'D' if self.drill else '' +
+            'A' if self.ambiguous else '' +
+            'E' if self.error else '',
         )))
     
     def __eq__(self, other):
