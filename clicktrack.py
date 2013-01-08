@@ -10,8 +10,6 @@ from hsaudiotag import ogg, mpeg
 
 import synctools
 from synctools.simfile import *
-from synctools.utils import getch
-
 
 __all__ = ['clicktrack']
 
@@ -88,7 +86,7 @@ def clicktrack(simfile):
             chart = simfile.get_chart(index=0)
             log.info('Using %s %s chart' % (chart['stepstype'],
                                           chart['difficulty']))
-        except IndexError:
+        except NoChartError:
             log.error('This simfile does not have any charts; aborting')
             return
     # Generate click track
