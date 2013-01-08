@@ -7,9 +7,26 @@ import sys
 import traceback
 
 from simfile import Simfile
-from utils import getch
 
 __all__ = ['get_config', 'find_simfiles', 'backup', 'main_iterator']
+
+def getch():
+    try:
+        import msvcrt
+        return msvcrt.getch()
+    except ImportError:
+        import sys
+        import termios
+        import tty
+        fd = sys.stdin.fileno()
+        old_settings = termios.tcgetattr(fd)
+        try:
+            tty.setraw(sys.stdin.fileno())
+            ch = sys.stdin.read(1)
+        finally:
+            termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
+        return ch
+
 
 class GetConfig(object):
 

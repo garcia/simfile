@@ -1,9 +1,13 @@
 import codecs
 import os
 
-from utils import enum
-
 __all__ = ['MultiInstanceError', 'NoChartError', 'Param', 'Notes', 'Simfile']
+
+# Used internally
+def enum(*sequential, **named):
+    """Creates an enum out of both sequential and named elements."""
+    enums = dict(zip(sequential, range(len(sequential))), **named)
+    return type('Enum', (), enums)
 
 # Special exceptions
 class MultiInstanceError(Exception): pass
@@ -11,6 +15,10 @@ class NoChartError(Exception): pass
 
 
 class Param(list):
+    """Represents a parameter as a list of values.
+    
+    This class is identical to `list` but includes a special __str__ method.
+    """
     def __str__(self):
         if self[0].upper() == 'NOTES':
             return ('\n#' + ':\n     '.join(self[:-1]) + ':\n' + self[-1] + ';')
@@ -19,15 +27,17 @@ class Param(list):
 
 
 class Notes(list):
+    """Represents note data as a list of measures, which are lists of rows.
+    
+    This class is identical to `list` but includes a special __str__ method.
+    """
     def __str__(self):
         return '\n,\n'.join(['\n'.join(m) for m in self]) + '\n'
 
 
 class Simfile(object):
-    # TODO: support for .SSC, .DWI, etc.
-    # This will probably involve separating the MSD parser from this code
     
-    DEFAULT_RADAR = u'0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0'
+    DEFAULT_RADAR = u'0,0,0,0,0'
     states = enum('NEXT_PARAM', 'READ_VALUE', 'COMMENT')
     
     def __init__(self, simfile):
@@ -37,6 +47,8 @@ class Simfile(object):
         MsdFile.cpp fairly closely.
         
         """
+        # TODO: support for .SSC, .DWI, etc.
+        # This will probably involve separating the MSD parser from this code
         self.filename = simfile
         self.dirname = os.path.dirname(simfile)
 		
