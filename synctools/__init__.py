@@ -30,34 +30,34 @@ def getch():
 
 class GetConfig(object):
 
-	config_structure = {
-		'synctools': {
-			'verbosity': str,
-			'global_offset': float,
-			'delayed_exit': bool,
-			'extensions': str,
-			'backup': bool,
-			'backup_extension': str,
-		},
-		'clicktrack': {
-			'metronome': bool,
-			'first_beat': bool,
-			'taps': bool,
-			'mines': bool,
-			'amplitude': float,
-		},
-		'adjustoffset': {
-			'amount': str,
-		},
-		'formatter': {
-			'in_file': str,
-			'out_file': str,
-		},
-		'magicstops': {
-			'margin': float,
-		},
-		'rename': {
-			'keep_other_files': bool,
+    config_structure = {
+        'synctools': {
+            'verbosity': str,
+            'global_offset': float,
+            'delayed_exit': bool,
+            'extensions': str,
+            'backup': bool,
+            'backup_extension': str,
+        },
+        'clicktrack': {
+            'metronome': bool,
+            'first_beat': bool,
+            'taps': bool,
+            'mines': bool,
+            'amplitude': float,
+        },
+        'adjustoffset': {
+            'amount': str,
+        },
+        'formatter': {
+            'in_file': str,
+            'out_file': str,
+        },
+        'magicstops': {
+            'margin': float,
+        },
+        'rename': {
+            'keep_other_files': bool,
             'directory': str,
             'simfile': str,
             'music': str,
@@ -65,41 +65,41 @@ class GetConfig(object):
             'banner': str,
             'cdtitle': str,
             'lyricspath': str,
-		},
+        },
         'resynthesize': {
             'input': str,
             'output': str,
         },
-	}
+    }
 
-	_config = None
+    _config = None
 
-	def get_config(self, reload=False):
-		# If we've already parsed the configuration file, return it
-		if (not reload and self._config):
-			return self._config
-		# Otherwise, get to parsing
-		parser = SafeConfigParser()
-		parser.read('preferences.ini')
-		config = {'synctools': {}}
-		for section, options in self.config_structure.iteritems():
-			config[section] = {}
-			for option, option_type in options.iteritems():
-				if option_type is bool:
-					config[section][option] = parser.getboolean(section, option)
-				elif option_type is float:
-					config[section][option] = parser.getfloat(section, option)
-				elif option_type is int:
-					config[section][option] = parser.getint(section, option)
-				else:
-					config[section][option] = parser.get(section, option)
-		# Special cases for certain options
-		if not 0 <= config['clicktrack']['amplitude'] <= 1:
-			raise ValueError('Error: amplitude must be between [0, 1]')
-		config['synctools']['extensions'] = [ext.strip() for ext in
-			config['synctools']['extensions'].split(',')]
-		self._config = config
-		return config
+    def get_config(self, reload=False):
+        # If we've already parsed the configuration file, return it
+        if (not reload and self._config):
+            return self._config
+        # Otherwise, get to parsing
+        parser = SafeConfigParser()
+        parser.read('preferences.ini')
+        config = {'synctools': {}}
+        for section, options in self.config_structure.iteritems():
+            config[section] = {}
+            for option, option_type in options.iteritems():
+                if option_type is bool:
+                    config[section][option] = parser.getboolean(section, option)
+                elif option_type is float:
+                    config[section][option] = parser.getfloat(section, option)
+                elif option_type is int:
+                    config[section][option] = parser.getint(section, option)
+                else:
+                    config[section][option] = parser.get(section, option)
+        # Special cases for certain options
+        if not 0 <= config['clicktrack']['amplitude'] <= 1:
+            raise ValueError('Error: amplitude must be between [0, 1]')
+        config['synctools']['extensions'] = [ext.strip() for ext in
+            config['synctools']['extensions'].split(',')]
+        self._config = config
+        return config
 
 _get_config = GetConfig()
 
