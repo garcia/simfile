@@ -70,6 +70,10 @@ class GetConfig(object):
             'input': str,
             'output': str,
         },
+        'patch': {
+            'backup': bool,
+            'patched_length': 105,
+        },
     }
 
     _config = None
