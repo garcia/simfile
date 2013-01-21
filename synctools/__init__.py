@@ -72,7 +72,7 @@ class GetConfig(object):
         },
         'patch': {
             'backup': bool,
-            'patched_length': 105,
+            'patched_length': int,
         },
     }
 

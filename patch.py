@@ -34,12 +34,11 @@ def patch(simfile):
         audiodata = audiofile.read()
     
     # Find last page by the 4-byte header + version 0 + last page indicator
-    lpindex = audiodata.rfind('OggS\x00\x05')
-    lp2index = audiodata.rfind('OggS\x00')
+    lpindex = audiodata.rfind('OggS\x00')
     if lpindex == -1:
         log.error('Unable to find last OGG page')
         return
-    if lpindex != lp2index:
+    if not ord(audiodata[lpindex + 5]) & 4:
         log.error('There is something very wrong with this OGG')
         return
     lp = audiodata[lpindex:]
