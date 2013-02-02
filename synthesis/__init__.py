@@ -82,8 +82,7 @@ class Synthesizer(object):
             self.log = logging.getLogger('synctools')
     
     def _lineMagnitude(self, x1, y1, x2, y2):
-        lineMagnitude = math.sqrt(math.pow((x2 - x1), 2)+ math.pow((y2 - y1), 2))
-        return lineMagnitude
+        return math.sqrt(math.pow((x2 - x1), 2)+ math.pow((y2 - y1), 2))
 
     def dpl(self, p, a, b):
         # http://local.wasp.uwa.edu.au/~pbourke/geometry/pointline/source.vba
