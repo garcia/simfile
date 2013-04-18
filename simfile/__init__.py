@@ -39,9 +39,11 @@ class Param(list):
 
 
 class Notes(object):
-    """Represents note data as a list of measures, which are lists of rows.
+    """Encapsulates note data.
     
-    TODO: update doc
+    The sole constructor argument should be a string of .SM note data. See
+    http://www.stepmania.com/wiki/The_.SM_file_format for more details.
+    
     """
     
     def _sort(self):
@@ -174,8 +176,44 @@ class Notes(object):
         rtn.extend(self._measure_to_str(m, measure))
         return '\n'.join(rtn)
 
-class Simfile(object):
+class Chart(object):
+    """Encapsulates chart data.
     
+    The sole constructor argument should be a list of parameter values,
+    usually returned by Simfile.get_raw_chart.
+    
+    """
+    def __init__(self, chart):
+        self.stepstype = chart[1]
+        self.description = chart[2]
+        self.difficulty = chart[3]
+        self.meter = int(chart[4])
+        self.radar = chart[5]
+        self.notes = Notes(chart[6])
+    
+    def __str__(self):
+        return ("#NOTES:\n"
+                "     {stepstype}:\n"
+                "     {description}:\n"
+                "     {difficulty}:\n"
+                "     {meter}:\n"
+                "     {radar}:\n"
+                "{notes}\n;\n").format(
+                    stepstype=self.stepstype,
+                    description=self.description,
+                    difficulty=self.difficulty,
+                    meter=self.meter,
+                    radar=self.radar,
+                    notes=self.notes)
+        
+        
+        
+class Simfile(object):
+    """Encapsulates simfile data.
+    
+    The sole constructor argument should be a path to a valid .sm file.
+    
+    """
     DEFAULT_RADAR = u'0,0,0,0,0'
     states = enum('NEXT_PARAM', 'READ_VALUE', 'COMMENT')
     
@@ -186,8 +224,6 @@ class Simfile(object):
         MsdFile.cpp fairly closely.
         
         """
-        # TODO: support for .SSC, .DWI, etc.
-        # This will probably involve separating the MSD parser from this code
         self.filename = simfile
         self.dirname = os.path.dirname(simfile)
 		
@@ -215,7 +251,7 @@ class Simfile(object):
                 # Fix missing semicolon
                 if c == '#' and sf[i - 1] in '\r\n':
                     param[-1] = param[-1].strip()
-                    params.append(Param(param))
+                    params.append(self._wrap(param))
                     param = ['']
                 # Next value
                 elif c == ':':
@@ -224,12 +260,17 @@ class Simfile(object):
                 # Next parameter
                 elif c == ';':
                     param[-1] = param[-1].strip()
-                    params.append(Param(param))
+                    params.append(self._wrap(param))
                     state = self.states.NEXT_PARAM
                 # Add character to param
                 else:
                     param[-1] += c
         self.params = params
+        
+    def _wrap(self, param):
+        if param[0] == 'NOTES':
+            return Chart(param)
+        return Param(param)
     
     def get(self, identifier):
         """Retrieve the value(s) denoted by (and including) the identifier.
@@ -271,51 +312,6 @@ class Simfile(object):
         if param not in self.params:
             self.params.append(param)
     
-    def get_raw_chart(self, difficulty=None, stepstype=None, meter=None,
-                  description=None, index=None):
-        """Retrieve the specified chart as an ordinary parameter.
-        
-        Raises MultiInstanceError in ambiguous cases, NoChartError if no
-        chart matched the given parameters, and IndexError if an invalid
-        index was given. Otherwise the chart's values are returned as a
-        dictionary.
-        
-        """
-        chart = None
-        if index != None:
-            i = 0
-        for param in self.params:
-            # Not a chart
-            if param[0].upper() != 'NOTES':
-                continue
-            # Check parameters
-            if ((difficulty and not param[3] == difficulty or
-                 stepstype and not param[1] == stepstype or
-                 meter and not int(param[4]) == meter or
-                 description and not param[2] == description) and
-                 any((difficulty, stepstype, meter, description))):
-                continue
-            # Already found a chart that fits the parameters
-            if chart and index == None:
-                hint = 'which index'
-                if chart[1] != param[1]:
-                    hint = 'which stepstype'
-                elif chart[4] != int(param[4]):
-                    hint = 'which meter'
-                elif chart[2] != param[2]:
-                    hint = 'which description'
-                raise MultiInstanceError('Ambiguous parameters (%s?)' % hint)
-            chart = param
-            if index != None:
-                if i == index:
-                    return chart
-                i += 1
-        if not chart or index != None and i == 0:
-            raise NoChartError('No charts fit the given parameters')
-        if index != None:
-            raise IndexError('Only %s charts fit the given parameters' % i)
-        return chart
-    
     def get_chart(self, difficulty=None, stepstype=None, meter=None,
                   description=None, index=None):
         """Retrieve the specified chart.
@@ -326,18 +322,43 @@ class Simfile(object):
         given parameters. Otherwise, the <index>th matching chart is
         returned.
         
-        Raises any error that get_raw_chart might raise.
+        Raises MultiInstanceError in ambiguous cases, NoChartError if no
+        chart matched the given parameters, and IndexError if an invalid
+        index was given. Otherwise the chart's values are returned as a
+        dictionary.
         
         """
-        chart = self.get_raw_chart(difficulty, stepstype, meter, description,
-            index)
-        # Give the enumerated values names
-        return {'stepstype': chart[1],
-                'description': chart[2],
-                'difficulty': chart[3],
-                'meter': int(chart[4]),
-                'radar': chart[5],
-                'notes': Notes(chart[6])}
+        found_chart = None
+        if index != None:
+            i = 0
+        for chart in filter(lambda p: type(p) is Chart, self.params):
+            # Check parameters
+            if ((difficulty and not chart.difficulty == difficulty or
+                 stepstype and not chart.stepstype == stepstype or
+                 meter and not chart.meter == meter or
+                 description and not chart.description == description) and
+                 any((difficulty, stepstype, meter, description))):
+                continue
+            # Already found a chart that fits the parameters
+            if found_chart and index == None:
+                hint = 'which index'
+                if found_chart.stepstype != chart.stepstype:
+                    hint = 'which stepstype'
+                elif found_chart.meter != int(chart.meter):
+                    hint = 'which meter'
+                elif found_chart.description != chart.description:
+                    hint = 'which description'
+                raise MultiInstanceError('Ambiguous parameters (%s?)' % hint)
+            found_chart = chart
+            if index != None:
+                if i == index:
+                    return found_chart
+                i += 1
+        if not found_chart or index != None and i == 0:
+            raise NoChartError('No charts fit the given parameters')
+        if index != None:
+            raise IndexError('Only %s charts fit the given parameters' % i)
+        return found_chart
         
     def set_chart(self, notes, difficulty=None, stepstype=None, meter=None,
                   description=None, index=None, radar=None):
@@ -350,18 +371,16 @@ class Simfile(object):
         the other given parameters are sufficiently unambiguous). The 'radar'
         argument is only used when adding a chart.
         
-        Raises any error that get_raw_chart might raise, except for
-        NoChartError.
+        Raises any error that get_chart might raise, except for NoChartError.
         
         """
-        found_chart = False
         try:
-            chart = self.get_raw_chart(difficulty, stepstype, meter,
-                                       description, index)
+            chart = self.get_chart(difficulty, stepstype, meter, description,
+                                   index)
         except NoChartError:
             if not stepstype:
                 raise ValueError("Must specify stepstype when adding a chart")
-            chart = Param([
+            chart = Chart([
                 'NOTES',
                 stepstype,
                 unicode(description) if description else u'synctools',
@@ -370,7 +389,7 @@ class Simfile(object):
                 unicode(radar) if radar else self.DEFAULT_RADAR,
                 u''
             ])
-        chart[6] = unicode(Notes(notes))
+        chart.notes = notes
         if chart not in self.params:
             self.params.append(chart)
     
