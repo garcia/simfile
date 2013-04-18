@@ -1,13 +1,25 @@
 import codecs
+from fractions import Fraction, gcd as _gcd
 import os
 
 __all__ = ['MultiInstanceError', 'NoChartError', 'Param', 'Notes', 'Simfile']
 
 # Used internally
+
 def enum(*sequential, **named):
     """Creates an enum out of both sequential and named elements."""
     enums = dict(zip(sequential, range(len(sequential))), **named)
     return type('Enum', (), enums)
+
+def gcd(*numbers):
+    """Return the greatest common divisor of the given integers"""
+    return reduce(_gcd, numbers)
+ 
+def lcm(*numbers):
+    """Return lowest common multiple."""    
+    def lcm(a, b):
+        return (a * b) // gcd(a, b)
+    return reduce(lcm, numbers, 1)
 
 # Special exceptions
 class MultiInstanceError(Exception): pass
@@ -26,14 +38,141 @@ class Param(list):
             return ('#' + ':'.join(self) + ';')
 
 
-class Notes(list):
+class Notes(object):
     """Represents note data as a list of measures, which are lists of rows.
     
-    This class is identical to `list` but includes a special __str__ method.
+    TODO: update doc
     """
+    
+    def _sort(self):
+        if self._out_of_order:
+            self.notes.sort(key=lambda x: x[0])
+    
+    def _clean_line(self, line):
+        # Remove unnecessary whitespace
+        line = line.strip()
+        # Remove comments
+        if line.find('//') >= 0:
+            line = line.split('//', '1')[0]
+        # The line may be empty; use filter(None, ...) to account for this
+        return line
+    
+    def __init__(self, notedata=None):
+        self.notes = []
+        self.arrows = None
+        self._out_of_order = False
+        
+        if not notedata:
+            return
+        
+        # Iterate over measures
+        # TODO: skip commas within comments
+        for m, measuredata in enumerate(notedata.split(',')):
+            measure_lines = filter(None,
+                (self._clean_line(line) for line in measuredata.splitlines()))
+            measure_len = len(measure_lines)
+            # Iterate over lines of measure
+            for l, line in enumerate(measure_lines):
+                # Set the number of arrows to the first line's length
+                if self.arrows is None:
+                    self.arrows = len(line)
+                # Ignore blank lines (e.g. "0000")
+                if any(a != '0' for a in line):
+                    line_pos = (m + Fraction(l, measure_len)) * 4
+                    self.notes.append((line_pos, line))
+    
+    def get_region(self, start, end, inclusive=False, _pop=False):
+        """Gets the region at the given endpoints."""
+        if start > end:
+            raise ValueError("start > end")
+        # If we're actually retrieving a region, sort the notes first
+        elif start < end:
+            self._sort()
+        rtn = Notes()
+        rtn.arrows = self.arrows
+        # pop_region: iterate over a copy of the note data
+        if _pop:
+            notes = self.notes[:]
+            _pop_offset = 0
+        else:
+            notes = self.notes
+        # Search for and remove the existing rows if possible
+        for r, row in enumerate(notes):
+            if ((inclusive and start <= row[0] <= end) or
+                    (not inclusive and start <= row[0] < end)):
+                rtn.notes.append((row[0] - start, row[1]))
+                # pop_region: pop the row afterward
+                if _pop:
+                    self.notes.pop(r - _pop_offset)
+                    _pop_offset += 1
+            # If we're retrieving a single row, this will trivially be true.
+            # Otherwise, the data must be sorted, so when we've reached the end
+            # we can be sure that there are no more rows to locate.
+            if row[0] >= end:
+                return rtn
+        # Return if we haven't already returned
+        return rtn
+    
+    def pop_region(self, start, end, inclusive=False):
+        """Gets and clears the region at the given endpoints."""
+        self.get_region(start, end, inclusive, _pop=True)
+    
+    def set_region(self, start, end, notes, inclusive=False):
+        """Sets the region at the given endpoints to the given note data."""
+        # If we're setting the region to itself, make a copy first, otherwise
+        # it might end up infinitely looping
+        if notes is self:
+            notes = Notes(str(notes))
+        # Start by clearing the region
+        # This doubles as a "start > end" check
+        self.pop_region(start, end, inclusive)
+        # Set _out_of_order now instead of after the for-loop, just in case
+        # something goes awry halfway through it
+        self._out_of_order = True
+        # Insert the note data
+        for r, row in enumerate(notes.notes):
+            if ((inclusive and row[0] <= end - start) or
+                    (not inclusive and row[0] < end - start)):
+                self.notes.append((row[0] + start, row[1]))
+    
+    def get_row(self, pos):
+        """Gets the row at the given position."""
+        return self.get_region(start=pos, end=pos, inclusive=True)
+    
+    def pop_row(self, pos):
+        """Gets and clears the row at the given position."""
+        return self.pop_region(start=pos, end=pos, inclusive=True)
+    
+    def set_row(self, pos, notes):
+        """Sets the row at the given position to the given note data."""
+        return self.set_region(start=pos, end=pos, notes=notes, inclusive=True)
+    
+    def _measure_to_str(self, m, measure):
+        rtn = []
+        rows = lcm(*[r[0].denominator for r in measure])
+        for r in [(m * 4 + Fraction(n, rows)) for n in xrange(rows * 4)]:
+            if measure and measure[0][0] == r:
+                rtn.append(measure.pop(0)[1])
+            else:
+                rtn.append('0' * self.arrows)
+        return rtn
+    
     def __str__(self):
-        return '\n,\n'.join(['\n'.join(m) for m in self]) + '\n'
-
+        self._sort()
+        rtn = []
+        measure = []
+        m = 0
+        for row in self.notes:
+            # Usually this will only get executed once at a time, but if
+            # there's an empty measure it'll execute twice or more
+            while row[0] / 4 >= m + 1:
+                rtn.extend(self._measure_to_str(m, measure))
+                rtn.append(',')
+                measure = []
+                m += 1
+            measure.append(row)
+        rtn.extend(self._measure_to_str(m, measure))
+        return '\n'.join(rtn)
 
 class Simfile(object):
     
