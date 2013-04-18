@@ -115,7 +115,7 @@ class Notes(object):
     
     def pop_region(self, start, end, inclusive=False):
         """Gets and clears the region at the given endpoints."""
-        self.get_region(start, end, inclusive, _pop=True)
+        return self.get_region(start, end, inclusive, _pop=True)
     
     def set_region(self, start, end, notes, inclusive=False):
         """Sets the region at the given endpoints to the given note data."""
