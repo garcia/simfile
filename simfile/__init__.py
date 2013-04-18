@@ -271,19 +271,6 @@ class Simfile(object):
         if param not in self.params:
             self.params.append(param)
     
-    def _notes(self, notedata):
-        """Converts a string of note data into a nested list."""
-        notes = []
-        for measure in notedata.split(','):
-            notes.append([])
-            for line in measure.splitlines():
-                line = line.strip()
-                if line.find('//') >= 0:
-                    line = line.split('//', '1')[0]
-                if line:
-                    notes[-1].append(line)
-        return Notes(notes)
-    
     def get_raw_chart(self, difficulty=None, stepstype=None, meter=None,
                   description=None, index=None):
         """Retrieve the specified chart as an ordinary parameter.
@@ -350,7 +337,7 @@ class Simfile(object):
                 'difficulty': chart[3],
                 'meter': int(chart[4]),
                 'radar': chart[5],
-                'notes': self._notes(chart[6])}
+                'notes': Notes(chart[6])}
         
     def set_chart(self, notes, difficulty=None, stepstype=None, meter=None,
                   description=None, index=None, radar=None):
