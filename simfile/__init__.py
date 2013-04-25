@@ -1,4 +1,5 @@
 import codecs
+from decimal import Decimal
 from fractions import Fraction, gcd as _gcd
 import os
 
@@ -21,10 +22,15 @@ def lcm(*numbers):
         return (a * b) // gcd(a, b)
     return reduce(lcm, numbers, 1)
 
+def decimal_to_192nd(dec):
+    return Fraction(int(round(Decimal(dec) * 192)), 192)
+
+def decimal_from_192nd(frac):
+    return Decimal(float(frac)).quantize(Decimal('0.001'))
+
 # Special exceptions
 class MultiInstanceError(Exception): pass
 class NoChartError(Exception): pass
-
 
 class Param(list):
     """Represents a parameter as a list of values.
@@ -124,7 +130,7 @@ class Notes(object):
         # If we're setting the region to itself, make a copy first, otherwise
         # it might end up infinitely looping
         if notes is self:
-            notes = Notes(str(notes))
+            notes = Notes(unicode(notes))
         # Start by clearing the region
         # This doubles as a "start > end" check
         self.pop_region(start, end, inclusive)
@@ -184,6 +190,9 @@ class Chart(object):
     
     """
     def __init__(self, chart):
+        if (chart[0] != 'NOTES'):
+            raise ValueError('Not a chart')
+        
         self.stepstype = chart[1]
         self.description = chart[2]
         self.difficulty = chart[3]
@@ -192,22 +201,41 @@ class Chart(object):
         self.notes = Notes(chart[6])
     
     def __str__(self):
-        return ("#NOTES:\n"
-                "     {stepstype}:\n"
-                "     {description}:\n"
-                "     {difficulty}:\n"
-                "     {meter}:\n"
-                "     {radar}:\n"
-                "{notes}\n;\n").format(
+        return ('#NOTES:\n'
+                '     {stepstype}:\n'
+                '     {description}:\n'
+                '     {difficulty}:\n'
+                '     {meter}:\n'
+                '     {radar}:\n'
+                '{notes}\n;\n').format(
                     stepstype=self.stepstype,
                     description=self.description,
                     difficulty=self.difficulty,
                     meter=self.meter,
                     radar=self.radar,
                     notes=self.notes)
-        
-        
-        
+
+
+class BPMs(object):
+    """Encapsulate BPM data.
+    
+    The sole constructor argument should be a Parameter containing BPM data.
+    
+    """
+    def __init__(self, bpms):
+        if (bpms[0] != 'BPMS'):
+            raise ValueError('Not a BPMS parameter')
+        bpmlist = []
+        for bpmline in bpms[1].split(','):
+            bpm = bpmline.strip().split('=')
+            bpmlist.append((decimal_to_192nd(bpm[0]), Decimal(bpm[1])))
+        self.bpms = bpmlist
+    
+    def __str__(self):
+        return '#BPMS:%s;' % ',\n'.join(
+            '='.join((str(decimal_from_192nd(b[0])), str(b[1])))
+            for b in self.bpms)
+
 class Simfile(object):
     """Encapsulates simfile data.
     
@@ -270,6 +298,8 @@ class Simfile(object):
     def _wrap(self, param):
         if param[0] == 'NOTES':
             return Chart(param)
+        elif param[0] == 'BPMS':
+            return BPMs(param)
         return Param(param)
     
     def get(self, identifier):
@@ -287,6 +317,9 @@ class Simfile(object):
             raise MultiInstanceError('Use get_chart for notedata')
         found_param = None
         for param in self.params:
+            # Skip charts
+            if type(param) is not Param:
+                continue
             if param[0].upper() == identifier:
                 if found_param:
                     raise MultiInstanceError('Multiple instances of identifier')
