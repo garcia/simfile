@@ -8,7 +8,7 @@ __all__ = ['MultiInstanceError', 'NoChartError', 'Param', 'Notes', 'Simfile']
 # Used internally
 
 def enum(*sequential, **named):
-    """Creates an enum out of both sequential and named elements."""
+    """Create an enum out of both sequential and named elements."""
     enums = dict(zip(sequential, range(len(sequential))), **named)
     return type('Enum', (), enums)
 
@@ -23,17 +23,26 @@ def lcm(*numbers):
     return reduce(lcm, numbers, 1)
 
 def decimal_to_192nd(dec):
+    """Convert a decimal value to a fraction whose denominator is 192."""
     return Fraction(int(round(Decimal(dec) * 192)), 192)
 
 def decimal_from_192nd(frac):
+    """Convert a fraction to a decimal value quantized to 1/1000."""
     return Decimal(float(frac)).quantize(Decimal('0.001'))
 
 # Special exceptions
-class MultiInstanceError(Exception): pass
-class NoChartError(Exception): pass
+class MultiInstanceError(Exception):
+    """
+    Raised upon attempting to retrieve a parameter or chart for which there
+    are multiple possible return values.
+    
+    This can always be resolved by setting the 'index' argument to 0.
+    """
+
 
 class Param(list):
-    """Represents a parameter as a list of values.
+    """
+    Represents a parameter as a list of values.
     
     This class is identical to `list` but includes a special __str__ method.
     """
@@ -45,13 +54,12 @@ class Param(list):
 
 
 class Notes(object):
-    """Encapsulates note data.
+    """
+    Encapsulates note data.
     
     The sole constructor argument should be a string of .SM note data. See
     http://www.stepmania.com/wiki/The_.SM_file_format for more details.
-    
     """
-    
     def _sort(self):
         if self._out_of_order:
             self.notes.sort(key=lambda x: x[0])
@@ -183,11 +191,14 @@ class Notes(object):
         return '\n'.join(rtn)
 
 class Chart(object):
-    """Encapsulates chart data.
+    """
+    Encapsulates chart data.
     
     The sole constructor argument should be a list of parameter values,
     usually returned by Simfile.get_raw_chart.
     
+    Exposes attributes 'stepstype', 'description', 'difficulty', and 'radar'
+    as strings, 'meter' as an integer, and 'notes' as a Notes object.
     """
     def __init__(self, chart):
         if (chart[0] != 'NOTES'):
@@ -217,10 +228,11 @@ class Chart(object):
 
 
 class BPMs(object):
-    """Encapsulate BPM data.
+    """
+    Encapsulate BPM data.
     
-    The sole constructor argument should be a Parameter containing BPM data.
-    
+    The sole constructor argument should be a Param object containing BPM
+    data.
     """
     def __init__(self, bpms):
         if (bpms[0] != 'BPMS'):
@@ -237,20 +249,20 @@ class BPMs(object):
             for b in self.bpms)
 
 class Simfile(object):
-    """Encapsulates simfile data.
+    """
+    Encapsulates simfile data.
     
     The sole constructor argument should be a path to a valid .sm file.
-    
     """
     DEFAULT_RADAR = u'0,0,0,0,0'
     states = enum('NEXT_PARAM', 'READ_VALUE', 'COMMENT')
     
     def __init__(self, simfile):
-        """Read and parse the given simfile.
+        """
+        Read and parse the given simfile.
         
         The functionality of this code should mirror StepMania's
         MsdFile.cpp fairly closely.
-        
         """
         self.filename = simfile
         self.dirname = os.path.dirname(simfile)
@@ -303,18 +315,20 @@ class Simfile(object):
         return Param(param)
     
     def get(self, identifier):
-        """Retrieve the value(s) denoted by (and including) the identifier.
+        """
+        Retrieve the value(s) denoted by (and including) the identifier as a
+        Parameter object.
         
-        Raises KeyError if there is no such identifier and
-        MultiInstanceError if multiple parameters begin with the identifier
-        or if it is known to be a multi-instance identifier (i.e. NOTES).
+        Raises KeyError if there is no such identifier and MultiInstanceError
+        if multiple parameters begin with the identifier, or if it is known to
+        be a multi-instance identifier (i.e. NOTES).
         
-        Identifiers are case-insensitive.
-        
+        Identifiers are case-insensitive, but their "true" case can be
+        determined by the observing the first element of the parameter.
         """
         identifier = identifier.upper()
         if identifier == 'NOTES':
-            raise MultiInstanceError('Use get_chart for notedata')
+            raise MultiInstanceError('Use get_chart to retrieve charts')
         found_param = None
         for param in self.params:
             # Skip charts
@@ -334,6 +348,12 @@ class Simfile(object):
         return ":".join(self.get(identifier)[1:])
     
     def set(self, identifier, *values):
+        """
+        Sets the identifier to the given value(s).
+        
+        This creates a new parameter if the identifier cannot be found in the
+        simfile. Otherwise, it modifies the existing parameter.
+        """
         # If the identifier already exists, edit it
         try:
             param = self.get(identifier)
@@ -347,19 +367,17 @@ class Simfile(object):
     
     def get_chart(self, difficulty=None, stepstype=None, meter=None,
                   description=None, index=None):
-        """Retrieve the specified chart.
+        """
+        Retrieve the specified chart.
         
-        difficulty, stepstype, meter, and/or description can all be
+        'difficulty', 'stepstype', 'meter', and/or 'description' can all be
         specified to narrow a search for a specific chart. If the 'index'
         parameter is omitted, there must be exactly one chart that fits the
-        given parameters. Otherwise, the <index>th matching chart is
-        returned.
+        given parameters. Otherwise, the index-th matching chart is returned.
         
-        Raises MultiInstanceError in ambiguous cases, NoChartError if no
-        chart matched the given parameters, and IndexError if an invalid
-        index was given. Otherwise the chart's values are returned as a
-        dictionary.
-        
+        Raises MultiInstanceError in ambiguous cases, KeyError if no chart
+        matched the given parameters, and IndexError if an invalid index was
+        given. Otherwise the chart's values are returned as a dictionary.
         """
         found_chart = None
         if index != None:
@@ -388,14 +406,15 @@ class Simfile(object):
                     return found_chart
                 i += 1
         if not found_chart or index != None and i == 0:
-            raise NoChartError('No charts fit the given parameters')
+            raise KeyError('No charts fit the given parameters')
         if index != None:
             raise IndexError('Only %s charts fit the given parameters' % i)
         return found_chart
         
     def set_chart(self, notes, difficulty=None, stepstype=None, meter=None,
                   description=None, index=None, radar=None):
-        """Change a chart from or add a chart to the simfile.
+        """
+        Change a chart from or add a chart to the simfile.
         
         The arguments are identical to those of get_chart, with the exception
         of the required 'notes' argument at the beginning and the optional
@@ -404,13 +423,14 @@ class Simfile(object):
         the other given parameters are sufficiently unambiguous). The 'radar'
         argument is only used when adding a chart.
         
-        Raises any error that get_chart might raise, except for NoChartError.
-        
+        Raises any error that get_chart might raise, except for KeyError. Also
+        raises ValueError if 'stepstype' is not specified when adding a new
+        chart.
         """
         try:
             chart = self.get_chart(difficulty, stepstype, meter, description,
                                    index)
-        except NoChartError:
+        except KeyError:
             if not stepstype:
                 raise ValueError("Must specify stepstype when adding a chart")
             chart = Chart([
@@ -427,6 +447,12 @@ class Simfile(object):
             self.params.append(chart)
     
     def save(self):
+        """
+        Writes the simfile to the file from which it was originally read.
+        
+        Alternatively, it can be written to any other file by setting the
+        'filename' attribute to a different path.
+        """
         with codecs.open(self.filename, 'w', 'utf-8') as output:
             output.write(unicode(self))
     
