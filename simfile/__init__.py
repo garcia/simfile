@@ -87,7 +87,7 @@ class Notes(object):
                 # Ignore blank lines (e.g. "0000")
                 if any(a != '0' for a in line):
                     line_pos = (m + Fraction(l, measure_len)) * 4
-                    self.notes.append((line_pos, line))
+                    self.notes.append([line_pos, line])
     
     def get_region(self, start, end, inclusive=False, _pop=False):
         """Gets the region at the given endpoints."""
@@ -228,7 +228,7 @@ class BPMs(object):
         bpmlist = []
         for bpmline in bpms[1].split(','):
             bpm = bpmline.strip().split('=')
-            bpmlist.append((decimal_to_192nd(bpm[0]), Decimal(bpm[1])))
+            bpmlist.append([decimal_to_192nd(bpm[0]), Decimal(bpm[1])])
         self.bpms = bpmlist
     
     def __str__(self):
