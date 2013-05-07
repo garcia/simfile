@@ -291,6 +291,7 @@ class Simfile(object):
             elif state == self.states.COMMENT:
                 if c in '\r\n':
                     state = old_state
+                    continue
             # Start of parameter
             if state == self.states.NEXT_PARAM:
                 if c == '#':
