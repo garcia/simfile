@@ -316,6 +316,10 @@ class Simfile(object):
                 # Add character to param
                 else:
                     param[-1] += c
+        # Add partial parameter (i.e. if the last one was missing a semicolon)
+        if state == self.states.READ_VALUE:
+            params.append(self._wrap(param))
+        
         self.params = params
         
     def _wrap(self, param):
