@@ -241,20 +241,17 @@ class BPMs(object):
     """
     Encapsulate BPM data.
     
-    The sole constructor argument should be a Param object containing BPM
-    data.
+    The sole constructor argument should be a string of BPM values.
     """
     def __init__(self, bpms):
-        if (bpms[0] != 'BPMS'):
-            raise ValueError('Not a BPMS parameter')
         bpmlist = []
-        for bpmline in bpms[1].split(','):
+        for bpmline in bpms.split(','):
             bpm = bpmline.strip().split('=')
             bpmlist.append([decimal_to_192nd(bpm[0]), Decimal(bpm[1])])
         self.bpms = bpmlist
     
     def __str__(self):
-        return '#BPMS:%s;' % ',\n'.join(
+        return ',\n'.join(
             '='.join((str(decimal_from_192nd(b[0])), str(b[1])))
             for b in self.bpms)
 
@@ -326,8 +323,9 @@ class Simfile(object):
         if param[0] == 'NOTES':
             return Chart(param)
         elif param[0] == 'BPMS':
-            return BPMs(param)
-        return Param(param)
+            return Param((param[0], BPMs(param[1])))
+        else:
+            return Param(param)
     
     def get(self, identifier):
         """
