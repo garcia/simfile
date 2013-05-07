@@ -3,7 +3,7 @@ from decimal import Decimal
 from fractions import Fraction, gcd as _gcd
 import os
 
-__all__ = ['MultiInstanceError', 'Param', 'Notes', 'Simfile']
+__all__ = ['MultiInstanceError', 'Param', 'Notes', 'Chart', 'BPMs', 'Simfile']
 
 # Used internally
 
