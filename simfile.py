@@ -1,7 +1,16 @@
+"""
+Simfile parser for Python. This library currently only supports the .SM
+format; .SSC support is planned for the future.
+"""
 import codecs
 from decimal import Decimal
 from fractions import Fraction, gcd as _gcd
 import os
+
+__author__ = 'Grant Garcia'
+__copyright__ = 'Copyright 2013, Grant Garcia'
+__license__ = 'MIT'
+__version__ = '0.6'
 
 __all__ = ['MultiInstanceError', 'Param', 'Notes', 'Chart', 'BPMs', 'Simfile']
 
@@ -58,7 +67,8 @@ class Notes(object):
     Encapsulates note data.
     
     The sole constructor argument should be a string of .SM note data. See
-    http://www.stepmania.com/wiki/The_.SM_file_format for more details.
+    `the StepMania wiki <http://www.stepmania.com/wiki/The_.SM_file_format>`_
+    for more details.
     """
     def _sort(self):
         if self._out_of_order:
@@ -252,7 +262,7 @@ class Simfile(object):
     """
     Encapsulates simfile data.
     
-    The sole constructor argument should be a path to a valid .sm file.
+    The sole constructor argument should be a path to a valid .SM file.
     """
     DEFAULT_RADAR = u'0,0,0,0,0'
     states = enum('NEXT_PARAM', 'READ_VALUE', 'COMMENT')
