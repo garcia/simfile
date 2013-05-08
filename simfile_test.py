@@ -47,7 +47,9 @@ class TestSimfile(unittest.TestCase):
         self.assertIsInstance(sm.get('TITLE'), Param)
         bpm_param = sm.get('BPMS')
         self.assertIsInstance(bpm_param, Param)
-        self.assertIsInstance(bpm_param[1], BPMs)
+        self.assertIsInstance(bpm_param[1], Timing)
+        stops_param = sm.get('STOPS')
+        self.assertIsInstance(stops_param[1], Timing)
         chart = sm.get_chart(index=0)
         self.assertIsInstance(chart, Chart)
         self.assertIsInstance(chart.notes, Notes)
@@ -55,10 +57,18 @@ class TestSimfile(unittest.TestCase):
     def test_bpms(self):
         sm = self.get_simfile('Robotix.sm')
         bpms = sm.get('BPMS')[1]
-        self.assertEqual(bpms.bpms[0][0], 0)
-        self.assertEqual(bpms.bpms[0][1], 150)
-        self.assertEqual(bpms.bpms[1][0], 144)
-        self.assertEqual(bpms.bpms[1][1], decimal.Decimal('170.001'))
+        self.assertEqual(bpms[0][0], 0)
+        self.assertEqual(bpms[0][1], 150)
+        self.assertEqual(bpms[1][0], 144)
+        self.assertEqual(bpms[1][1], decimal.Decimal('170.001'))
+    
+    def test_stops(self):
+        sm = self.get_simfile('Robotix.sm')
+        stops = sm.get('STOPS')[1]
+        self.assertEqual(stops[0][0], 313)
+        self.assertEqual(stops[0][1], decimal.Decimal('0.400'))
+        self.assertEqual(stops[1][0], 344)
+        self.assertEqual(stops[1][1], decimal.Decimal('0.400'))
     
     def test_get_chart(self):
         sm = self.get_simfile('Tribal Style.sm')

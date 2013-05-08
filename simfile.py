@@ -12,7 +12,7 @@ __copyright__ = 'Copyright 2013, Grant Garcia'
 __license__ = 'MIT'
 __version__ = '0.6.1'
 
-__all__ = ['MultiInstanceError', 'Param', 'Notes', 'Chart', 'BPMs', 'Simfile']
+__all__ = ['MultiInstanceError', 'Param', 'Notes', 'Chart', 'Timing', 'Simfile']
 
 # Used internally
 
@@ -237,23 +237,24 @@ class Chart(object):
                     notes=self.notes)
 
 
-class BPMs(object):
+class Timing(list):
     """
-    Encapsulate BPM data.
+    Encapsulate timing data as a list of [beat, value] lists.
     
-    The sole constructor argument should be a string of BPM values.
+    The sole constructor argument should be a string of BPM or stop values.
     """
-    def __init__(self, bpms):
-        bpmlist = []
-        for bpmline in bpms.split(','):
-            bpm = bpmline.strip().split('=')
-            bpmlist.append([decimal_to_192nd(bpm[0]), Decimal(bpm[1])])
-        self.bpms = bpmlist
+    def __init__(self, tdata):
+        tlist = []
+        for tline in tdata.split(','):
+            t = tline.strip().split('=')
+            if ''.join(t):
+                tlist.append([decimal_to_192nd(t[0]), Decimal(t[1])])
+        self.extend(tlist)
     
-    def __str__(self):
+    def __repr__(self):
         return ',\n'.join(
-            '='.join((str(decimal_from_192nd(b[0])), str(b[1])))
-            for b in self.bpms)
+            '='.join((str(decimal_from_192nd(t[0])), str(t[1])))
+            for t in self)
 
 class Simfile(object):
     """
@@ -320,10 +321,10 @@ class Simfile(object):
         self.params = params
         
     def _wrap(self, param):
-        if param[0] == 'NOTES':
+        if param[0].upper() == 'NOTES':
             return Chart(param)
-        elif param[0] == 'BPMS':
-            return Param((param[0], BPMs(param[1])))
+        elif param[0].upper() in ('BPMS', 'STOPS'):
+            return Param((param[0], Timing(param[1])))
         else:
             return Param(param)
     
