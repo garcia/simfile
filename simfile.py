@@ -10,7 +10,7 @@ import os
 __author__ = 'Grant Garcia'
 __copyright__ = 'Copyright 2013, Grant Garcia'
 __license__ = 'MIT'
-__version__ = '0.6.1'
+__version__ = '0.6.2'
 
 __all__ = ['MultiInstanceError', 'Param', 'Notes', 'Chart', 'Timing', 'Simfile']
 
