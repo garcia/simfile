@@ -7,8 +7,10 @@ from simfile import *
 
 class TestSimfile(unittest.TestCase):
     
-    def get_simfile(self, filename):
-        return Simfile(os.path.join('testdata', filename))
+    def get_simfile(self, filename, cache={}):
+        if filename not in cache:
+            cache[filename] = Simfile(os.path.join('testdata', filename))
+        return cache[filename]
     
     def test_empty(self):
         sm = self.get_simfile('empty.sm')
@@ -45,9 +47,9 @@ class TestSimfile(unittest.TestCase):
     def test_types(self):
         sm = self.get_simfile('Tribal Style.sm')
         self.assertIsInstance(sm.get('TITLE'), Param)
-        bpm_param = sm.get('BPMS')
-        self.assertIsInstance(bpm_param, Param)
-        self.assertIsInstance(bpm_param[1], Timing)
+        bpms_param = sm.get('BPMS')
+        self.assertIsInstance(bpms_param, Param)
+        self.assertIsInstance(bpms_param[1], Timing)
         stops_param = sm.get('STOPS')
         self.assertIsInstance(stops_param[1], Timing)
         chart = sm.get_chart(index=0)
@@ -91,6 +93,30 @@ class TestSimfile(unittest.TestCase):
         self.assertRaises(IndexError, sm.get_chart, index=9)
         self.assertRaises(IndexError, sm.get_chart, meter=9, index=2)
         self.assertRaises(KeyError, sm.get_chart, meter=100)
+    
+    def test_param_str(self):
+        sm = self.get_simfile('Tribal Style.sm')
+        self.assertEqual(str(sm.get('TITLE')), '#TITLE:Tribal Style;')
+        self.assertEqual(str(sm.get('Artist')), '#ARTIST:KaW;')
+        bpms_param = sm.get('BPMS')
+        self.assertEqual(str(bpms_param), '#BPMS:0.000=140.000;')
+        self.assertEqual(str(bpms_param[1]), '0.000=140.000')
+        stops_param = sm.get('STOPS')
+        self.assertEqual(str(stops_param), '#STOPS:;')
+        self.assertEqual(str(stops_param[1]), '')
+    
+    def test_chart_str(self):
+        sm = self.get_simfile('Tribal Style.sm')
+        chart_sn = sm.get_chart(meter=1)
+        expected_str = (
+            "#NOTES:\n"
+            "     dance-single:\n"
+            "     K. Ward:\n"
+            "     Beginner:\n"
+            "     1:\n"
+            "     0.104,0.115,0.045,0.000,0.000:\n"
+            "0000\n0000\n0000\n0000\n,\n")
+        self.assertEqual(str(chart_sn)[:len(expected_str)], expected_str)
 
 
 if __name__ == '__main__':

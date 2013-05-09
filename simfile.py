@@ -56,10 +56,10 @@ class Param(list):
     This class is identical to `list` but includes a special __str__ method.
     """
     def __str__(self):
-        if self[0].upper() == 'NOTES':
-            return ('\n#' + ':\n     '.join(self[:-1]) + ':\n' + self[-1] + ';')
-        else:
-            return ('#' + ':'.join(self) + ';')
+        return ('#' + ':'.join(str(elem) for elem in self) + ';')
+    
+    def __repr__(self):
+        return '%s(%s)' % ('Param', super(Param, self).__repr__())
 
 
 class Notes(object):
@@ -200,6 +200,7 @@ class Notes(object):
         rtn.extend(self._measure_to_str(m, measure))
         return '\n'.join(rtn)
 
+
 class Chart(object):
     """
     Encapsulates chart data.
@@ -251,10 +252,14 @@ class Timing(list):
                 tlist.append([decimal_to_192nd(t[0]), Decimal(t[1])])
         self.extend(tlist)
     
-    def __repr__(self):
+    def __str__(self):
         return ',\n'.join(
             '='.join((str(decimal_from_192nd(t[0])), str(t[1])))
             for t in self)
+    
+    def __repr__(self):
+        return '%s(%s)' % ('Timing', super(Timing, self).__repr__())
+
 
 class Simfile(object):
     """
