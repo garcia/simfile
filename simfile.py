@@ -24,7 +24,7 @@ def enum(*sequential, **named):
 def gcd(*numbers):
     """Return the greatest common divisor of the given integers"""
     return reduce(_gcd, numbers)
- 
+
 def lcm(*numbers):
     """Return lowest common multiple."""    
     def lcm(a, b):
@@ -44,7 +44,7 @@ class MultiInstanceError(Exception):
     """
     Raised upon attempting to retrieve a parameter or chart for which there
     are multiple possible return values.
-    
+
     This can always be resolved by setting the 'index' argument to 0.
     """
 
@@ -52,12 +52,12 @@ class MultiInstanceError(Exception):
 class Param(list):
     """
     Represents a parameter as a list of values.
-    
+
     This class is identical to `list` but includes a special __str__ method.
     """
     def __str__(self):
         return ('#' + ':'.join(str(elem) for elem in self) + ';')
-    
+
     def __repr__(self):
         return '%s(%s)' % ('Param', super(Param, self).__repr__())
 
@@ -65,7 +65,7 @@ class Param(list):
 class Notes(object):
     """
     Encapsulates note data.
-    
+
     The sole constructor argument should be a string of .SM note data. See
     `the StepMania wiki <http://www.stepmania.com/wiki/The_.SM_file_format>`_
     for more details.
@@ -73,7 +73,7 @@ class Notes(object):
     def _sort(self):
         if self._out_of_order:
             self.notes.sort(key=lambda x: x[0])
-    
+
     def _clean_line(self, line):
         # Remove unnecessary whitespace
         line = line.strip()
@@ -82,15 +82,15 @@ class Notes(object):
             line = line.split('//', '1')[0]
         # The line may be empty; use filter(None, ...) to account for this
         return line
-    
+
     def __init__(self, notedata=None):
         self.notes = []
         self.arrows = None
         self._out_of_order = False
-        
+
         if not notedata:
             return
-        
+
         # Iterate over measures
         # TODO: skip commas within comments
         for m, measuredata in enumerate(notedata.split(',')):
@@ -106,7 +106,7 @@ class Notes(object):
                 if any(a != '0' for a in line):
                     line_pos = (m + Fraction(l, measure_len)) * 4
                     self.notes.append([line_pos, line])
-    
+
     def get_region(self, start, end, inclusive=False, _pop=False):
         """Gets the region at the given endpoints."""
         if start > end:
@@ -138,11 +138,11 @@ class Notes(object):
                 return rtn
         # Return if we haven't already returned
         return rtn
-    
+
     def pop_region(self, start, end, inclusive=False):
         """Gets and clears the region at the given endpoints."""
         return self.get_region(start, end, inclusive, _pop=True)
-    
+
     def set_region(self, start, end, notes, inclusive=False):
         """Sets the region at the given endpoints to the given note data."""
         # If we're setting the region to itself, make a copy first, otherwise
@@ -160,19 +160,19 @@ class Notes(object):
             if ((inclusive and row[0] <= end - start) or
                     (not inclusive and row[0] < end - start)):
                 self.notes.append((row[0] + start, row[1]))
-    
+
     def get_row(self, pos):
         """Gets the row at the given position."""
         return self.get_region(start=pos, end=pos, inclusive=True)
-    
+
     def pop_row(self, pos):
         """Gets and clears the row at the given position."""
         return self.pop_region(start=pos, end=pos, inclusive=True)
-    
+
     def set_row(self, pos, notes):
         """Sets the row at the given position to the given note data."""
         return self.set_region(start=pos, end=pos, notes=notes, inclusive=True)
-    
+
     def _measure_to_str(self, m, measure):
         rtn = []
         rows = lcm(*[r[0].denominator for r in measure])
@@ -182,7 +182,7 @@ class Notes(object):
             else:
                 rtn.append('0' * self.arrows)
         return rtn
-    
+
     def __str__(self):
         self._sort()
         rtn = []
@@ -199,7 +199,7 @@ class Notes(object):
             measure.append(row)
         rtn.extend(self._measure_to_str(m, measure))
         return '\n'.join(rtn)
-    
+
     def __eq__(self, other):
         return self.__dict__ == other.__dict__
 
@@ -207,24 +207,24 @@ class Notes(object):
 class Chart(object):
     """
     Encapsulates chart data.
-    
+
     The sole constructor argument should be a list of parameter values,
     usually returned by Simfile.get_raw_chart.
-    
+
     Exposes attributes 'stepstype', 'description', 'difficulty', and 'radar'
     as strings, 'meter' as an integer, and 'notes' as a Notes object.
     """
     def __init__(self, chart):
         if (chart[0] != 'NOTES'):
             raise ValueError('Not a chart')
-        
+
         self.stepstype = chart[1]
         self.description = chart[2]
         self.difficulty = chart[3]
         self.meter = int(chart[4])
         self.radar = chart[5]
         self.notes = Notes(chart[6])
-    
+
     def __str__(self):
         return ('#NOTES:\n'
                 '     {stepstype}:\n'
@@ -239,7 +239,7 @@ class Chart(object):
                     meter=self.meter,
                     radar=self.radar,
                     notes=self.notes)
-    
+
     def __eq__(self, other):
         return self.__dict__ == other.__dict__
 
@@ -247,7 +247,7 @@ class Chart(object):
 class Timing(list):
     """
     Encapsulate timing data as a list of [beat, value] lists.
-    
+
     The sole constructor argument should be a string of BPM or stop values.
     """
     def __init__(self, tdata):
@@ -257,7 +257,7 @@ class Timing(list):
             if ''.join(t):
                 tlist.append([decimal_to_192nd(t[0]), Decimal(t[1])])
         self.extend(tlist)
-    
+
     def __str__(self):
         return ',\n'.join(
             '='.join((str(decimal_from_192nd(t[0])), str(t[1])))
@@ -270,21 +270,21 @@ class Timing(list):
 class Simfile(object):
     """
     Encapsulates simfile data.
-    
+
     The sole constructor argument should be a path to a valid .SM file.
     """
     DEFAULT_RADAR = u'0,0,0,0,0'
     states = enum('NEXT_PARAM', 'READ_VALUE', 'COMMENT')
     filename = dirname = None
-    
+
     def __init__(self, filename=None, string=None):
         """
         Parse the given simfile.
-        
+
         If the 'filename' argument is given, reads a simfile from the given
         file. If the 'string' argument is given, parses the string instead.
         Passing both arguments is disallowed.
-        
+
         The functionality of this code should mirror StepMania's
         MsdFile.cpp fairly closely.
         """
@@ -296,7 +296,7 @@ class Simfile(object):
             self.dirname = os.path.dirname(filename)
             with codecs.open(filename, encoding='utf-8') as simfile_h:
                 string = simfile_h.read()
-        
+
         state = self.states.NEXT_PARAM
         params = []
         i = 0
@@ -337,9 +337,9 @@ class Simfile(object):
         # Add partial parameter (i.e. if the last one was missing a semicolon)
         if state == self.states.READ_VALUE:
             params.append(self._wrap(param))
-        
+
         self.params = params
-        
+
     def _wrap(self, param):
         if param[0].upper() == 'NOTES':
             return Chart(param)
@@ -347,16 +347,16 @@ class Simfile(object):
             return Param((param[0], Timing(param[1])))
         else:
             return Param(param)
-    
+
     def get(self, identifier):
         """
         Retrieve the value(s) denoted by (and including) the identifier as a
         Parameter object.
-        
+
         Raises KeyError if there is no such identifier and MultiInstanceError
         if multiple parameters begin with the identifier, or if it is known to
         be a multi-instance identifier (i.e. NOTES).
-        
+
         Identifiers are case-insensitive, but their "true" case can be
         determined by the observing the first element of the parameter.
         """
@@ -376,15 +376,15 @@ class Simfile(object):
             return found_param
         else:
             raise KeyError('No such identifier')
-    
+
     def get_string(self, identifier):
         """Retrieve the data following the identifier as a single string."""
         return ":".join(self.get(identifier)[1:])
-    
+
     def set(self, identifier, *values):
         """
         Sets the identifier to the given value(s).
-        
+
         This creates a new parameter if the identifier cannot be found in the
         simfile. Otherwise, it modifies the existing parameter.
         """
@@ -398,17 +398,17 @@ class Simfile(object):
         # Add the parameter if it was just created
         if param not in self.params:
             self.params.append(param)
-    
+
     def get_chart(self, difficulty=None, stepstype=None, meter=None,
                   description=None, index=None):
         """
         Retrieve the specified chart.
-        
+
         'difficulty', 'stepstype', 'meter', and/or 'description' can all be
         specified to narrow a search for a specific chart. If the 'index'
         parameter is omitted, there must be exactly one chart that fits the
         given parameters. Otherwise, the index-th matching chart is returned.
-        
+
         Raises MultiInstanceError in ambiguous cases, KeyError if no chart
         matched the given parameters, and IndexError if an invalid index was
         given. Otherwise the chart's values are returned as a dictionary.
@@ -444,19 +444,19 @@ class Simfile(object):
         if index != None:
             raise IndexError('Only %s charts fit the given parameters' % i)
         return found_chart
-        
+
     def set_chart(self, notes, difficulty=None, stepstype=None, meter=None,
                   description=None, index=None, radar=None):
         """
         Change a chart from or add a chart to the simfile.
-        
+
         The arguments are identical to those of get_chart, with the exception
         of the required 'notes' argument at the beginning and the optional
         'radar' argument at the end. The 'stepstype' argument is required when
         adding a new chart, but not when editing an existing chart (assuming
         the other given parameters are sufficiently unambiguous). The 'radar'
         argument is only used when adding a chart.
-        
+
         Raises any error that get_chart might raise, except for KeyError. Also
         raises ValueError if 'stepstype' is not specified when adding a new
         chart.
@@ -479,11 +479,11 @@ class Simfile(object):
         chart.notes = notes
         if chart not in self.params:
             self.params.append(chart)
-    
+
     def save(self, filename=None):
         """
         Writes the simfile to disk.
-        
+
         If the 'filename' argument is given, it is used. If omitted, the
         simfile will be written to the file from which it was originally read,
         or a ValueError will be raised if it was read from a string.
@@ -493,14 +493,14 @@ class Simfile(object):
             raise ValueError('no filename provided')
         with codecs.open(filename, 'w', 'utf-8') as output:
             output.write(unicode(self))
-    
+
     def __str__(self):
         return '\n'.join(unicode(param) for param in self.params)
-    
+
     def __eq__(self, other):
         """
         Test for equality with another Simfile.
-        
+
         This only compares the parameter lists, not the filenames or any other
         Simfile object attributes.
         """
