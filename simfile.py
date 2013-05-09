@@ -199,6 +199,9 @@ class Notes(object):
             measure.append(row)
         rtn.extend(self._measure_to_str(m, measure))
         return '\n'.join(rtn)
+    
+    def __eq__(self, other):
+        return self.__dict__ == other.__dict__
 
 
 class Chart(object):
@@ -236,6 +239,9 @@ class Chart(object):
                     meter=self.meter,
                     radar=self.radar,
                     notes=self.notes)
+    
+    def __eq__(self, other):
+        return self.__dict__ == other.__dict__
 
 
 class Timing(list):
@@ -474,15 +480,28 @@ class Simfile(object):
         if chart not in self.params:
             self.params.append(chart)
     
-    def save(self):
+    def save(self, filename=None):
         """
-        Writes the simfile to the file from which it was originally read.
+        Writes the simfile to disk.
         
-        Alternatively, it can be written to any other file by setting the
-        'filename' attribute to a different path.
+        If the 'filename' argument is given, it is used. If omitted, the
+        simfile will be written to the file from which it was originally read,
+        or a ValueError will be raised if it was read from a string.
         """
-        with codecs.open(self.filename, 'w', 'utf-8') as output:
+        filename = filename or self.filename
+        if not filename:
+            raise ValueError('no filename provided')
+        with codecs.open(filename, 'w', 'utf-8') as output:
             output.write(unicode(self))
     
     def __str__(self):
         return '\n'.join(unicode(param) for param in self.params)
+    
+    def __eq__(self, other):
+        """
+        Test for equality with another Simfile.
+        
+        This only compares the parameter lists, not the filenames or any other
+        Simfile object attributes.
+        """
+        return type(self) is type(other) and self.params == other.params
