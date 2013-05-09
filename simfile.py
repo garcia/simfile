@@ -256,7 +256,7 @@ class Timing(list):
         return ',\n'.join(
             '='.join((str(decimal_from_192nd(t[0])), str(t[1])))
             for t in self)
-    
+
     def __repr__(self):
         return '%s(%s)' % ('Timing', super(Timing, self).__repr__())
 
@@ -269,25 +269,34 @@ class Simfile(object):
     """
     DEFAULT_RADAR = u'0,0,0,0,0'
     states = enum('NEXT_PARAM', 'READ_VALUE', 'COMMENT')
+    filename = dirname = None
     
-    def __init__(self, simfile):
+    def __init__(self, filename=None, string=None):
         """
-        Read and parse the given simfile.
+        Parse the given simfile.
+        
+        If the 'filename' argument is given, reads a simfile from the given
+        file. If the 'string' argument is given, parses the string instead.
+        Passing both arguments is disallowed.
         
         The functionality of this code should mirror StepMania's
         MsdFile.cpp fairly closely.
         """
-        self.filename = simfile
-        self.dirname = os.path.dirname(simfile)
-		
-        with codecs.open(simfile, encoding='utf-8') as simfile_h:
-            sf = simfile_h.read()
+        if filename:
+            if string:
+                raise TypeError('Simfile() takes either a filename '
+                                'or a string -- not both')
+            self.filename = filename
+            self.dirname = os.path.dirname(filename)
+            with codecs.open(filename, encoding='utf-8') as simfile_h:
+                string = simfile_h.read()
+        
         state = self.states.NEXT_PARAM
         params = []
         i = 0
-        for i, c in enumerate(sf):
+        for i, c in enumerate(string):
             # Start of comment
-            if i + 1 < len(sf) and c == '/' and sf[i + 1] == '/':
+            if i + 1 < len(string) and c == '/' and string[i + 1] == '/':
                 old_state = state
                 state = self.states.COMMENT
             # Comment
@@ -303,7 +312,7 @@ class Simfile(object):
             # Read value
             elif state == self.states.READ_VALUE:
                 # Fix missing semicolon
-                if c == '#' and sf[i - 1] in '\r\n':
+                if c == '#' and string[i - 1] in '\r\n':
                     param[-1] = param[-1].strip()
                     params.append(self._wrap(param))
                     param = ['']
