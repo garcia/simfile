@@ -117,6 +117,11 @@ class TestSimfile(unittest.TestCase):
             "     0.104,0.115,0.045,0.000,0.000:\n"
             "0000\n0000\n0000\n0000\n,\n")
         self.assertEqual(str(chart_sn)[:len(expected_str)], expected_str)
+    
+    def test_simfile_str(self):
+        sm1 = self.get_simfile('Tribal Style.sm')
+        sm2 = Simfile(string=str(sm1))
+        self.assertEqual(sm1, sm2)
 
 
 if __name__ == '__main__':
