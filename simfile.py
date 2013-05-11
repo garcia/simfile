@@ -4,7 +4,7 @@ format; .SSC support is planned for the future.
 """
 import codecs
 from decimal import Decimal
-from fractions import Fraction, gcd as _gcd
+from fractions import Fraction, gcd
 import os
 
 __author__ = 'Grant Garcia'
@@ -14,21 +14,21 @@ __version__ = '0.6.3'
 
 __all__ = ['MultiInstanceError', 'Param', 'Notes', 'Chart', 'Timing', 'Simfile']
 
-# Used internally
+# Internal functions
 
-def enum(*sequential, **named):
+def _enum(*sequential, **named):
     """Create an enum out of both sequential and named elements."""
     enums = dict(zip(sequential, range(len(sequential))), **named)
     return type('Enum', (), enums)
 
-def gcd(*numbers):
+def _gcd(*numbers):
     """Return the greatest common divisor of the given integers"""
-    return reduce(_gcd, numbers)
+    return reduce(gcd, numbers)
 
-def lcm(*numbers):
-    """Return lowest common multiple."""    
+def _lcm(*numbers):
+    """Return the lowest common multiple of the given integers."""
     def lcm(a, b):
-        return (a * b) // gcd(a, b)
+        return (a * b) // _gcd(a, b)
     return reduce(lcm, numbers, 1)
 
 def decimal_to_192nd(dec):
@@ -175,7 +175,7 @@ class Notes(object):
 
     def _measure_to_str(self, m, measure):
         rtn = []
-        rows = lcm(*[r[0].denominator for r in measure])
+        rows = _lcm(*[r[0].denominator for r in measure])
         for r in [(m * 4 + Fraction(n, rows)) for n in xrange(rows * 4)]:
             if measure and measure[0][0] == r:
                 rtn.append(measure.pop(0)[1])
@@ -274,7 +274,7 @@ class Simfile(object):
     The sole constructor argument should be a path to a valid .SM file.
     """
     DEFAULT_RADAR = u'0,0,0,0,0'
-    states = enum('NEXT_PARAM', 'READ_VALUE', 'COMMENT')
+    states = _enum('NEXT_PARAM', 'READ_VALUE', 'COMMENT')
     filename = dirname = None
 
     def __init__(self, filename=None, string=None):
