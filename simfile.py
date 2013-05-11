@@ -16,11 +16,6 @@ __all__ = ['MultiInstanceError', 'Param', 'Notes', 'Chart', 'Timing', 'Simfile']
 
 # Internal functions
 
-def _enum(*sequential, **named):
-    """Create an enum out of both sequential and named elements."""
-    enums = dict(zip(sequential, range(len(sequential))), **named)
-    return type('Enum', (), enums)
-
 def _gcd(*numbers):
     """Return the greatest common divisor of the given integers"""
     return reduce(gcd, numbers)
@@ -274,7 +269,6 @@ class Simfile(object):
     The sole constructor argument should be a path to a valid .SM file.
     """
     DEFAULT_RADAR = u'0,0,0,0,0'
-    states = _enum('NEXT_PARAM', 'READ_VALUE', 'COMMENT')
     filename = dirname = None
 
     def __init__(self, filename=None, string=None):
@@ -296,27 +290,29 @@ class Simfile(object):
             self.dirname = os.path.dirname(filename)
             with codecs.open(filename, encoding='utf-8') as simfile_h:
                 string = simfile_h.read()
-
-        state = self.states.NEXT_PARAM
+        
+        NEXT_PARAM, READ_VALUE, COMMENT = xrange(3)
+        
+        state = NEXT_PARAM
         params = []
         i = 0
         for i, c in enumerate(string):
             # Start of comment
             if i + 1 < len(string) and c == '/' and string[i + 1] == '/':
                 old_state = state
-                state = self.states.COMMENT
+                state = COMMENT
             # Comment
-            elif state == self.states.COMMENT:
+            elif state == COMMENT:
                 if c in '\r\n':
                     state = old_state
                     continue
             # Start of parameter
-            if state == self.states.NEXT_PARAM:
+            if state == NEXT_PARAM:
                 if c == '#':
-                    state = self.states.READ_VALUE
+                    state = READ_VALUE
                     param = ['']
             # Read value
-            elif state == self.states.READ_VALUE:
+            elif state == READ_VALUE:
                 # Fix missing semicolon
                 if c == '#' and string[i - 1] in '\r\n':
                     param[-1] = param[-1].strip()
@@ -330,12 +326,12 @@ class Simfile(object):
                 elif c == ';':
                     param[-1] = param[-1].strip()
                     params.append(self._wrap(param))
-                    state = self.states.NEXT_PARAM
+                    state = NEXT_PARAM
                 # Add character to param
                 else:
                     param[-1] += c
         # Add partial parameter (i.e. if the last one was missing a semicolon)
-        if state == self.states.READ_VALUE:
+        if state == READ_VALUE:
             params.append(self._wrap(param))
 
         self.params = params
