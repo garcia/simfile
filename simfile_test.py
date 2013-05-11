@@ -11,13 +11,25 @@ class TestSimfile(unittest.TestCase):
         if filename not in cache:
             cache[filename] = Simfile(os.path.join('testdata', filename))
         return cache[filename]
-
+    
     def test_empty(self):
         sm = self.get_simfile('empty.sm')
         self.assertTrue(sm)
         self.assertFalse(sm.params)
         self.assertRaises(KeyError, sm.get, 'TITLE')
-
+        # Nowhere else to put these at the moment
+        self.assertRaises(TypeError, Simfile, filename='.', string='.')
+    
+    def test_get(self):
+        sm = self.get_simfile('Tribal Style.sm')
+        self.assertEqual(sm.get('TITLE'), Param(('TITLE', 'Tribal Style')))
+        self.assertRaises(MultiInstanceError, sm.get, 'NOTES')
+    
+    def test_get_string(self):
+        sm = self.get_simfile('Tribal Style.sm')
+        self.assertEqual(sm.get_string('TITLE'), 'Tribal Style')
+        self.assertRaises(MultiInstanceError, sm.get_string, 'NOTES')
+    
     def test_comments(self):
         sm = self.get_simfile('comments.sm')
         self.assertEqual(sm.get('TITLE'), Param(('TITLE', 'Comments')))
@@ -119,9 +131,17 @@ class TestSimfile(unittest.TestCase):
         self.assertEqual(str(chart_sn)[:len(expected_str)], expected_str)
 
     def test_simfile_str(self):
+        # Comprehensive test that ensures str(simfile) returns a perfect
+        # representation of the original simfile. This also serves as a "test"
+        # of Simfile.save(), which essentially writes str(self) to a file.
         sm1 = self.get_simfile('Tribal Style.sm')
         sm2 = Simfile(string=str(sm1))
         self.assertEqual(sm1, sm2)
+    
+    def test_set_chart(self):
+        sm1 = self.get_simfile('Tribal Style.sm')
+        self.assertRaises(ValueError, sm.set_chart, notes='0000')
+        # TODO
 
 
 if __name__ == '__main__':
