@@ -137,11 +137,6 @@ class TestSimfile(unittest.TestCase):
         sm1 = self.get_simfile('Tribal Style.sm')
         sm2 = Simfile(string=str(sm1))
         self.assertEqual(sm1, sm2)
-    
-    def test_set_chart(self):
-        sm1 = self.get_simfile('Tribal Style.sm')
-        self.assertRaises(ValueError, sm.set_chart, notes='0000')
-        # TODO
 
 
 if __name__ == '__main__':
