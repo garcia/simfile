@@ -12,7 +12,7 @@ __copyright__ = 'Copyright 2013, Grant Garcia'
 __license__ = 'MIT'
 __version__ = '0.6.3'
 
-__all__ = ['MultiInstanceError', 'Param', 'Notes', 'Chart', 'Timing', 'Simfile']
+__all__ = ['Param', 'Notes', 'Chart', 'Timing', 'Simfile']
 
 # Internal functions
 
@@ -33,15 +33,6 @@ def decimal_to_192nd(dec):
 def decimal_from_192nd(frac):
     """Convert a fraction to a decimal value quantized to 1/1000."""
     return Decimal(float(frac)).quantize(Decimal('0.001'))
-
-# Special exceptions
-class MultiInstanceError(Exception):
-    """
-    Raised upon attempting to retrieve a parameter or chart for which there
-    are multiple possible return values.
-
-    This can always be resolved by setting the 'index' argument to 0.
-    """
 
 
 class Param(list):
@@ -347,59 +338,58 @@ class Simfile(object):
         else:
             return Param(param)
     
-    def _get_or_pop(self, identifier, pop):
+    def _get_or_pop(self, identifier, index, pop):
         identifier = identifier.upper()
         if identifier == 'NOTES':
-            raise MultiInstanceError('Use get_chart to retrieve charts')
-        found_param = None
-        for param in self.params:
-            # Skip charts
-            if type(param) is not Param:
+            raise ValueError('Use get_chart to retrieve charts')
+        # TODO: the following code is partly redundant with get_chart(); maybe
+        # find a way to combine the two?
+        i = 0
+        for param in filter(lambda p: type(p) is Param, self.params):
+            # Check identifier
+            if param[0].upper() != identifier:
                 continue
-            if param[0].upper() == identifier:
-                if found_param:
-                    raise MultiInstanceError('Multiple instances of identifier')
-                found_param = param
-        if found_param:
-            if pop:
-                self.params.remove(found_param)
-            return found_param
+            if i == index:
+                return param
+            i += 1
+        if i:
+            raise IndexError('Only %s parameters fit the given identifier' % i)
         else:
             raise KeyError('No such identifier')
 
-    def get(self, identifier):
+    def get(self, identifier, index=0):
         """
         Get the value(s) denoted by (and including) the identifier as a
         Parameter object.
-
-        Raises KeyError if there is no such identifier and MultiInstanceError
-        if multiple parameters begin with the identifier, or if it is known to
-        be a multi-instance identifier (i.e. NOTES).
-
+        
         Identifiers are case-insensitive, but their "true" case can be
-        determined by the observing the first element of the parameter.
+        determined by the observing the first element of the parameter. The
+        index-th matching parameter is returned, defaulting to the first.
+        
+        Raises KeyError if there are no matches whatsoever, or IndexError if
+        the given index was greater than the number of matching parameters.
         """
-        return self._get_or_pop(identifier, False)
+        return self._get_or_pop(identifier, index, False)
 
-    def get_string(self, identifier):
+    def get_string(self, identifier, index=0):
         """
         Get the data following the identifier as a single string.
         """
-        return ':'.join(self.get(identifier)[1:])
+        return ':'.join(self.get(identifier, index)[1:])
 
-    def pop(self, identifier):
+    def pop(self, identifier, index=0):
         """
         Get and remove the value(s) denoted by (and including) the identifier.
-        
+
         pop() behaves identically to get(), except the parameter retrieved is
         additionally removed from the simfile."""
-        return self._get_or_pop(identifier, True)
+        return self._get_or_pop(identifier, index, True)
 
-    def pop_string(self, identifier):
+    def pop_string(self, identifier, index=0):
         """
         Get and remove the data following the identifier as a single string.
         """
-        return ':'.join(self.pop(identifier)[1:])
+        return ':'.join(self.pop(identifier, index)[1:])
 
     def set(self, identifier, *values):
         """
@@ -420,22 +410,19 @@ class Simfile(object):
             self.params.append(param)
 
     def get_chart(self, difficulty=None, stepstype=None, meter=None,
-                  description=None, index=None):
+                  description=None, index=0):
         """
-        Retrieve the specified chart.
+        Get the specified chart as a Chart object.
 
         'difficulty', 'stepstype', 'meter', and/or 'description' can all be
-        specified to narrow a search for a specific chart. If the 'index'
-        parameter is omitted, there must be exactly one chart that fits the
-        given parameters. Otherwise, the index-th matching chart is returned.
+        specified to narrow a search for a specific chart. All of those
+        arguments are case-sensitive except for the int 'meter'. The index-th
+        matching chart is returned, defaulting to the first.
 
-        Raises MultiInstanceError in ambiguous cases, KeyError if no chart
-        matched the given parameters, and IndexError if an invalid index was
-        given. Otherwise the chart's values are returned as a dictionary.
+        Raises KeyError if there are no matches whatsoever, or IndexError if
+        the given index was greater than the number of matching charts.
         """
-        found_chart = None
-        if index != None:
-            i = 0
+        i = 0
         for chart in filter(lambda p: type(p) is Chart, self.params):
             # Check parameters
             if ((difficulty and not chart.difficulty == difficulty or
@@ -444,29 +431,16 @@ class Simfile(object):
                  description and not chart.description == description) and
                  any((difficulty, stepstype, meter, description))):
                 continue
-            # Already found a chart that fits the parameters
-            if found_chart and index == None:
-                hint = 'which index'
-                if found_chart.stepstype != chart.stepstype:
-                    hint = 'which stepstype'
-                elif found_chart.meter != int(chart.meter):
-                    hint = 'which meter'
-                elif found_chart.description != chart.description:
-                    hint = 'which description'
-                raise MultiInstanceError('Ambiguous parameters (%s?)' % hint)
-            found_chart = chart
-            if index != None:
-                if i == index:
-                    return found_chart
-                i += 1
-        if not found_chart or index != None and i == 0:
-            raise KeyError('No charts fit the given parameters')
-        if index != None:
+            if i == index:
+                return chart
+            i += 1
+        if i:
             raise IndexError('Only %s charts fit the given parameters' % i)
-        return found_chart
+        else:
+            raise KeyError('No charts fit the given parameters')
 
     def set_chart(self, notes, difficulty=None, stepstype=None, meter=None,
-                  description=None, index=None, radar=None):
+                  description=None, index=0, radar=None):
         """
         Change a chart from or add a chart to the simfile.
 

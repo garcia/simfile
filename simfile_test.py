@@ -23,12 +23,12 @@ class TestSimfile(unittest.TestCase):
     def test_get(self):
         sm = self.get_simfile('Tribal Style.sm')
         self.assertEqual(sm.get('TITLE'), Param(('TITLE', 'Tribal Style')))
-        self.assertRaises(MultiInstanceError, sm.get, 'NOTES')
+        self.assertRaises(ValueError, sm.get, 'NOTES')
     
     def test_get_string(self):
         sm = self.get_simfile('Tribal Style.sm')
         self.assertEqual(sm.get_string('TITLE'), 'Tribal Style')
-        self.assertRaises(MultiInstanceError, sm.get_string, 'NOTES')
+        self.assertRaises(ValueError, sm.get_string, 'NOTES')
     
     def test_comments(self):
         sm = self.get_simfile('comments.sm')
@@ -39,9 +39,10 @@ class TestSimfile(unittest.TestCase):
 
     def test_duplicates(self):
         sm = self.get_simfile('duplicates.sm')
-        self.assertRaises(MultiInstanceError, sm.get, 'TITLE')
-        self.assertRaises(MultiInstanceError, sm.get, 'SUBTITLE')
-        self.assertRaises(MultiInstanceError, sm.get, 'subtitle')
+        self.assertEqual(sm.get('TITLE'), Param(('TITLE', 'First duplicate field')))
+        self.assertEqual(sm.get('TITLE', 1), Param(('TITLE', 'Second duplicate field')))
+        self.assertEqual(sm.get('SUBTITLE', 0), Param(('SUBTITLE', 'Case insensitivity')))
+        self.assertEqual(sm.get('SUBTITLE', 1), Param(('Subtitle', 'Case insensitivity')))
 
     def test_multivalue(self):
         sm = self.get_simfile('multivalue.sm')
@@ -99,9 +100,6 @@ class TestSimfile(unittest.TestCase):
         sm.get_chart(index=0)
         sm.get_chart(index=8)
         sm.get_chart(description='J.Casarino')
-        self.assertRaises(MultiInstanceError, sm.get_chart, stepstype='dance-single')
-        self.assertRaises(MultiInstanceError, sm.get_chart, difficulty='Challenge')
-        self.assertRaises(MultiInstanceError, sm.get_chart, description='M.Emirzian')
         self.assertRaises(IndexError, sm.get_chart, index=9)
         self.assertRaises(IndexError, sm.get_chart, meter=9, index=2)
         self.assertRaises(KeyError, sm.get_chart, meter=100)
