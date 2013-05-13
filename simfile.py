@@ -346,19 +346,8 @@ class Simfile(object):
             return Param((param[0], Timing(param[1])))
         else:
             return Param(param)
-
-    def get(self, identifier):
-        """
-        Retrieve the value(s) denoted by (and including) the identifier as a
-        Parameter object.
-
-        Raises KeyError if there is no such identifier and MultiInstanceError
-        if multiple parameters begin with the identifier, or if it is known to
-        be a multi-instance identifier (i.e. NOTES).
-
-        Identifiers are case-insensitive, but their "true" case can be
-        determined by the observing the first element of the parameter.
-        """
+    
+    def _get_or_pop(self, identifier, pop):
         identifier = identifier.upper()
         if identifier == 'NOTES':
             raise MultiInstanceError('Use get_chart to retrieve charts')
@@ -372,16 +361,45 @@ class Simfile(object):
                     raise MultiInstanceError('Multiple instances of identifier')
                 found_param = param
         if found_param:
+            if pop:
+                self.params.remove(found_param)
             return found_param
         else:
             raise KeyError('No such identifier')
 
+    def get(self, identifier):
+        """
+        Get the value(s) denoted by (and including) the identifier as a
+        Parameter object.
+
+        Raises KeyError if there is no such identifier and MultiInstanceError
+        if multiple parameters begin with the identifier, or if it is known to
+        be a multi-instance identifier (i.e. NOTES).
+
+        Identifiers are case-insensitive, but their "true" case can be
+        determined by the observing the first element of the parameter.
+        """
+        return self._get_or_pop(identifier, False)
+
     def get_string(self, identifier):
-        """Retrieve the data following the identifier as a single string."""
-        return ":".join(self.get(identifier)[1:])
-    
+        """
+        Get the data following the identifier as a single string.
+        """
+        return ':'.join(self.get(identifier)[1:])
+
     def pop(self, identifier):
-        return
+        """
+        Get and remove the value(s) denoted by (and including) the identifier.
+        
+        pop() behaves identically to get(), except the parameter retrieved is
+        additionally removed from the simfile."""
+        return self._get_or_pop(identifier, True)
+
+    def pop_string(self, identifier):
+        """
+        Get and remove the data following the identifier as a single string.
+        """
+        return ':'.join(self.pop(identifier)[1:])
 
     def set(self, identifier, *values):
         """
