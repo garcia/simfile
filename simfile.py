@@ -10,7 +10,7 @@ import os
 __author__ = 'Grant Garcia'
 __copyright__ = 'Copyright 2013, Grant Garcia'
 __license__ = 'MIT'
-__version__ = '0.6.3'
+__version__ = '0.7.0'
 
 __all__ = ['Param', 'Notes', 'Chart', 'Timing', 'Simfile']
 
