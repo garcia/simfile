@@ -101,9 +101,8 @@ class Notes(object):
                 if any(a != '0' for a in line):
                     line_pos = (m + Fraction(l, measure_len)) * 4
                     self.notes.append([line_pos, line])
-
-    def get_region(self, start, end, inclusive=False, _pop=False):
-        """Gets the region at the given endpoints."""
+    
+    def _get_or_pop_region(self, start, end, inclusive, pop):
         if start > end:
             raise ValueError("start > end")
         # If we're actually retrieving a region, sort the notes first
@@ -112,9 +111,9 @@ class Notes(object):
         rtn = Notes()
         rtn.arrows = self.arrows
         # pop_region: iterate over a copy of the note data
-        if _pop:
+        if pop:
             notes = self.notes[:]
-            _pop_offset = 0
+            pop_offset = 0
         else:
             notes = self.notes
         # Search for and remove the existing rows if possible
@@ -123,9 +122,9 @@ class Notes(object):
                     (not inclusive and start <= row[0] < end)):
                 rtn.notes.append((row[0] - start, row[1]))
                 # pop_region: pop the row afterward
-                if _pop:
+                if pop:
                     self.notes.pop(r - _pop_offset)
-                    _pop_offset += 1
+                    pop_offset += 1
             # If we're retrieving a single row, this will trivially be true.
             # Otherwise, the data must be sorted, so when we've reached the end
             # we can be sure that there are no more rows to locate.
@@ -134,9 +133,13 @@ class Notes(object):
         # Return if we haven't already returned
         return rtn
 
+    def get_region(self, start, end, inclusive=False):
+        """Gets the region at the given endpoints."""
+        return self._get_or_pop_region(start, end, inclusive, pop=False)
+
     def pop_region(self, start, end, inclusive=False):
         """Gets and clears the region at the given endpoints."""
-        return self.get_region(start, end, inclusive, _pop=True)
+        return self._get_or_pop_region(start, end, inclusive, pop=True)
 
     def set_region(self, start, end, notes, inclusive=False):
         """Sets the region at the given endpoints to the given note data."""
@@ -376,6 +379,9 @@ class Simfile(object):
     def get_string(self, identifier):
         """Retrieve the data following the identifier as a single string."""
         return ":".join(self.get(identifier)[1:])
+    
+    def pop(self, identifier):
+        return
 
     def set(self, identifier, *values):
         """
