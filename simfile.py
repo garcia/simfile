@@ -3,6 +3,7 @@ Simfile parser for Python. This library currently only supports the .SM
 format; .SSC support is planned for the future.
 """
 import codecs
+from cStringIO import StringIO
 from decimal import Decimal
 from fractions import Fraction, gcd
 import os
@@ -289,10 +290,17 @@ class Simfile(object):
         
         state = NEXT_PARAM
         params = []
+        param = []
+        value = StringIO()
         i = 0
         for i, c in enumerate(string):
+            # This is the most frequent scenario, so it sits at the front of
+            # the loop for optimization purposes.
+            if state == READ_VALUE and c not in '#:;/':
+                value.write(c)
+                continue
             # Start of comment
-            if i + 1 < len(string) and c == '/' and string[i + 1] == '/':
+            if c == '/' and i + 1 < len(string) and string[i + 1] == '/':
                 old_state = state
                 state = COMMENT
             # Comment
@@ -304,28 +312,30 @@ class Simfile(object):
             if state == NEXT_PARAM:
                 if c == '#':
                     state = READ_VALUE
-                    param = ['']
             # Read value
             elif state == READ_VALUE:
                 # Fix missing semicolon
                 if c == '#' and string[i - 1] in '\r\n':
-                    param[-1] = param[-1].strip()
+                    param.append(value.getvalue().strip())
                     params.append(self._wrap(param))
-                    param = ['']
+                    param = []
+                    value = StringIO()
                 # Next value
                 elif c == ':':
-                    param[-1] = param[-1].strip()
-                    param.append('')
+                    param.append(value.getvalue().strip())
+                    value = StringIO()
                 # Next parameter
                 elif c == ';':
-                    param[-1] = param[-1].strip()
+                    param.append(value.getvalue().strip())
                     params.append(self._wrap(param))
+                    param = []
+                    value = StringIO()
                     state = NEXT_PARAM
-                # Add character to param
                 else:
-                    param[-1] += c
+                    value.write(c)
         # Add partial parameter (i.e. if the last one was missing a semicolon)
         if state == READ_VALUE:
+            param.append(value.getvalue().strip())
             params.append(self._wrap(param))
 
         self.params = params
