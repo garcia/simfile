@@ -2,4 +2,4 @@
 #SUBTITLE:Split // by a comment
 into two lines;
 #ART// Comment
-IST:Grant Garcia;
+IST:Grant/Garcia; // One slash isn't enough!
