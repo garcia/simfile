@@ -127,11 +127,11 @@ class Notes(object):
 
     def get_region(self, start, end, inclusive=False):
         """Gets the region at the given endpoints."""
-        return self._get_or_pop_region(start, end, inclusive, pop=False)
+        return self._get_or_pop_region(start, end, inclusive, False)
 
     def pop_region(self, start, end, inclusive=False):
         """Gets and clears the region at the given endpoints."""
-        return self._get_or_pop_region(start, end, inclusive, pop=True)
+        return self._get_or_pop_region(start, end, inclusive, True)
 
     def set_region(self, start, end, notes, inclusive=False):
         """Sets the region at the given endpoints to the given note data."""
@@ -360,6 +360,8 @@ class Simfile(object):
             if param[0].upper() != identifier:
                 continue
             if i == index:
+                if pop:
+                    self.params.remove(param)
                 return param
             i += 1
         if i:
