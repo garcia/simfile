@@ -35,18 +35,26 @@ def decimal_from_192nd(frac):
     """Convert a fraction to a decimal value quantized to 1/1000."""
     return Decimal(float(frac)).quantize(Decimal('0.001'))
 
+class SimfileList(list):
+    """
+    Subclass of 'list' that overrides __repr__.
+    """
+    def __repr__(self):
+        return '%s(%s)' % (self.__class__.__name__,
+                           super(SimfileList, self).__repr__())
 
-class Param(list):
+class Param(SimfileList):
     """
     Represents a parameter as a list of values.
 
-    This class is identical to `list` but includes a special __str__ method.
+    >>> p = Param(['A', 'B'])
+    >>> p
+    Param(['A', 'B'])
+    >>> print p
+    #A:B;
     """
     def __str__(self):
         return ('#' + ':'.join(str(elem) for elem in self) + ';')
-
-    def __repr__(self):
-        return '%s(%s)' % ('Param', super(Param, self).__repr__())
 
 
 class Notes(object):
@@ -234,11 +242,17 @@ class Chart(object):
         return self.__dict__ == other.__dict__
 
 
-class Timing(list):
+class Timing(SimfileList):
     """
     Encapsulate timing data as a list of [beat, value] lists.
 
     The sole constructor argument should be a string of BPM or stop values.
+    
+    >>> t = Timing('0.000=170.000')
+    >>> t
+    Timing([[Fraction(0, 1), Decimal('170.000')]])
+    >>> print t
+    0.000=170.000
     """
     def __init__(self, tdata):
         tlist = []
@@ -252,9 +266,6 @@ class Timing(list):
         return ',\n'.join(
             '='.join((str(decimal_from_192nd(t[0])), str(t[1])))
             for t in self)
-
-    def __repr__(self):
-        return '%s(%s)' % ('Timing', super(Timing, self).__repr__())
 
 
 class Simfile(object):
