@@ -162,10 +162,36 @@ class Notes(object):
     def get_row(self, pos):
         """Gets the row at the given position."""
         return self.get_region(start=pos, end=pos, inclusive=True)
+    
+    def get_row_string(self, pos):
+        """
+        Gets the row at the given position as a one-line string.
+        
+        This is not the same as str(notes.get_row()), which returns
+        a four-line measure padded with zeros.
+        """
+        row = self.get_row(pos).notes
+        if row:
+            return row[0][1]
+        else:
+            return '0' * self.arrows
 
     def pop_row(self, pos):
         """Gets and clears the row at the given position."""
         return self.pop_region(start=pos, end=pos, inclusive=True)
+    
+    def pop_row_string(self, pos):
+        """
+        Gets and clears the row at the given position as a one-line string.
+        
+        This is not the same as str(notes.pop_row()), which returns
+        a four-line measure padded with zeros.
+        """
+        row = self.pop_row(pos).notes
+        if row:
+            return row[0][1]
+        else:
+            return '0' * self.arrows
 
     def set_row(self, pos, notes):
         """Sets the row at the given position to the given note data."""
