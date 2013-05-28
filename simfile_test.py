@@ -6,11 +6,16 @@ import unittest
 from simfile import *
 
 class TestSimfile(unittest.TestCase):
-
-    def get_simfile(self, filename, cache={}):
-        if filename not in cache:
-            cache[filename] = Simfile(os.path.join('testdata', filename))
-        return cache[filename]
+    
+    cache = {}
+    
+    def get_simfile(self, filename, clone=False):
+        if filename not in self.cache:
+            self.cache[filename] = Simfile(os.path.join('testdata', filename))
+        if clone:
+            return Simfile(string=str(self.cache[filename]))
+        else:
+            return self.cache[filename]
     
     def test_empty(self):
         sm = self.get_simfile('empty.sm')
@@ -34,15 +39,15 @@ class TestSimfile(unittest.TestCase):
         sm = self.get_simfile('comments.sm')
         self.assertEqual(sm.get('TITLE'), Param(('TITLE', 'Comments')))
         self.assertEqual(sm.get('SUBTITLE'), Param(('SUBTITLE', 'Split into two lines')))
-        self.assertEqual(sm.get('ARTIST'), Param(('ARTIST', 'Grant Garcia')))
+        self.assertEqual(sm.get('ARTIST'), Param(('ARTIST', 'Grant/Garcia')))
         self.assertEqual(sm.get_string('TITLE'), 'Comments')
 
     def test_duplicates(self):
         sm = self.get_simfile('duplicates.sm')
         self.assertEqual(sm.get('TITLE'), Param(('TITLE', 'First duplicate field')))
         self.assertEqual(sm.get('TITLE', 1), Param(('TITLE', 'Second duplicate field')))
-        self.assertEqual(sm.get('SUBTITLE', 0), Param(('SUBTITLE', 'Case insensitivity')))
-        self.assertEqual(sm.get('SUBTITLE', 1), Param(('Subtitle', 'Case insensitivity')))
+        self.assertEqual(sm.get('SUBTITLE', 0), Param(('SUBTITLE', 'CASE INSENSITIVITY')))
+        self.assertEqual(sm.get('SUBTITLE', 1), Param(('Subtitle', 'case insensitivity')))
 
     def test_multivalue(self):
         sm = self.get_simfile('multivalue.sm')
@@ -135,6 +140,24 @@ class TestSimfile(unittest.TestCase):
         sm1 = self.get_simfile('Tribal Style.sm')
         sm2 = Simfile(string=str(sm1))
         self.assertEqual(sm1, sm2)
+    
+    # The following tests hinge on whether the above test passes or not.
+    # (Technically they don't -have- to be underneath it, but it feels cleaner
+    # this way.)
+    
+    def test_pop(self):
+        sm1 = self.get_simfile('Tribal Style.sm', clone=True)
+        title = sm1.pop('TITLE')
+        self.assertEqual(title, Param(('TITLE', 'Tribal Style')))
+        self.assertRaises(KeyError, sm1.pop, 'TITLE')
+        sm2 = self.get_simfile('duplicates.sm', clone=True)
+        self.assertEqual(sm2.pop('TITLE'), Param(('TITLE', 'First duplicate field')))
+        self.assertEqual(sm2.pop('TITLE'), Param(('TITLE', 'Second duplicate field')))
+        self.assertRaises(KeyError, sm2.pop, 'TITLE')
+        self.assertEqual(sm2.pop('SUBTITLE', index=1), Param(('Subtitle', 'case insensitivity')))
+        self.assertRaises(IndexError, sm2.pop, 'SUBTITLE', index=1)
+        self.assertEqual(sm2.pop('SUBTITLE'), Param(('SUBTITLE', 'CASE INSENSITIVITY')))
+        self.assertRaises(KeyError, sm2.pop, 'SUBTITLE')
 
 
 if __name__ == '__main__':

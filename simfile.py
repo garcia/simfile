@@ -3,6 +3,7 @@ Simfile parser for Python. This library currently only supports the .SM
 format; .SSC support is planned for the future.
 """
 import codecs
+from cStringIO import StringIO
 from decimal import Decimal
 from fractions import Fraction, gcd
 import os
@@ -10,9 +11,10 @@ import os
 __author__ = 'Grant Garcia'
 __copyright__ = 'Copyright 2013, Grant Garcia'
 __license__ = 'MIT'
-__version__ = '0.7.0'
+__version__ = '0.7.2'
 
-__all__ = ['Param', 'Notes', 'Chart', 'Timing', 'Simfile']
+__all__ = ['Param', 'Notes', 'Chart', 'Timing', 'Simfile',
+           'decimal_to_192nd', 'decimal_from_192nd']
 
 # Internal functions
 
@@ -34,18 +36,26 @@ def decimal_from_192nd(frac):
     """Convert a fraction to a decimal value quantized to 1/1000."""
     return Decimal(float(frac)).quantize(Decimal('0.001'))
 
+class SimfileList(list):
+    """
+    Subclass of 'list' that overrides __repr__.
+    """
+    def __repr__(self):
+        return '%s(%s)' % (self.__class__.__name__,
+                           super(SimfileList, self).__repr__())
 
-class Param(list):
+class Param(SimfileList):
     """
     Represents a parameter as a list of values.
 
-    This class is identical to `list` but includes a special __str__ method.
+    >>> p = Param(['A', 'B'])
+    >>> p
+    Param(['A', 'B'])
+    >>> print p
+    #A:B;
     """
     def __str__(self):
         return ('#' + ':'.join(str(elem) for elem in self) + ';')
-
-    def __repr__(self):
-        return '%s(%s)' % ('Param', super(Param, self).__repr__())
 
 
 class Notes(object):
@@ -126,11 +136,11 @@ class Notes(object):
 
     def get_region(self, start, end, inclusive=False):
         """Gets the region at the given endpoints."""
-        return self._get_or_pop_region(start, end, inclusive, pop=False)
+        return self._get_or_pop_region(start, end, inclusive, False)
 
     def pop_region(self, start, end, inclusive=False):
         """Gets and clears the region at the given endpoints."""
-        return self._get_or_pop_region(start, end, inclusive, pop=True)
+        return self._get_or_pop_region(start, end, inclusive, True)
 
     def set_region(self, start, end, notes, inclusive=False):
         """Sets the region at the given endpoints to the given note data."""
@@ -153,10 +163,36 @@ class Notes(object):
     def get_row(self, pos):
         """Gets the row at the given position."""
         return self.get_region(start=pos, end=pos, inclusive=True)
+    
+    def get_row_string(self, pos):
+        """
+        Gets the row at the given position as a one-line string.
+        
+        This is not the same as str(notes.get_row()), which returns
+        a four-line measure padded with zeros.
+        """
+        row = self.get_row(pos).notes
+        if row:
+            return row[0][1]
+        else:
+            return '0' * self.arrows
 
     def pop_row(self, pos):
         """Gets and clears the row at the given position."""
         return self.pop_region(start=pos, end=pos, inclusive=True)
+    
+    def pop_row_string(self, pos):
+        """
+        Gets and clears the row at the given position as a one-line string.
+        
+        This is not the same as str(notes.pop_row()), which returns
+        a four-line measure padded with zeros.
+        """
+        row = self.pop_row(pos).notes
+        if row:
+            return row[0][1]
+        else:
+            return '0' * self.arrows
 
     def set_row(self, pos, notes):
         """Sets the row at the given position to the given note data."""
@@ -171,6 +207,9 @@ class Notes(object):
             else:
                 rtn.append('0' * self.arrows)
         return rtn
+    
+    def __iter__(self):
+        return iter(self.notes)
 
     def __str__(self):
         self._sort()
@@ -233,11 +272,17 @@ class Chart(object):
         return self.__dict__ == other.__dict__
 
 
-class Timing(list):
+class Timing(SimfileList):
     """
     Encapsulate timing data as a list of [beat, value] lists.
 
     The sole constructor argument should be a string of BPM or stop values.
+    
+    >>> t = Timing('0.000=170.000')
+    >>> t
+    Timing([[Fraction(0, 1), Decimal('170.000')]])
+    >>> print t
+    0.000=170.000
     """
     def __init__(self, tdata):
         tlist = []
@@ -251,9 +296,6 @@ class Timing(list):
         return ',\n'.join(
             '='.join((str(decimal_from_192nd(t[0])), str(t[1])))
             for t in self)
-
-    def __repr__(self):
-        return '%s(%s)' % ('Timing', super(Timing, self).__repr__())
 
 
 class Simfile(object):
@@ -289,10 +331,17 @@ class Simfile(object):
         
         state = NEXT_PARAM
         params = []
+        param = []
+        value = StringIO()
         i = 0
         for i, c in enumerate(string):
+            # This is the most frequent scenario, so it sits at the front of
+            # the loop for optimization purposes.
+            if state == READ_VALUE and c not in '#:;/':
+                value.write(c)
+                continue
             # Start of comment
-            if i + 1 < len(string) and c == '/' and string[i + 1] == '/':
+            if c == '/' and i + 1 < len(string) and string[i + 1] == '/':
                 old_state = state
                 state = COMMENT
             # Comment
@@ -304,28 +353,30 @@ class Simfile(object):
             if state == NEXT_PARAM:
                 if c == '#':
                     state = READ_VALUE
-                    param = ['']
             # Read value
             elif state == READ_VALUE:
                 # Fix missing semicolon
                 if c == '#' and string[i - 1] in '\r\n':
-                    param[-1] = param[-1].strip()
+                    param.append(value.getvalue().strip())
                     params.append(self._wrap(param))
-                    param = ['']
+                    param = []
+                    value = StringIO()
                 # Next value
                 elif c == ':':
-                    param[-1] = param[-1].strip()
-                    param.append('')
+                    param.append(value.getvalue().strip())
+                    value = StringIO()
                 # Next parameter
                 elif c == ';':
-                    param[-1] = param[-1].strip()
+                    param.append(value.getvalue().strip())
                     params.append(self._wrap(param))
+                    param = []
+                    value = StringIO()
                     state = NEXT_PARAM
-                # Add character to param
                 else:
-                    param[-1] += c
+                    value.write(c)
         # Add partial parameter (i.e. if the last one was missing a semicolon)
         if state == READ_VALUE:
+            param.append(value.getvalue().strip())
             params.append(self._wrap(param))
 
         self.params = params
@@ -350,6 +401,8 @@ class Simfile(object):
             if param[0].upper() != identifier:
                 continue
             if i == index:
+                if pop:
+                    self.params.remove(param)
                 return param
             i += 1
         if i:
@@ -487,6 +540,9 @@ class Simfile(object):
             raise ValueError('no filename provided')
         with codecs.open(filename, 'w', 'utf-8') as output:
             output.write(unicode(self))
+    
+    def __iter__(self):
+        return iter(self.params)
 
     def __str__(self):
         return '\n'.join(unicode(param) for param in self.params)
