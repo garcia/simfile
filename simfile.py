@@ -496,7 +496,7 @@ class Simfile(object):
 
         `difficulty`, `stepstype`, `meter`, and/or `description` can all be
         specified to narrow a search for a specific chart. All of those
-        arguments are case-sensitive except for the int `meter`. The `index`th
+        arguments are case-sensitive except for the int `meter`. The `index`-th
         matching chart is returned, defaulting to the first.
 
         Raises ``KeyError`` if there are no matches whatsoever, or
