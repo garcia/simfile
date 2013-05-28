@@ -206,6 +206,9 @@ class Notes(object):
             else:
                 rtn.append('0' * self.arrows)
         return rtn
+    
+    def __iter__(self):
+        return iter(self.notes)
 
     def __str__(self):
         self._sort()
@@ -536,6 +539,9 @@ class Simfile(object):
             raise ValueError('no filename provided')
         with codecs.open(filename, 'w', 'utf-8') as output:
             output.write(unicode(self))
+    
+    def __iter__(self):
+        return iter(self.params)
 
     def __str__(self):
         return '\n'.join(unicode(param) for param in self.params)
