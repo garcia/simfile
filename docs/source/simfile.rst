@@ -1,6 +1,11 @@
 :mod:`simfile` --- Simfile parser library
 =========================================
 
+This module provides a parser for .SM simfiles. It can be used to programmatically manipulate simfiles, charts, and note data.
+
+Members
+-------
+
 .. automodule:: simfile
    :members:
 
