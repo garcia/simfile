@@ -7,7 +7,7 @@ import os
 __author__ = 'Grant Garcia'
 __copyright__ = 'Copyright 2013, Grant Garcia'
 __license__ = 'MIT'
-__version__ = '0.8.0'
+__version__ = '0.8.1'
 
 __all__ = ['decimal_to_192nd', 'decimal_from_192nd', 'Param', 'Notes', 'Chart',
            'Timing', 'Simfile']
@@ -496,7 +496,7 @@ class Simfile(object):
 
         `difficulty`, `stepstype`, `meter`, and/or `description` can all be
         specified to narrow a search for a specific chart. All of those
-        arguments are case-sensitive except for the int `meter`. The `index`th
+        arguments are case-sensitive except for the int `meter`. The `index`-th
         matching chart is returned, defaulting to the first.
 
         Raises ``KeyError`` if there are no matches whatsoever, or
