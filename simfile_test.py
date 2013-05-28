@@ -158,6 +158,13 @@ class TestSimfile(unittest.TestCase):
         self.assertRaises(IndexError, sm2.pop, 'SUBTITLE', index=1)
         self.assertEqual(sm2.pop('SUBTITLE'), Param(('SUBTITLE', 'CASE INSENSITIVITY')))
         self.assertRaises(KeyError, sm2.pop, 'SUBTITLE')
+    
+    def test_pop_chart(self):
+        sm = self.get_simfile('Tribal Style.sm', clone=True)
+        chart1 = sm.get_chart(index=0)
+        chart2 = sm.pop_chart(index=0)
+        self.assertEqual(chart1, chart2)
+        self.assertNotEqual(chart1, sm.get_chart(index=0))
 
 
 if __name__ == '__main__':

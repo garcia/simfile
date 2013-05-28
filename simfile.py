@@ -253,8 +253,8 @@ class Chart(object):
     The sole constructor argument should be a list of parameter values,
     usually returned by Simfile.get_raw_chart.
 
-    Exposes attributes 'stepstype', 'description', 'difficulty', and 'radar'
-    as strings, 'meter' as an integer, and 'notes' as a Notes object.
+    Exposes attributes `stepstype`, `description`, `difficulty`, and `radar`
+    as strings, `meter` as an integer, and `notes` as a `Notes` object.
     """
     def __init__(self, chart):
         if (chart[0] != 'NOTES'):
@@ -467,6 +467,27 @@ class Simfile(object):
         # Add the parameter if it was just created
         if param not in self.params:
             self.params.append(param)
+    
+    def _get_or_pop_chart(self, difficulty, stepstype, meter, description,
+                          index, pop):
+        i = 0
+        for chart in filter(lambda p: type(p) is Chart, self.params):
+            # Check parameters
+            if ((difficulty and not chart.difficulty == difficulty or
+                 stepstype and not chart.stepstype == stepstype or
+                 meter and not chart.meter == meter or
+                 description and not chart.description == description) and
+                 any((difficulty, stepstype, meter, description))):
+                continue
+            if i == index:
+                if pop:
+                    self.params.remove(chart)
+                return chart
+            i += 1
+        if i:
+            raise IndexError('Only %s charts fit the given parameters' % i)
+        else:
+            raise KeyError('No charts fit the given parameters')
 
     def get_chart(self, difficulty=None, stepstype=None, meter=None,
                   description=None, index=0):
@@ -482,29 +503,26 @@ class Simfile(object):
         ``IndexError`` if the given index was greater than the number of
         matching charts.
         """
-        i = 0
-        for chart in filter(lambda p: type(p) is Chart, self.params):
-            # Check parameters
-            if ((difficulty and not chart.difficulty == difficulty or
-                 stepstype and not chart.stepstype == stepstype or
-                 meter and not chart.meter == meter or
-                 description and not chart.description == description) and
-                 any((difficulty, stepstype, meter, description))):
-                continue
-            if i == index:
-                return chart
-            i += 1
-        if i:
-            raise IndexError('Only %s charts fit the given parameters' % i)
-        else:
-            raise KeyError('No charts fit the given parameters')
+        return self._get_or_pop_chart(difficulty, stepstype, meter,
+                                      description, index, False)
+    
+    def pop_chart(self, difficulty=None, stepstype=None, meter=None,
+                  description=None, index=0):
+        """
+        Get and remove the specified chart.
+        
+        pop_chart() behaves identically to get_chart(), except the chart
+        retrieved is additionally removed from the simfile.
+        """
+        return self._get_or_pop_chart(difficulty, stepstype, meter,
+                                      description, index, True)
 
     def set_chart(self, notes, difficulty=None, stepstype=None, meter=None,
                   description=None, index=0, radar=None):
         """
         Change a chart from or add a chart to the simfile.
 
-        The arguments are identical to those of get_chart, with the exception
+        The arguments are identical to those of `get_chart`, with the exception
         of the required `notes` argument at the beginning and the optional
         `radar` argument at the end. The `stepstype` argument is required when
         adding a new chart, but not when editing an existing chart (assuming
