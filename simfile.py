@@ -163,7 +163,7 @@ class Notes(object):
         # something goes awry halfway through it
         self._out_of_order = True
         # Insert the note data
-        for r, row in enumerate(notes.notes):
+        for row in notes.notes:
             if ((inclusive and row[0] <= end - start) or
                     (not inclusive and row[0] < end - start)):
                 self.notes.append((row[0] + start, row[1]))
@@ -344,7 +344,7 @@ class Simfile(object):
             # This is the most frequent scenario, so it sits at the front of
             # the loop for optimization purposes.
             if state == READ_VALUE and c not in '#:;/':
-                value.write(c)
+                value.write(c.encode('utf-8'))
                 continue
             # Start of comment
             if c == '/' and i + 1 < len(string) and string[i + 1] == '/':
@@ -363,17 +363,17 @@ class Simfile(object):
             elif state == READ_VALUE:
                 # Fix missing semicolon
                 if c == '#' and string[i - 1] in '\r\n':
-                    param.append(value.getvalue().strip())
+                    param.append(value.getvalue().strip().decode('utf-8'))
                     params.append(self._wrap(param))
                     param = []
                     value = StringIO()
                 # Next value
                 elif c == ':':
-                    param.append(value.getvalue().strip())
+                    param.append(value.getvalue().strip().decode('utf-8'))
                     value = StringIO()
                 # Next parameter
                 elif c == ';':
-                    param.append(value.getvalue().strip())
+                    param.append(value.getvalue().strip().decode('utf-8'))
                     params.append(self._wrap(param))
                     param = []
                     value = StringIO()
@@ -382,7 +382,7 @@ class Simfile(object):
                     value.write(c)
         # Add partial parameter (i.e. if the last one was missing a semicolon)
         if state == READ_VALUE:
-            param.append(value.getvalue().strip())
+            param.append(value.getvalue().strip().decode('utf-8'))
             params.append(self._wrap(param))
 
         self.params = params
