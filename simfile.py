@@ -57,7 +57,10 @@ class Param(SimfileList):
     #A:B;
     """
     def __str__(self):
-        return ('#' + ':'.join(str(elem) for elem in self) + ';')
+        return unicode(self).encode('utf-8')
+
+    def __unicode__(self):
+        return ('#' + ':'.join(unicode(elem) for elem in self) + ';')
 
 
 class Notes(object):
@@ -226,6 +229,9 @@ class Notes(object):
         return iter(self.notes)
 
     def __str__(self):
+        return unicode(self).encode('utf-8')
+
+    def __unicode__(self):
         self._sort()
         rtn = []
         measure = []
@@ -266,9 +272,12 @@ class Chart(object):
         self.meter = int(chart[4])
         self.radar = chart[5]
         self.notes = Notes(chart[6])
-
+    
     def __str__(self):
-        return ('#NOTES:\n'
+        return unicode(self).encode('utf-8')
+
+    def __unicode__(self):
+        return (u'#NOTES:\n'
                 '     {stepstype}:\n'
                 '     {description}:\n'
                 '     {difficulty}:\n'
@@ -307,8 +316,11 @@ class Timing(SimfileList):
         self.extend(tlist)
 
     def __str__(self):
+        return unicode(self).encode('utf-8')
+    
+    def __unicode__(self):
         return ',\n'.join(
-            '='.join((str(decimal_from_192nd(t[0])), str(t[1])))
+            '='.join((unicode(decimal_from_192nd(t[0])), unicode(t[1])))
             for t in self)
 
 
@@ -568,8 +580,11 @@ class Simfile(object):
     
     def __iter__(self):
         return iter(self.params)
-
+    
     def __str__(self):
+        return unicode(self).encode('utf-8')
+
+    def __unicode__(self):
         return '\n'.join(unicode(param) for param in self.params)
 
     def __eq__(self, other):

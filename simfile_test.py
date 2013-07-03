@@ -14,7 +14,7 @@ class TestSimfile(unittest.TestCase):
         if filename not in self.cache:
             self.cache[filename] = Simfile(os.path.join('testdata', filename))
         if clone:
-            return Simfile(string=str(self.cache[filename]))
+            return Simfile(string=unicode(self.cache[filename]))
         else:
             return self.cache[filename]
     
@@ -65,9 +65,9 @@ class TestSimfile(unittest.TestCase):
 
     def test_unicode(self):
         sm1 = self.get_simfile('unicode.sm')
-        sm2 = Simfile(string=str(sm1))
-        self.assertEqual(sm1.get('TITLE'), Param(('TITLE', '実例')));
-        self.assertEqual(sm1.get('ARTIST'), Param(('ARTIST', '楽士')));
+        sm2 = Simfile(string=unicode(sm1))
+        self.assertEqual(sm1.get('TITLE'), Param(('TITLE', u'実例')));
+        self.assertEqual(sm1.get('ARTIST'), Param(('ARTIST', u'楽士')));
         self.assertEqual(sm1.get('TITLE'), sm2.get('TITLE'));
 
 
@@ -118,18 +118,18 @@ class TestSimfile(unittest.TestCase):
         self.assertRaises(IndexError, sm.get_chart, meter=9, index=2)
         self.assertRaises(KeyError, sm.get_chart, meter=100)
 
-    def test_param_str(self):
+    def test_param_unicode(self):
         sm = self.get_simfile('Tribal Style.sm')
-        self.assertEqual(str(sm.get('TITLE')), '#TITLE:Tribal Style;')
-        self.assertEqual(str(sm.get('Artist')), '#ARTIST:KaW;')
+        self.assertEqual(unicode(sm.get('TITLE')), '#TITLE:Tribal Style;')
+        self.assertEqual(unicode(sm.get('Artist')), '#ARTIST:KaW;')
         bpms_param = sm.get('BPMS')
-        self.assertEqual(str(bpms_param), '#BPMS:0.000=140.000;')
-        self.assertEqual(str(bpms_param[1]), '0.000=140.000')
+        self.assertEqual(unicode(bpms_param), '#BPMS:0.000=140.000;')
+        self.assertEqual(unicode(bpms_param[1]), '0.000=140.000')
         stops_param = sm.get('STOPS')
-        self.assertEqual(str(stops_param), '#STOPS:;')
-        self.assertEqual(str(stops_param[1]), '')
+        self.assertEqual(unicode(stops_param), '#STOPS:;')
+        self.assertEqual(unicode(stops_param[1]), '')
 
-    def test_chart_str(self):
+    def test_chart_unicode(self):
         sm = self.get_simfile('Tribal Style.sm')
         chart_sn = sm.get_chart(meter=1)
         expected_str = (
@@ -140,14 +140,14 @@ class TestSimfile(unittest.TestCase):
             "     1:\n"
             "     0.104,0.115,0.045,0.000,0.000:\n"
             "0000\n0000\n0000\n0000\n,\n")
-        self.assertEqual(str(chart_sn)[:len(expected_str)], expected_str)
+        self.assertEqual(unicode(chart_sn)[:len(expected_str)], expected_str)
 
-    def test_simfile_str(self):
-        # Comprehensive test that ensures str(simfile) returns a perfect
+    def test_simfile_unicode(self):
+        # Comprehensive test that ensures unicode(simfile) returns a perfect
         # representation of the original simfile. This also serves as a "test"
-        # of Simfile.save(), which essentially writes str(self) to a file.
+        # of Simfile.save(), which essentially writes unicode(self) to a file.
         sm1 = self.get_simfile('Tribal Style.sm')
-        sm2 = Simfile(string=str(sm1))
+        sm2 = Simfile(string=unicode(sm1))
         self.assertEqual(sm1, sm2)
     
     # The following tests hinge on whether the above test passes or not.
