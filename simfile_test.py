@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 import decimal
 import os
 import unittest
@@ -61,6 +62,14 @@ class TestSimfile(unittest.TestCase):
         sm = self.get_simfile('no semicolon.sm')
         self.assertEqual(sm.get('TITLE'), Param(('TITLE', 'No semicolon')))
         self.assertEqual(sm.get('SUBTITLE'), Param(('SUBTITLE', 'EOF')))
+
+    def test_unicode(self):
+        sm1 = self.get_simfile('unicode.sm')
+        sm2 = Simfile(string=str(sm1))
+        self.assertEqual(sm1.get('TITLE'), Param(('TITLE', '実例')));
+        self.assertEqual(sm1.get('ARTIST'), Param(('ARTIST', '楽士')));
+        self.assertEqual(sm1.get('TITLE'), sm2.get('TITLE'));
+
 
     def test_types(self):
         sm = self.get_simfile('Tribal Style.sm')
