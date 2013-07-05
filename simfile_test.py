@@ -173,7 +173,10 @@ class TestSimfile(unittest.TestCase):
         chart1 = sm.get_chart(index=0)
         chart2 = sm.pop_chart(index=0)
         self.assertEqual(chart1, chart2)
-        self.assertNotEqual(chart1, sm.get_chart(index=0))
+        chart3 = sm.get_chart(index=0)
+        self.assertNotEqual(chart1, chart3)
+        chart4 = sm.pop_chart(index=1)
+        self.assertNotEqual(chart3, chart4)
     
     def test_set(self):
         sm = Simfile(string='')
