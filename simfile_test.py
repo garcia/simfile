@@ -174,6 +174,24 @@ class TestSimfile(unittest.TestCase):
         chart2 = sm.pop_chart(index=0)
         self.assertEqual(chart1, chart2)
         self.assertNotEqual(chart1, sm.get_chart(index=0))
+    
+    def test_set(self):
+        sm = Simfile(string='')
+        sm.set('PARAM1', 'Value');
+        self.assertEqual(sm.get('PARAM1'), Param(('PARAM1', 'Value')))
+        self.assertEqual(len([param for param in sm]), 1)
+        sm.set('PARAM2', 'Value 1', 'Value 2')
+        self.assertEqual(sm.get('PARAM2'), Param(('PARAM2', 'Value 1', 'Value 2')))
+        self.assertEqual(len([param for param in sm]), 2)
+        sm.set('PARAM1', 'Other value', '')
+        self.assertEqual(sm.get('PARAM1'), Param(('PARAM1', 'Other value', '')))
+        self.assertEqual(len([param for param in sm]), 2)
+        sm.set('PARAM2', '')
+        self.assertEqual(sm.get('PARAM2'), Param(('PARAM2', '')))
+        self.assertEqual(len([param for param in sm]), 2)
+        sm.set('PARAM3')
+        self.assertEqual(sm.get('PARAM3'), Param(('PARAM3',)))
+        self.assertEqual(len([param for param in sm]), 3)
 
 
 if __name__ == '__main__':
