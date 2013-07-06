@@ -268,7 +268,7 @@ class Chart(object):
             description=self.description,
         )
         if self.description:
-            rtn += '(%s)' % self.description
+            rtn += ' (%s)' % self.description
         return rtn + '>'
     
     def __str__(self):
