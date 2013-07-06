@@ -132,11 +132,12 @@ class Chart(object):
     """
     Encapsulates chart data.
 
-    The sole constructor argument should be a list of parameter values,
-    usually returned by Simfile.get_raw_chart.
-
-    Exposes attributes `stepstype`, `description`, `difficulty`, and `radar`
-    as strings, `meter` as an integer, and `notes` as a `Notes` object.
+    The sole constructor argument should be a list containing, in order,
+    the steps type (i.e. "dance-single"), description, difficulty (i.e.
+    "Challenge"), meter, radar values, and note data. These values are
+    accessible through the string attributes `stepstype`, `description`,
+    `difficulty`, and `radar`, the integer attribute `meter`, and the `Notes`
+    attribute `notes`.
     """
     def __init__(self, chart):
         self.stepstype = chart[0]
@@ -225,12 +226,6 @@ class Timing(SimfileList):
     Encapsulates timing data as a list of [beat, value] lists.
 
     The sole constructor argument should be a string of BPM or stop values.
-    
-    >>> t = Timing('0.000=170.000')
-    >>> t
-    Timing([[Fraction(0, 1), Decimal('170.000')]])
-    >>> print t
-    0.000=170.000
     """
     def __init__(self, tdata):
         tlist = []
@@ -311,6 +306,11 @@ class Simfile(OrderedDict):
             output.write(unicode(self))
     
     def __len__(self):
+        """
+        Get the combined length of the simfile's parameters and charts.
+        
+        A simfile containing neither parameters nor charts is considered empty.
+        """
         return super(Simfile, self).__len__() + len(self.charts)
     
     def __repr__(self):

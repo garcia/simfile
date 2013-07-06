@@ -108,22 +108,11 @@ In addition to the fields illustrated above, :class:`Chart` instances expose the
 
 .. doctest::
 
-    >>> notes = double_expert.notes
+    >>> notes = sim.charts.get(stepstype='dance-double', meter=11).notes
     >>> notes
     <simfile.simfile.Notes object at 0x...>
-    >>> notes.get_region(16, 20)
-    <simfile.simfile.Notes object at 0x...>
-    >>> print _
-    02002000
-    00000000
-    00100000
-    10000000
-    00100000
-    00000000
-    10000000
-    00100000
-    >>> notes.get_row_string(16)
-    u'02002000'
+    >>> notes[0]
+    [Fraction(16, 1), u'02002000']
 
 Examples
 --------
