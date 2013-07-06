@@ -17,13 +17,9 @@ __all__ = ['decimal_to_192nd', 'decimal_from_192nd', 'Notes', 'Chart',
            'Charts', 'Timing', 'Simfile']
 
 
-def _gcd(*numbers):
-    return reduce(gcd, numbers)
-
-
 def _lcm(*numbers):
     def lcm(a, b):
-        return (a * b) // _gcd(a, b)
+        return (a * b) // reduce(gcd, (a, b))
     return reduce(lcm, numbers, 1)
 
 
@@ -50,7 +46,7 @@ class SimfileList(list):
                            super(SimfileList, self).__repr__())
 
 
-class Notes(object):
+class Notes(list):
     """
     Encapsulates note data.
 
@@ -59,149 +55,39 @@ class Notes(object):
     for more details.
     """
     def _sort(self):
-        if self._out_of_order:
-            self.notes.sort(key=lambda x: x[0])
+        self.sort(key=lambda x: x[0])
 
     def _clean_line(self, line):
         # Remove unnecessary whitespace
         line = line.strip()
-        # Remove comments
-        if line.find('//') >= 0:
-            line = line.split('//', '1')[0]
         # The line may be empty; use filter(None, ...) to account for this
         return line
 
     def __init__(self, notedata=None):
-        self.notes = []
+        super(Notes, self).__init__()
         self.arrows = None
-        self._out_of_order = False
 
         if not notedata:
             return
 
         # Iterate over measures
-        # TODO: skip commas within comments
         for m, measuredata in enumerate(notedata.split(',')):
             measure_lines = filter(None,
                 (self._clean_line(line) for line in measuredata.splitlines()))
             measure_len = len(measure_lines)
             # Iterate over lines of measure
             for l, line in enumerate(measure_lines):
+                line_pos = (m + Fraction(l, measure_len)) * 4
                 # Set the number of arrows to the first line's length
                 if self.arrows is None:
                     self.arrows = len(line)
+                elif len(line) != self.arrows:
+                    raise ValueError("Inconsistent row length at beat %s" %
+                                     line_pos)
                 # Ignore blank lines (e.g. "0000")
                 if any(a != '0' for a in line):
-                    line_pos = (m + Fraction(l, measure_len)) * 4
-                    self.notes.append([line_pos, line])
+                    super(Notes, self).append([line_pos, line])
     
-    def _get_or_pop_region(self, start, end, inclusive, pop):
-        if start > end:
-            raise ValueError("start > end")
-        # If we're actually retrieving a region, sort the notes first
-        elif start < end:
-            self._sort()
-        rtn = Notes()
-        rtn.arrows = self.arrows
-        # pop_region: iterate over a copy of the note data
-        if pop:
-            notes = self.notes[:]
-            pop_offset = 0
-        else:
-            notes = self.notes
-        # Search for and remove the existing rows if possible
-        for r, row in enumerate(notes):
-            if ((inclusive and start <= row[0] <= end) or
-                    (not inclusive and start <= row[0] < end)):
-                rtn.notes.append((row[0] - start, row[1]))
-                # pop_region: pop the row afterward
-                if pop:
-                    self.notes.pop(r - _pop_offset)
-                    pop_offset += 1
-            # If we're retrieving a single row, this will trivially be true.
-            # Otherwise, the data must be sorted, so when we've reached the end
-            # we can be sure that there are no more rows to locate.
-            if row[0] >= end:
-                return rtn
-        # Return if we haven't already returned
-        return rtn
-
-    def get_region(self, start, end, inclusive=False):
-        """
-        Get the region at the given endpoints.
-        """
-        return self._get_or_pop_region(start, end, inclusive, False)
-
-    def pop_region(self, start, end, inclusive=False):
-        """
-        Get and clear the region at the given endpoints.
-        """
-        return self._get_or_pop_region(start, end, inclusive, True)
-
-    def set_region(self, start, end, notes, inclusive=False):
-        """
-        Set the region at the given endpoints to the given note data.
-        """
-        # If we're setting the region to itself, make a copy first, otherwise
-        # it might end up infinitely looping
-        if notes is self:
-            notes = Notes(unicode(notes))
-        # Start by clearing the region
-        # This doubles as a "start > end" check
-        self.pop_region(start, end, inclusive)
-        # Set _out_of_order now instead of after the for-loop, just in case
-        # something goes awry halfway through it
-        self._out_of_order = True
-        # Insert the note data
-        for row in notes.notes:
-            if ((inclusive and row[0] <= end - start) or
-                    (not inclusive and row[0] < end - start)):
-                self.notes.append((row[0] + start, row[1]))
-
-    def get_row(self, pos):
-        """
-        Get the row at the given position.
-        """
-        return self.get_region(start=pos, end=pos, inclusive=True)
-    
-    def get_row_string(self, pos):
-        """
-        Get the row at the given position as a one-line string.
-        
-        This is not the same as str(notes.get_row()), which returns
-        a four-line measure padded with zeros.
-        """
-        row = self.get_row(pos).notes
-        if row:
-            return row[0][1]
-        else:
-            return '0' * self.arrows
-
-    def pop_row(self, pos):
-        """
-        Get and clear the row at the given position.
-        """
-        return self.pop_region(start=pos, end=pos, inclusive=True)
-    
-    def pop_row_string(self, pos):
-        """
-        Get and clear the row at the given position as a one-line string.
-        
-        This is not the same as str(notes.pop_row()), which returns
-        a four-line measure padded with zeros.
-        """
-        row = self.pop_row(pos).notes
-        if row:
-            return row[0][1]
-        else:
-            return '0' * self.arrows
-
-    def set_row(self, pos, notes):
-        """
-        Set the row at the given position to the given note data.
-        """
-        return self.set_region(start=pos, end=pos, notes=notes, inclusive=True)
-
     def _measure_to_str(self, m, measure):
         rtn = []
         rows = _lcm(*[r[0].denominator for r in measure])
@@ -212,8 +98,9 @@ class Notes(object):
                 rtn.append('0' * self.arrows)
         return rtn
     
-    def __iter__(self):
-        return iter(self.notes)
+    def __repr__(self):
+        # Don't try to output the entire list
+        return object.__repr__(self)
 
     def __str__(self):
         return unicode(self).encode('utf-8')
@@ -223,9 +110,9 @@ class Notes(object):
         rtn = []
         measure = []
         m = 0
-        for row in self.notes:
+        for row in self:
             # Usually this will only get executed once at a time, but if
-            # there's an empty measure it'll execute twice or more
+            # there's an empty measure it'll execute twice or more.
             while row[0] / 4 >= m + 1:
                 rtn.extend(self._measure_to_str(m, measure))
                 rtn.append(',')
@@ -236,7 +123,9 @@ class Notes(object):
         return '\n'.join(rtn)
 
     def __eq__(self, other):
-        return self.__dict__ == other.__dict__
+        return (type(self) is type(other) and
+                super(Notes, self).__eq__(other) and
+                self.arrows == other.arrows)
 
 
 class Chart(object):
@@ -250,15 +139,12 @@ class Chart(object):
     as strings, `meter` as an integer, and `notes` as a `Notes` object.
     """
     def __init__(self, chart):
-        if (chart[0] != 'NOTES'):
-            raise ValueError('Not a chart')
-
-        self.stepstype = chart[1]
-        self.description = chart[2]
-        self.difficulty = chart[3]
-        self.meter = int(chart[4])
-        self.radar = chart[5]
-        self.notes = Notes(chart[6])
+        self.stepstype = chart[0]
+        self.description = chart[1]
+        self.difficulty = chart[2]
+        self.meter = int(chart[3])
+        self.radar = chart[4]
+        self.notes = Notes(chart[5])
     
     def __repr__(self):
         rtn = '<Chart: {type} {difficulty} {meter}'.format(
@@ -291,6 +177,7 @@ class Chart(object):
 
     def __eq__(self, other):
         return self.__dict__ == other.__dict__
+
 
 class Charts(SimfileList):
     """
@@ -398,7 +285,7 @@ class Simfile(OrderedDict):
                 param[0] = param[0].upper()
                 # Charts go into self.charts
                 if param[0] == 'NOTES':
-                    self.charts.append(Chart(param))
+                    self.charts.append(Chart(param[1:]))
                 # BPMS and STOPS go into self, but with extra methods
                 elif param[0] in ('BPMS', 'STOPS'):
                     self[param[0]] = Timing(param[1])
@@ -422,6 +309,9 @@ class Simfile(OrderedDict):
             raise ValueError('no filename provided')
         with codecs.open(filename, 'w', 'utf-8') as output:
             output.write(unicode(self))
+    
+    def __len__(self):
+        return super(Simfile, self).__len__() + len(self.charts)
     
     def __repr__(self):
         rtn = '<Simfile'
