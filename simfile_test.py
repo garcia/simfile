@@ -6,7 +6,7 @@ import decimal
 import os
 import unittest
 
-from simfile import Simfile, Timing
+from simfile import *
 from simfile.msd import MSDParser
 
 def get_parser(filename):
@@ -15,6 +15,7 @@ def get_parser(filename):
 
 def get_simfile(filename):
     return Simfile(os.path.join('testdata', filename))
+
 
 class TestMSD(unittest.TestCase):
     
@@ -60,6 +61,7 @@ class TestMSD(unittest.TestCase):
         self.assertEqual(parser.next(), ['ARTIST', '楽士'])
         self.assertRaises(StopIteration, parser.next)
 
+
 class TestSimfile(unittest.TestCase):
     
     def test_init(self):
@@ -74,29 +76,25 @@ class TestSimfile(unittest.TestCase):
         with codecs.open('testdata/Tribal Style.sm', 'r', 'utf-8') as sm2:
             self.assertEqual(sm1, Simfile(string=sm2.read()))
     
-    def test_types(self):
-        sm = get_simfile('Tribal Style.sm')
-        self.assertIsInstance(sm['TITLE'], basestring)
-        self.assertIsInstance(sm['BPMS'], Timing)
-        self.assertIsInstance(sm['STOPS'], Timing)
-        #chart = sm.get_chart(index=0)
-        #self.assertIsInstance(chart, Chart)
-        #self.assertIsInstance(chart.notes, Notes)
-    
     def test_getitem(self):
         sm = get_simfile('Tribal Style.sm')
         # Basic parameter retrieval
         self.assertIn('TITLE', sm)
-        self.assertEqual(sm['TITLE'], 'Tribal Style')
+        title = sm['TITLE']
+        self.assertIsInstance(title, basestring)
+        self.assertEqual(title, 'Tribal Style')
         # Charts should reside in sm.charts
         self.assertNotIn('NOTES', sm)
         # Despite being 'weird', BPMS and STOPS are still items of sm
         self.assertIn('BPMS', sm)
         self.assertIn('STOPS', sm)
-
+    
+    # TODO: split these into their own classes, flesh out unit tests more
+    
     def test_bpms(self):
         sm = get_simfile('Robotix.sm')
         bpms = sm['BPMS']
+        self.assertIsInstance(bpms, Timing)
         self.assertEqual(bpms[0][0], 0)
         self.assertEqual(bpms[0][1], 150)
         self.assertEqual(bpms[1][0], 144)
@@ -105,31 +103,49 @@ class TestSimfile(unittest.TestCase):
     def test_stops(self):
         sm = get_simfile('Robotix.sm')
         stops = sm['STOPS']
+        self.assertIsInstance(stops, Timing)
         self.assertEqual(stops[0][0], 313)
         self.assertEqual(stops[0][1], decimal.Decimal('0.400'))
         self.assertEqual(stops[1][0], 344)
         self.assertEqual(stops[1][1], decimal.Decimal('0.400'))
 
-    """def test_get_chart(self):
-        sm = get_simfile('Tribal Style.sm')
-        chart_sx = sm.get_chart(stepstype='dance-single', difficulty='Challenge')
-        self.assertEqual(chart_sx.meter, 10)
-        chart_sh = sm.get_chart(stepstype='dance-single', difficulty='Hard')
-        self.assertEqual(chart_sh.meter, 9)
-        chart_dx = sm.get_chart(stepstype='dance-double', difficulty='Challenge')
-        self.assertEqual(chart_dx.meter, 11)
-        chart_dh = sm.get_chart(stepstype='dance-double', difficulty='Hard')
-        self.assertEqual(chart_dh.meter, 9)
-        sm.get_chart(difficulty='Beginner')
-        sm.get_chart(meter=11)
-        sm.get_chart(index=0)
-        sm.get_chart(index=8)
-        sm.get_chart(description='J.Casarino')
-        self.assertRaises(IndexError, sm.get_chart, index=9)
-        self.assertRaises(IndexError, sm.get_chart, meter=9, index=2)
-        self.assertRaises(KeyError, sm.get_chart, meter=100)
 
-    def test_param_unicode(self):
+class TestCharts(unittest.TestCase):
+    
+    def test_get(self):
+        charts = get_simfile('Tribal Style.sm').charts
+        chart_sx = charts.get(stepstype='dance-single', difficulty='Challenge')
+        self.assertIsInstance(chart_sx, Chart)
+        self.assertEqual(chart_sx.meter, 10)
+        chart_sh = charts.get(stepstype='dance-single', difficulty='Hard')
+        self.assertEqual(chart_sh.meter, 9)
+        chart_dx = charts.get(stepstype='dance-double', difficulty='Challenge')
+        self.assertEqual(chart_dx.meter, 11)
+        chart_dh = charts.get(stepstype='dance-double', difficulty='Hard')
+        self.assertEqual(chart_dh.meter, 9)
+        self.assertRaises(LookupError, sm.get_chart, difficulty='Beginner')
+        self.assertRaises(LookupError, sm.get_chart, meter=11)
+        self.assertRaises(LookupError, sm.get_chart, description='J.Casarino')
+    
+    def test_filter(self):
+        charts = get_simfile('Tribal Style.sm').charts
+        chart_sx = charts.get(stepstype='dance-single', difficulty='Challenge')
+        chart_dx = charts.get(stepstype='dance-double', difficulty='Challenge')
+        self.assertEqual(
+            charts.filter(stepstype='dance-single', difficulty='Challenge'),
+            Charts([chart_sx])
+        )
+        self.assertEqual(
+            charts.filter(difficulty='Challenge'),
+            Charts([chart_sx, chart_dx])
+        )
+        self.assertEqual(len(charts.filter(stepstype='dance-single')), 5)
+        self.assertEqual(len(charts.filter(stepstype='dance-double')), 4)
+        # A filter that matches nothing should return an empty Charts object,
+        # as opposed to raising an error
+        self.assertFalse(charts.filter(stepstype='dance-triple'))
+
+    """def test_param_unicode(self):
         sm = get_simfile('Tribal Style.sm')
         self.assertEqual(unicode(sm.get('TITLE')), '#TITLE:Tribal Style;')
         self.assertEqual(unicode(sm.get('Artist')), '#ARTIST:KaW;')
