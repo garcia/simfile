@@ -62,6 +62,57 @@ class TestMSD(unittest.TestCase):
         self.assertRaises(StopIteration, parser.next)
 
 
+class TestCharts(unittest.TestCase):
+    
+    def test_get(self):
+        charts = get_simfile('Tribal Style.sm').charts
+        chart_sx = charts.get(stepstype='dance-single', difficulty='Challenge')
+        self.assertIsInstance(chart_sx, Chart)
+        self.assertEqual(chart_sx.meter, 10)
+        chart_sh = charts.get(stepstype='dance-single', difficulty='Hard')
+        self.assertEqual(chart_sh.meter, 9)
+        chart_dx = charts.get(stepstype='dance-double', difficulty='Challenge')
+        self.assertEqual(chart_dx.meter, 11)
+        chart_dh = charts.get(stepstype='dance-double', difficulty='Hard')
+        self.assertEqual(chart_dh.meter, 9)
+        chart_sn = charts.get(difficulty='Beginner')
+        self.assertEqual(chart_sn.meter, 1)
+        self.assertEqual(charts.get(description='J.Casarino'), chart_dx)
+        self.assertRaises(LookupError, charts.get, difficulty='Easy')
+        self.assertRaises(LookupError, charts.get, meter=9)
+        self.assertRaises(LookupError, charts.get, description='K. Ward')
+    
+    def test_filter(self):
+        charts = get_simfile('Tribal Style.sm').charts
+        chart_sx = charts.get(stepstype='dance-single', difficulty='Challenge')
+        chart_dx = charts.get(stepstype='dance-double', difficulty='Challenge')
+        self.assertEqual(
+            charts.filter(stepstype='dance-single', difficulty='Challenge'),
+            Charts([chart_sx])
+        )
+        self.assertEqual(
+            charts.filter(difficulty='Challenge'),
+            Charts([chart_sx, chart_dx])
+        )
+        self.assertEqual(len(charts.filter(stepstype='dance-single')), 5)
+        self.assertEqual(len(charts.filter(stepstype='dance-double')), 4)
+        # A filter that matches nothing should return an empty Charts object,
+        # as opposed to raising an error
+        self.assertFalse(charts.filter(stepstype='dance-triple'))
+
+    def test_unicode(self):
+        chart_sn = get_simfile('Tribal Style.sm').charts.get(meter=1)
+        expected_str = (
+            "#NOTES:\n"
+            "     dance-single:\n"
+            "     K. Ward:\n"
+            "     Beginner:\n"
+            "     1:\n"
+            "     0.104,0.115,0.045,0.000,0.000:\n"
+            "0000\n0000\n0000\n0000\n,\n")
+        self.assertEqual(unicode(chart_sn)[:len(expected_str)], expected_str)
+
+
 class TestSimfile(unittest.TestCase):
     
     def test_init(self):
@@ -133,122 +184,6 @@ class TestSimfile(unittest.TestCase):
         self.assertEqual(stops[0][1], decimal.Decimal('0.400'))
         self.assertEqual(stops[1][0], 344)
         self.assertEqual(stops[1][1], decimal.Decimal('0.400'))
-
-
-class TestCharts(unittest.TestCase):
-    
-    def test_get(self):
-        charts = get_simfile('Tribal Style.sm').charts
-        chart_sx = charts.get(stepstype='dance-single', difficulty='Challenge')
-        self.assertIsInstance(chart_sx, Chart)
-        self.assertEqual(chart_sx.meter, 10)
-        chart_sh = charts.get(stepstype='dance-single', difficulty='Hard')
-        self.assertEqual(chart_sh.meter, 9)
-        chart_dx = charts.get(stepstype='dance-double', difficulty='Challenge')
-        self.assertEqual(chart_dx.meter, 11)
-        chart_dh = charts.get(stepstype='dance-double', difficulty='Hard')
-        self.assertEqual(chart_dh.meter, 9)
-        chart_sn = charts.get(difficulty='Beginner')
-        self.assertEqual(chart_sn.meter, 1)
-        self.assertEqual(charts.get(description='J.Casarino'), chart_dx)
-        self.assertRaises(LookupError, charts.get, difficulty='Easy')
-        self.assertRaises(LookupError, charts.get, meter=9)
-        self.assertRaises(LookupError, charts.get, description='K. Ward')
-    
-    def test_filter(self):
-        charts = get_simfile('Tribal Style.sm').charts
-        chart_sx = charts.get(stepstype='dance-single', difficulty='Challenge')
-        chart_dx = charts.get(stepstype='dance-double', difficulty='Challenge')
-        self.assertEqual(
-            charts.filter(stepstype='dance-single', difficulty='Challenge'),
-            Charts([chart_sx])
-        )
-        self.assertEqual(
-            charts.filter(difficulty='Challenge'),
-            Charts([chart_sx, chart_dx])
-        )
-        self.assertEqual(len(charts.filter(stepstype='dance-single')), 5)
-        self.assertEqual(len(charts.filter(stepstype='dance-double')), 4)
-        # A filter that matches nothing should return an empty Charts object,
-        # as opposed to raising an error
-        self.assertFalse(charts.filter(stepstype='dance-triple'))
-
-    def test_unicode(self):
-        chart_sn = get_simfile('Tribal Style.sm').charts.get(meter=1)
-        expected_str = (
-            "#NOTES:\n"
-            "     dance-single:\n"
-            "     K. Ward:\n"
-            "     Beginner:\n"
-            "     1:\n"
-            "     0.104,0.115,0.045,0.000,0.000:\n"
-            "0000\n0000\n0000\n0000\n,\n")
-        self.assertEqual(unicode(chart_sn)[:len(expected_str)], expected_str)
-
-    """def test_param_unicode(self):
-        sm = get_simfile('Tribal Style.sm')
-        self.assertEqual(unicode(sm.get('TITLE')), '#TITLE:Tribal Style;')
-        self.assertEqual(unicode(sm.get('Artist')), '#ARTIST:KaW;')
-        bpms_param = sm.get('BPMS')
-        self.assertEqual(unicode(bpms_param), '#BPMS:0.000=140.000;')
-        self.assertEqual(unicode(bpms_param[1]), '0.000=140.000')
-        stops_param = sm.get('STOPS')
-        self.assertEqual(unicode(stops_param), '#STOPS:;')
-        self.assertEqual(unicode(stops_param[1]), '')
-
-    def test_simfile_unicode(self):
-        # Comprehensive test that ensures unicode(simfile) returns a perfect
-        # representation of the original simfile. This also serves as a "test"
-        # of Simfile.save(), which essentially writes unicode(self) to a file.
-        sm1 = get_simfile('Tribal Style.sm')
-        sm2 = Simfile(string=unicode(sm1))
-        self.assertEqual(sm1, sm2)
-    
-    # The following tests hinge on whether the above test passes or not.
-    # (Technically they don't -have- to be underneath it, but it feels cleaner
-    # this way.)
-    
-    def test_pop(self):
-        sm1 = get_simfile('Tribal Style.sm', clone=True)
-        title = sm1.pop('TITLE')
-        self.assertEqual(title, Param(('TITLE', 'Tribal Style')))
-        self.assertRaises(KeyError, sm1.pop, 'TITLE')
-        sm2 = get_simfile('duplicates.sm', clone=True)
-        self.assertEqual(sm2.pop('TITLE'), Param(('TITLE', 'First duplicate field')))
-        self.assertEqual(sm2.pop('TITLE'), Param(('TITLE', 'Second duplicate field')))
-        self.assertRaises(KeyError, sm2.pop, 'TITLE')
-        self.assertEqual(sm2.pop('SUBTITLE', index=1), Param(('Subtitle', 'case insensitivity')))
-        self.assertRaises(IndexError, sm2.pop, 'SUBTITLE', index=1)
-        self.assertEqual(sm2.pop('SUBTITLE'), Param(('SUBTITLE', 'CASE INSENSITIVITY')))
-        self.assertRaises(KeyError, sm2.pop, 'SUBTITLE')
-    
-    def test_pop_chart(self):
-        sm = get_simfile('Tribal Style.sm', clone=True)
-        chart1 = sm.get_chart(index=0)
-        chart2 = sm.pop_chart(index=0)
-        self.assertEqual(chart1, chart2)
-        chart3 = sm.get_chart(index=0)
-        self.assertNotEqual(chart1, chart3)
-        chart4 = sm.pop_chart(index=1)
-        self.assertNotEqual(chart3, chart4)
-    
-    def test_set(self):
-        sm = Simfile(string='')
-        sm.set('PARAM1', 'Value');
-        self.assertEqual(sm.get('PARAM1'), Param(('PARAM1', 'Value')))
-        self.assertEqual(len([param for param in sm]), 1)
-        sm.set('PARAM2', 'Value 1', 'Value 2')
-        self.assertEqual(sm.get('PARAM2'), Param(('PARAM2', 'Value 1', 'Value 2')))
-        self.assertEqual(len([param for param in sm]), 2)
-        sm.set('PARAM1', 'Other value', '')
-        self.assertEqual(sm.get('PARAM1'), Param(('PARAM1', 'Other value', '')))
-        self.assertEqual(len([param for param in sm]), 2)
-        sm.set('PARAM2', '')
-        self.assertEqual(sm.get('PARAM2'), Param(('PARAM2', '')))
-        self.assertEqual(len([param for param in sm]), 2)
-        sm.set('PARAM3')
-        self.assertEqual(sm.get('PARAM3'), Param(('PARAM3',)))
-        self.assertEqual(len([param for param in sm]), 3)"""
 
 
 if __name__ == '__main__':

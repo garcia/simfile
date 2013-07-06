@@ -1,16 +1,20 @@
+from __future__ import with_statement, unicode_literals
 import codecs
 from cStringIO import StringIO
 from decimal import Decimal
 from fractions import Fraction, gcd
 import os
+try:
+    from collections import OrderedDict
+except ImportError:
+    # For Python versions < 2.7
+    from ordereddict import OrderedDict
 
-__author__ = 'Grant Garcia'
-__copyright__ = 'Copyright 2013, Grant Garcia'
-__license__ = 'MIT'
-__version__ = '0.8.1'
+from msd import MSDParser
 
-__all__ = ['decimal_to_192nd', 'decimal_from_192nd', 'Param', 'Notes', 'Chart',
-           'Timing', 'Simfile']
+
+__all__ = ['decimal_to_192nd', 'decimal_from_192nd', 'Notes', 'Chart',
+           'Charts', 'Timing', 'Simfile']
 
 
 def _gcd(*numbers):
@@ -44,23 +48,6 @@ class SimfileList(list):
     def __repr__(self):
         return '%s(%s)' % (self.__class__.__name__,
                            super(SimfileList, self).__repr__())
-
-
-class Param(SimfileList):
-    """
-    Represents a parameter as a list of values.
-
-    >>> p = Param(['A', 'B'])
-    >>> p
-    Param(['A', 'B'])
-    >>> print p
-    #A:B;
-    """
-    def __str__(self):
-        return unicode(self).encode('utf-8')
-
-    def __unicode__(self):
-        return ('#' + ':'.join(unicode(elem) for elem in self) + ';')
 
 
 class Notes(object):
@@ -273,17 +260,28 @@ class Chart(object):
         self.radar = chart[5]
         self.notes = Notes(chart[6])
     
+    def __repr__(self):
+        rtn = '<Chart: {type} {difficulty} {meter}'.format(
+            type=self.stepstype,
+            difficulty=self.difficulty,
+            meter=self.meter,
+            description=self.description,
+        )
+        if self.description:
+            rtn += '(%s)' % self.description
+        return rtn + '>'
+    
     def __str__(self):
         return unicode(self).encode('utf-8')
 
     def __unicode__(self):
-        return (u'#NOTES:\n'
+        return ('#NOTES:\n'
                 '     {stepstype}:\n'
                 '     {description}:\n'
                 '     {difficulty}:\n'
                 '     {meter}:\n'
                 '     {radar}:\n'
-                '{notes}\n;\n').format(
+                '{notes}\n;').format(
                     stepstype=self.stepstype,
                     description=self.description,
                     difficulty=self.difficulty,
@@ -293,6 +291,46 @@ class Chart(object):
 
     def __eq__(self, other):
         return self.__dict__ == other.__dict__
+
+class Charts(SimfileList):
+    """
+    Encapsulates a list of charts and provides methods for retrieving them.
+    """
+    def filter(self, difficulty=None, stepstype=None, meter=None,
+               description=None):
+        """
+        Filter charts and return matches in a new Charts object.
+        
+        If no charts match the given criteria, returns an empty Charts object.
+        """
+        result = Charts()
+        for chart in self:
+            if (difficulty and not chart.difficulty == difficulty or
+                    stepstype and not chart.stepstype == stepstype or
+                    meter and not chart.meter == meter or
+                    description and not chart.description == description):
+                continue
+            result.append(chart)
+        return result
+    
+    def get(self, **kwargs):
+        """
+        Get a chart that matches the given criteria.
+        
+        Arguments are identical to those of `filter`. Raises ``LookupError``
+        if any number of charts other than one are matched.
+        """
+        result = self.filter(**kwargs)
+        if len(result) != 1:
+            raise LookupError('%s charts match the given parameters' %
+                len(result))
+        return result[0]
+    
+    def __str__(self):
+        return unicode(self).encode('utf-8')
+    
+    def __unicode__(self):
+        return '\n\n'.join(unicode(chart) for chart in self)
 
 
 class Timing(SimfileList):
@@ -324,7 +362,7 @@ class Timing(SimfileList):
             for t in self)
 
 
-class Simfile(object):
+class Simfile(OrderedDict):
     """
     Encapsulates simfile data.
 
@@ -332,237 +370,44 @@ class Simfile(object):
     If the `string` argument is given, parses the string instead. Passing both
     arguments is disallowed.
     """
-    DEFAULT_RADAR = u'0,0,0,0,0'
+    DEFAULT_RADAR = '0,0,0,0,0'
     filename = dirname = None
+    charts = None
 
     def __init__(self, filename=None, string=None):
-        if filename:
-            if string:
-                raise TypeError('Simfile() takes either a filename '
-                                'or a string -- not both')
-            self.filename = filename
-            self.dirname = os.path.dirname(filename)
-            with codecs.open(filename, encoding='utf-8') as simfile_h:
-                string = simfile_h.read()
-        
-        NEXT_PARAM, READ_VALUE, COMMENT = xrange(3)
-        
-        state = NEXT_PARAM
-        params = []
-        param = []
-        value = StringIO()
-        i = 0
-        for i, c in enumerate(string):
-            # This is the most frequent scenario, so it sits at the front of
-            # the loop for optimization purposes.
-            if state == READ_VALUE and c not in '#:;/':
-                value.write(c.encode('utf-8'))
-                continue
-            # Start of comment
-            if c == '/' and i + 1 < len(string) and string[i + 1] == '/':
-                old_state = state
-                state = COMMENT
-            # Comment
-            elif state == COMMENT:
-                if c in '\r\n':
-                    state = old_state
-                    continue
-            # Start of parameter
-            if state == NEXT_PARAM:
-                if c == '#':
-                    state = READ_VALUE
-            # Read value
-            elif state == READ_VALUE:
-                # Fix missing semicolon
-                if c == '#' and string[i - 1] in '\r\n':
-                    param.append(value.getvalue().strip().decode('utf-8'))
-                    params.append(self._wrap(param))
-                    param = []
-                    value = StringIO()
-                # Next value
-                elif c == ':':
-                    param.append(value.getvalue().strip().decode('utf-8'))
-                    value = StringIO()
-                # Next parameter
-                elif c == ';':
-                    param.append(value.getvalue().strip().decode('utf-8'))
-                    params.append(self._wrap(param))
-                    param = []
-                    value = StringIO()
-                    state = NEXT_PARAM
+        super(Simfile, self).__init__()
+        self.charts = Charts()
+        msddata = None
+        try:
+            if filename:
+                if string:
+                    raise TypeError('Simfile() takes either a filename '
+                                    'or a string -- not both')
+                self.filename = filename
+                self.dirname = os.path.dirname(filename)
+                msddata = codecs.open(filename, 'r', 'utf-8')
+            elif string:
+                msddata = string
+            else:
+                # Empty simfile
+                return
+            # Iterate over simfile's parameters
+            for param in MSDParser(msddata):
+                # StepMania treats the first identifier case-insensitively,
+                # and leading identifiers are traditionally all-caps
+                param[0] = param[0].upper()
+                # Charts go into self.charts
+                if param[0] == 'NOTES':
+                    self.charts.append(Chart(param))
+                # BPMS and STOPS go into self, but with extra methods
+                elif param[0] in ('BPMS', 'STOPS'):
+                    self[param[0]] = Timing(param[1])
+                # Everything else goes into self
                 else:
-                    value.write(c)
-        # Add partial parameter (i.e. if the last one was missing a semicolon)
-        if state == READ_VALUE:
-            param.append(value.getvalue().strip().decode('utf-8'))
-            params.append(self._wrap(param))
-
-        self.params = params
-
-    def _wrap(self, param):
-        if param[0].upper() == 'NOTES':
-            return Chart(param)
-        elif param[0].upper() in ('BPMS', 'STOPS'):
-            return Param((param[0], Timing(param[1])))
-        else:
-            return Param(param)
-    
-    def _get_or_pop(self, identifier, index, pop):
-        identifier = identifier.upper()
-        if identifier == 'NOTES':
-            raise ValueError('Use get_chart to retrieve charts')
-        # TODO: the following code is partly redundant with get_chart(); maybe
-        # find a way to combine the two?
-        i = 0
-        for param in filter(lambda p: type(p) is Param, self.params):
-            # Check identifier
-            if param[0].upper() != identifier:
-                continue
-            if i == index:
-                if pop:
-                    self.params.remove(param)
-                return param
-            i += 1
-        if i:
-            raise IndexError('Only %s parameters fit the given identifier' % i)
-        else:
-            raise KeyError('No such identifier')
-
-    def get(self, identifier, index=0):
-        """
-        Get the value(s) denoted by (and including) the identifier as a
-        Parameter object.
-        
-        Identifiers are case-insensitive, but their "true" case can be
-        determined by the observing the first element of the parameter. The
-        index-th matching parameter is returned, defaulting to the first.
-        
-        Raises KeyError if there are no matches whatsoever, or IndexError if
-        the given index was greater than the number of matching parameters.
-        """
-        return self._get_or_pop(identifier, index, False)
-
-    def get_string(self, identifier, index=0):
-        """
-        Get the data following the identifier as a single string.
-        """
-        return ':'.join(self.get(identifier, index)[1:])
-
-    def pop(self, identifier, index=0):
-        """
-        Get and remove the value(s) denoted by (and including) the identifier.
-
-        pop() behaves identically to get(), except the parameter retrieved is
-        additionally removed from the simfile."""
-        return self._get_or_pop(identifier, index, True)
-
-    def pop_string(self, identifier, index=0):
-        """
-        Get and remove the data following the identifier as a single string.
-        """
-        return ':'.join(self.pop(identifier, index)[1:])
-
-    def set(self, identifier, *values):
-        """
-        Set the identifier to the given value(s).
-
-        This creates a new parameter if the identifier cannot be found in the
-        simfile. Otherwise, it modifies the existing parameter.
-        """
-        # If the identifier already exists, edit it
-        try:
-            param = self.get(identifier)
-        # Otherwise, create a new one
-        except KeyError:
-            param = Param([unicode(identifier), u''])
-        param[1:] = [unicode(v) for v in values]
-        # Add the parameter if it was just created
-        if param not in self.params:
-            self.params.append(param)
-    
-    def _get_or_pop_chart(self, difficulty, stepstype, meter, description,
-                          index, pop):
-        i = 0
-        for chart in filter(lambda p: type(p) is Chart, self.params):
-            # Check parameters
-            if ((difficulty and not chart.difficulty == difficulty or
-                 stepstype and not chart.stepstype == stepstype or
-                 meter and not chart.meter == meter or
-                 description and not chart.description == description) and
-                 any((difficulty, stepstype, meter, description))):
-                continue
-            if i == index:
-                if pop:
-                    self.params.remove(chart)
-                return chart
-            i += 1
-        if i:
-            raise IndexError('Only %s charts fit the given parameters' % i)
-        else:
-            raise KeyError('No charts fit the given parameters')
-
-    def get_chart(self, difficulty=None, stepstype=None, meter=None,
-                  description=None, index=0):
-        """
-        Get the specified chart.
-
-        `difficulty`, `stepstype`, `meter`, and/or `description` can all be
-        specified to narrow a search for a specific chart. All of those
-        arguments are case-sensitive except for the int `meter`. The `index`-th
-        matching chart is returned, defaulting to the first.
-
-        Raises ``KeyError`` if there are no matches whatsoever, or
-        ``IndexError`` if the given index was greater than the number of
-        matching charts.
-        """
-        return self._get_or_pop_chart(difficulty, stepstype, meter,
-                                      description, index, False)
-    
-    def pop_chart(self, difficulty=None, stepstype=None, meter=None,
-                  description=None, index=0):
-        """
-        Get and remove the specified chart.
-        
-        pop_chart() behaves identically to get_chart(), except the chart
-        retrieved is additionally removed from the simfile.
-        """
-        return self._get_or_pop_chart(difficulty, stepstype, meter,
-                                      description, index, True)
-
-    def set_chart(self, notes, difficulty=None, stepstype=None, meter=None,
-                  description=None, index=0, radar=None):
-        """
-        Change a chart from or add a chart to the simfile.
-
-        The arguments are identical to those of `get_chart`, with the exception
-        of the required `notes` argument at the beginning and the optional
-        `radar` argument at the end. The `stepstype` argument is required when
-        adding a new chart, but not when editing an existing chart (assuming
-        the other given parameters are sufficiently unambiguous). The `radar`
-        argument is only used when adding a chart.
-
-        Raises any error that `get_chart` might raise, except for
-        ``KeyError``. Also raises ``ValueError`` if `stepstype` is not
-        specified when adding a new chart.
-        """
-        try:
-            chart = self.get_chart(difficulty, stepstype, meter, description,
-                                   index)
-        except KeyError:
-            if not stepstype:
-                raise ValueError('Must specify stepstype when adding a chart')
-            chart = Chart([
-                'NOTES',
-                stepstype,
-                unicode(description) if description else u'synctools',
-                unicode(difficulty) if difficulty else u'Edit',
-                unicode(meter) if meter else u'1',
-                unicode(radar) if radar else self.DEFAULT_RADAR,
-                u''
-            ])
-        chart.notes = notes
-        if chart not in self.params:
-            self.params.append(chart)
+                    self[param[0]] = ':'.join(param[1:])
+        finally:
+            if msddata and hasattr(msddata, 'close'):
+                msddata.close()
 
     def save(self, filename=None):
         """
@@ -578,20 +423,33 @@ class Simfile(object):
         with codecs.open(filename, 'w', 'utf-8') as output:
             output.write(unicode(self))
     
-    def __iter__(self):
-        return iter(self.params)
+    def __repr__(self):
+        rtn = '<Simfile'
+        if 'TITLE' in self and self['TITLE']:
+            rtn += ': ' + self['TITLE']
+            if 'SUBTITLE' in self and self['SUBTITLE']:
+                subtitle = self['SUBTITLE']
+                if subtitle[0] not in '[({' or subtitle[-1] not in '])}':
+                    subtitle = '(%s)' % subtitle
+                rtn += ' ' + subtitle
+        return rtn + '>'
     
     def __str__(self):
         return unicode(self).encode('utf-8')
 
     def __unicode__(self):
-        return '\n'.join(unicode(param) for param in self.params)
+        return '\n\n'.join((
+            '\n'.join('#%s:%s;' % param for param in self.items()),
+            unicode(self.charts)
+        ))
 
     def __eq__(self, other):
         """
         Test for equality with another Simfile.
 
-        This only compares the parameter lists, not the filenames or any other
-        Simfile object attributes.
+        This only compares the parameters and charts, not the filenames or any
+        other Simfile object attributes.
         """
-        return type(self) is type(other) and self.params == other.params
+        return (type(self) is type(other) and
+                super(Simfile, self).__eq__(other) and
+                self.charts == other.charts)
