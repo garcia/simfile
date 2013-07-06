@@ -123,9 +123,12 @@ class TestCharts(unittest.TestCase):
         self.assertEqual(chart_dx.meter, 11)
         chart_dh = charts.get(stepstype='dance-double', difficulty='Hard')
         self.assertEqual(chart_dh.meter, 9)
-        self.assertRaises(LookupError, sm.get_chart, difficulty='Beginner')
-        self.assertRaises(LookupError, sm.get_chart, meter=11)
-        self.assertRaises(LookupError, sm.get_chart, description='J.Casarino')
+        chart_sn = charts.get(difficulty='Beginner')
+        self.assertEqual(chart_sn.meter, 1)
+        self.assertEqual(charts.get(description='J.Casarino'), chart_dx)
+        self.assertRaises(LookupError, charts.get, difficulty='Easy')
+        self.assertRaises(LookupError, charts.get, meter=9)
+        self.assertRaises(LookupError, charts.get, description='K. Ward')
     
     def test_filter(self):
         charts = get_simfile('Tribal Style.sm').charts
