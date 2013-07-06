@@ -7,54 +7,54 @@ Members
 -------
 
 .. automodule:: simfile
-   :members:
+   :members: decimal_to_192nd, decimal_from_192nd, Notes, Chart, Charts, Timing, Simfile
 
 Basic usage
 -----------
+
+.. testsetup:: *
+    
+    from os import chdir
+    from simfile import *
+    chdir("..")
+    sim = Simfile("testdata/Tribal Style.sm")
 
 There are two ways to import simfiles. To import a simfile from the filesystem, pass the filename as the sole argument to the constructor::
 
     >>> from simfile import *
     >>> sim = Simfile("testdata/Tribal Style.sm")
     >>> sim
-    <simfile.Simfile object at 0x...>
+    <Simfile: Tribal Style>
 
-Alternatively, a string containing simfile data can be imported using the named argument `string`::
+Alternatively, a string containing simfile data can be imported using the named argument `string`:
 
-    >>> with open("testdata/Tribal Style.sm", "r") as infile:
+.. doctest::
+
+    >>> import codecs
+    >>> with codecs.open("testdata/Tribal Style.sm", "r", encoding="utf-8") as infile:
     ...     sim = Simfile(string=infile.read())
     ...
     >>> sim
-    <simfile.Simfile object at 0x...>
+    <Simfile: Tribal Style>
 
-There are two methods for retrieving the simfile's parameters: :meth:`~Simfile.get` and :meth:`~Simfile.get_string`. The former returns a :class:`Param` containing the entire parameter; the latter returns a string containing only the values following the identifier::
+The simfile's parameters are accessible through a :py:class:`dict`-like interface:
 
-    >>> sim.get('title')
-    Param(['TITLE', 'Tribal Style'])
-    >>> print _
-    #TITLE:Tribal Style;
-    >>> sim.get_string('title')
-    'Tribal Style'
+.. doctest::
 
-Since :class:`Param` instances are mutable, they can be used to manipulate the simfile's contents, although this is not the only means of doing so. The methods :meth:`~Simfile.pop`, :meth:`~Simfile.pop_string`, and :meth:`~Simfile.set` can also be used to modify :class:`Simfile` instances::
+    >>> sim['TITLE']
+    u'Tribal Style'
+    >>> sim['TITLE'] = 'Robotix'
+    >>> sim['TITLE']
+    'Robotix'
+    >>> del sim['TITLE']
+    >>> 'TITLE' in sim
+    False
 
-    >>> title = sim.get('title')
-    >>> title[1] = 'Robotix'
-    >>> print sim.get('title')
-    #TITLE:Robotix;
-    >>> sim.set('title', 'Soapy Bubble')
-    >>> print sim.pop('title')
-    #TITLE:Soapy Bubble;
-    >>> try:
-    ...     sim.get('title')
-    >>> except KeyError:
-            print 'KeyError'
-    ...
-    KeyError
+Timing data (specifically, the BPMS and STOPS parameters) can be manipulated through the methods exposed by the :class:`Timing` class:
 
-Timing data (specifically, the BPMS and STOPS parameters) can be accessed and manipulated through the methods exposed by the :class:`Timing` class::
+.. doctest::
 
-    >>> bpms = sim.get('bpms')[1]
+    >>> bpms = sim['BPMS']
     >>> bpms
     Timing([[Fraction(0, 1), Decimal('140.000')]])
     >>> print bpms
@@ -63,38 +63,56 @@ Timing data (specifically, the BPMS and STOPS parameters) can be accessed and ma
     >>> print bpms
     0.000=180.000
 
-Charts are retrieved and manipulated using the :meth:`~Simfile.get_chart` and :meth:`~Simfile.set_chart` methods, respectively::
+Charts are stored in a :class:`Charts` object that provides two methods for retrieving charts. The first is :meth:`get`, which gets a single chart or raises :py:exc:`LookupError` if zero or two or more charts match:
 
-    >>> single_novice = sim.get_chart(difficulty='Beginner')
+.. doctest::
+
+    >>> single_novice = sim.charts.get(difficulty='Beginner')
     >>> single_novice
-    <simfile.Chart object at 0x...>
+    <Chart: dance-single Beginner 1 (K. Ward)>
     >>> single_novice.meter
     1
-    >>> double_expert = sim.get_chart(difficulty='Challenge', stepstype='dance-double')
+    >>> double_expert = sim.charts.get(difficulty='Challenge', stepstype='dance-double')
     >>> double_expert.meter
     11
-    >>> first_chart = sim.get_chart(index=0)
+    >>> sim.charts.get(meter=100)
+    Traceback (most recent call last):
+      File "<stdin>", line 1, in ?
+    LookupError: 0 charts match the given parameters
+    >>> sim.charts.get(stepstype='dance-single')
+    Traceback (most recent call last):
+      File "<stdin>", line 1, in ?
+    LookupError: 5 charts match the given parameters
+
+The second method is :meth:`filter`, which gets any and all charts that match the query:
+
+.. doctest::
+
+    >>> expert_charts = sim.charts.filter(difficulty='Challenge')
+    >>> expert_charts
+    Charts([<Chart: dance-single Challenge 10 (C. Foy)>, <Chart: dance-double Challenge 11 (J.Casarino)>])
+    >>> expert_charts[1] == double_expert
+    True
+    >>> len(sim.charts.filter(meter=100))
+    0
+
+Charts can also be retrieved directly from the :class:`Charts` object:
+
+.. doctest::
+
+    >>> first_chart = sim.charts[0]
     >>> print first_chart.stepstype, first_chart.difficulty, first_chart.meter
     dance-single Hard 9
 
-:class:`Chart` instances also expose the note data as a :class:`Notes` object::
+In addition to the fields illustrated above, :class:`Chart` instances expose their note data as a :class:`Notes` object:
 
-    >>> notes = double_expert.notes
+.. doctest::
+
+    >>> notes = sim.charts.get(stepstype='dance-double', meter=11).notes
     >>> notes
-    <simfile.Notes object at 0x...>
-    >>> notes.get_region(16, 20)
-    <simfile.Notes object at 0x...>
-    >>> print _
-    02002000
-    00000000
-    00100000
-    10000000
-    00100000
-    00000000
-    10000000
-    00100000
-    >>> notes.get_row_string(16)
-    '02002000'
+    <simfile.simfile.Notes object at 0x...>
+    >>> notes[0]
+    [Fraction(16, 1), u'02002000']
 
 Examples
 --------
@@ -103,7 +121,7 @@ Set the description of every chart::
 
     from simfile import *
     sim = Simfile("testdata/Tribal Style.sm")
-    for chart in filter(lambda p: type(p) is Chart, sim):
+    for chart in sim.charts:
         chart.description = 'Edited'
     sim.save()
 
@@ -111,9 +129,8 @@ If there is a transliterated title available, set it as the primary title::
 
     from simfile import *
     sim = Simfile("testdata/Tribal Style.sm")
-    try:
-        translit = sim.get_string('TITLETRANSLIT')
-        sim.set('TITLE', translit)
+    if 'TITLETRANSLIT' in sim:
+        sim['TITLE'] = sim['TITLETRANSLIT']
     except KeyError:
         pass
     sim.save()

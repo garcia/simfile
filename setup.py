@@ -9,5 +9,5 @@ setup(name='simfile',
       version=__version__,
       description='A simfile library for Python',
       author='Grant Garcia',
-      py_modules=['simfile'],
+      packages=['simfile'],
 )
