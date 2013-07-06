@@ -89,6 +89,31 @@ class TestSimfile(unittest.TestCase):
         self.assertIn('BPMS', sm)
         self.assertIn('STOPS', sm)
     
+    def test_equality(self):
+        # Equality is indirectly tested in other methods, but it has subtleties
+        # that need to be specifically tested that don't fit in elsewhere.
+        sm = Simfile(string='#TITLE:A;#SUBTITLE:B;')
+        sm_whitespace = Simfile(string=' #  TITLE   :\tA\n;#\r\rSUBTITLE:\nB\t\n;')
+        sm_order = Simfile(string='#SUBTITLE:B;#TITLE:A;')
+        sm_identifier_case = Simfile(string='#Title:A;#subtitle:B;')
+        sm_value_case = Simfile(string='#TITLE:a;#SUBTITLE:b;')
+        sm_chart = Simfile(string='#TITLE:A;#SUBTITLE:B;#NOTES::::1::;')
+        sm_chart_2 = Simfile(string='#TITLE:A;#SUBTITLE:B;#NOTES::::2::;')
+        self.assertEqual(sm, sm_whitespace)
+        self.assertNotEqual(sm, sm_order)
+        self.assertEqual(sm, sm_identifier_case)
+        self.assertNotEqual(sm, sm_value_case)
+        self.assertNotEqual(sm, sm_chart)
+        self.assertNotEqual(sm_chart, sm_chart_2)
+    
+    def test_unicode(self):
+        # Comprehensive test that ensures unicode(simfile) returns a perfect
+        # representation of the original simfile. This also serves as a "test"
+        # of Simfile.save(), which essentially writes unicode(self) to a file.
+        sm1 = get_simfile('Tribal Style.sm')
+        sm2 = Simfile(string=unicode(sm1))
+        self.assertEqual(sm1, sm2)
+    
     # TODO: split these into their own classes, flesh out unit tests more
     
     def test_bpms(self):
@@ -148,6 +173,18 @@ class TestCharts(unittest.TestCase):
         # as opposed to raising an error
         self.assertFalse(charts.filter(stepstype='dance-triple'))
 
+    def test_unicode(self):
+        chart_sn = get_simfile('Tribal Style.sm').charts.get(meter=1)
+        expected_str = (
+            "#NOTES:\n"
+            "     dance-single:\n"
+            "     K. Ward:\n"
+            "     Beginner:\n"
+            "     1:\n"
+            "     0.104,0.115,0.045,0.000,0.000:\n"
+            "0000\n0000\n0000\n0000\n,\n")
+        self.assertEqual(unicode(chart_sn)[:len(expected_str)], expected_str)
+
     """def test_param_unicode(self):
         sm = get_simfile('Tribal Style.sm')
         self.assertEqual(unicode(sm.get('TITLE')), '#TITLE:Tribal Style;')
@@ -158,19 +195,6 @@ class TestCharts(unittest.TestCase):
         stops_param = sm.get('STOPS')
         self.assertEqual(unicode(stops_param), '#STOPS:;')
         self.assertEqual(unicode(stops_param[1]), '')
-
-    def test_chart_unicode(self):
-        sm = get_simfile('Tribal Style.sm')
-        chart_sn = sm.get_chart(meter=1)
-        expected_str = (
-            "#NOTES:\n"
-            "     dance-single:\n"
-            "     K. Ward:\n"
-            "     Beginner:\n"
-            "     1:\n"
-            "     0.104,0.115,0.045,0.000,0.000:\n"
-            "0000\n0000\n0000\n0000\n,\n")
-        self.assertEqual(unicode(chart_sn)[:len(expected_str)], expected_str)
 
     def test_simfile_unicode(self):
         # Comprehensive test that ensures unicode(simfile) returns a perfect
