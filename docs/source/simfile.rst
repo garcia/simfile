@@ -16,13 +16,13 @@ Basic usage
     
     from os import chdir
     from simfile import *
-    chdir("..")
-    sim = Simfile("testdata/Tribal Style.sm")
+    chdir('..')
+    sim = Simfile('testdata/Tribal Style.sm')
 
 There are two ways to import simfiles. To import a simfile from the filesystem, pass the filename as the sole argument to the constructor::
 
     >>> from simfile import *
-    >>> sim = Simfile("testdata/Tribal Style.sm")
+    >>> sim = Simfile('testdata/Tribal Style.sm')
     >>> sim
     <Simfile: Tribal Style>
 
@@ -31,7 +31,7 @@ Alternatively, a string containing simfile data can be imported using the named 
 .. doctest::
 
     >>> import codecs
-    >>> with codecs.open("testdata/Tribal Style.sm", "r", encoding="utf-8") as infile:
+    >>> with codecs.open('testdata/Tribal Style.sm', 'r', encoding='utf-8') as infile:
     ...     sim = Simfile(string=infile.read())
     ...
     >>> sim
@@ -117,20 +117,39 @@ In addition to the fields illustrated above, :class:`Chart` instances expose the
 Examples
 --------
 
-Set the description of every chart::
+Copy transliterated fields to their non-transliterated counterparts::
 
     from simfile import *
-    sim = Simfile("testdata/Tribal Style.sm")
-    for chart in sim.charts:
-        chart.description = 'Edited'
+    sim = Simfile('My Simfile.sm')
+    for field in ('TITLE', 'SUBTITLE', 'ARTIST'):
+        fieldtranslit = field + 'TRANSLIT'
+        if fieldtranslit in sim and sim[fieldtranslit]:
+            sim[field] = sim[fieldtranslit]
     sim.save()
 
-If there is a transliterated title available, set it as the primary title::
+Change the offset of a simfile written for StepMania 5 to match In The Groove's global offset::
 
+    from decimal import Decimal
     from simfile import *
-    sim = Simfile("testdata/Tribal Style.sm")
-    if 'TITLETRANSLIT' in sim:
-        sim['TITLE'] = sim['TITLETRANSLIT']
-    except KeyError:
-        pass
+    sim = Simfile('My Simfile.sm')
+    sim['OFFSET'] += Decimal('0.009')
     sim.save()
+
+Set the description of every chart in a pack folder::
+
+    import glob
+    from simfile import *
+    for sim_path in glob.iglob('Pack/*/*.sm'):
+        sim = Simfile(sim_path)
+        for chart in sim.charts:
+            chart.description = 'Edited'
+        sim.save()
+
+Remove all charts that aren't dance-single Challenge charts from a pack folder::
+
+    import glob
+    from simfile import *
+    for sim_path in glob.iglob('Pack/*/*.sm'):
+        sim = Simfile(sim_path)
+        sim.charts = sim.charts.filter(stepstype='dance-single', difficulty='Challenge')
+        sim.save()
