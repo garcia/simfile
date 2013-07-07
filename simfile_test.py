@@ -72,7 +72,7 @@ class TestMSD(unittest.TestCase):
 
 class TestNotes(unittest.TestCase):
     
-    def test_init(self):
+    def test_init_str(self):
         notes = Notes('0000')
         # bool(notes) should be False because it contains no arrows
         self.assertFalse(notes)
@@ -98,6 +98,17 @@ class TestNotes(unittest.TestCase):
         self.assertEqual(notes[9], [Fraction(13, 2), '1101'])
         self.assertEqual(notes[10], [Fraction(14, 2), '1110'])
         self.assertEqual(notes[11], [Fraction(15, 2), '1111'])
+    
+    def test_init_notes(self):
+        notes1 = Notes('1010\n0101\n1001\n0110,')
+        notes2 = Notes(notes1)
+        self.assertEqual(notes1, notes2)
+        self.assertIsNot(notes1, notes2)
+        self.assertIsNot(notes1[0], notes2[0])
+        notes1[0][0] = Fraction(1, 2)
+        self.assertNotEqual(notes1[0][0], notes2[0][0])
+        notes1[0][1] = '1111'
+        self.assertNotEqual(notes1[0][1], notes2[0][1])
     
     def test_repr(self):
         self.assertTrue(repr(Notes('0000')).startswith(
@@ -136,8 +147,10 @@ class TestNotes(unittest.TestCase):
 
 class TestChart(unittest.TestCase):
     
-    def test_init(self):
-        chart = get_default_chart()
+    def test_init_seq(self):
+        chart = Chart([
+            'dance-single', 'Grant Garcia', 'Challenge', '12', '?', '0000'
+        ])
         self.assertEqual(chart.stepstype, 'dance-single')
         self.assertEqual(chart.description, 'Grant Garcia')
         self.assertEqual(chart.difficulty, 'Challenge')
@@ -145,6 +158,32 @@ class TestChart(unittest.TestCase):
         self.assertEqual(chart.meter, 12)
         self.assertEqual(chart.radar, '?')
         self.assertIsInstance(chart.notes, Notes)
+    
+    def test_init_map(self):
+        chart = Chart({
+            'stepstype': 'dance-single',
+            'description': 'Grant Garcia',
+            'difficulty': 'Challenge',
+            'meter': '12',
+            'radar': '?',
+            'notes': '0000',
+        })
+        self.assertEqual(chart.stepstype, 'dance-single')
+        self.assertEqual(chart.description, 'Grant Garcia')
+        self.assertEqual(chart.difficulty, 'Challenge')
+        self.assertEqual(chart.meter, 12)
+        self.assertEqual(chart.radar, '?')
+        self.assertIsInstance(chart.notes, Notes)
+    
+    def test_init_chart(self):
+        chart1 = get_default_chart()
+        chart2 = Chart(chart1)
+        self.assertEqual(chart1, chart2)
+        self.assertIsNot(chart1, chart2)
+        self.assertEqual(chart1.notes, chart2.notes)
+        self.assertIsNot(chart1.notes, chart2.notes)
+        chart1.meter = 100
+        self.assertNotEqual(chart1.meter, chart2.meter)
     
     def test_repr(self):
         chart = get_default_chart()
@@ -254,30 +293,40 @@ class TestTiming(unittest.TestCase):
 
 class TestSimfile(unittest.TestCase):
     
-    def test_init(self):
-        # Can't pass both filename and string
-        self.assertRaises(TypeError, Simfile, filename='.', string='.')
+    def test_init_filename(self):
+        sm = Simfile('testdata/Tribal Style.sm')
+        self.assertEqual(sm.filename, 'testdata/Tribal Style.sm')
+    
+    def test_init_file(self):
         sm1 = Simfile('testdata/Tribal Style.sm')
-        # Named 'filename' argument can be positionally inferred
-        self.assertEqual(sm1, Simfile(filename='testdata/Tribal Style.sm'))
+        # File object input should be identical to filename input
+        with codecs.open('testdata/Tribal Style.sm', 'r', 'utf-8') as sm_file:
+            sm2 = Simfile(sm_file)
+        self.assertEqual(sm1, sm2)
+        # File object input should retrieve filename
+        self.assertEqual(sm1.filename, sm2.filename)
+    
+    def test_from_string(self):
+        sm1 = Simfile('testdata/Tribal Style.sm')
+        # String input should be identical to filename input
+        with codecs.open('testdata/Tribal Style.sm', 'r', 'utf-8') as sm_file:
+            sm2 = Simfile.from_string(sm_file.read())
+        self.assertEqual(sm1, sm2)
+        # String input should have no filename
+        self.assertFalse(sm2.filename)
         # No arguments is equivalent to an empty string argument
-        self.assertEqual(Simfile(), Simfile(string=''))
-        # Reading file from string should return identical results
-        # (except for the filename and dirname properties, but those aren't
-        # considered when comparing simfiles)
-        with codecs.open('testdata/Tribal Style.sm', 'r', 'utf-8') as sm2:
-            self.assertEqual(sm1, Simfile(string=sm2.read()))
+        self.assertEqual(Simfile(), Simfile.from_string(''))
     
     def test_eq(self):
         # Equality is indirectly tested in other methods, but it has subtleties
         # that need to be specifically tested that don't fit in elsewhere.
-        sm = Simfile(string='#TITLE:A;#SUBTITLE:B;')
-        sm_whitespace = Simfile(string=' #  TITLE   :\tA\n;#\r\rSUBTITLE:\nB\t\n;')
-        sm_order = Simfile(string='#SUBTITLE:B;#TITLE:A;')
-        sm_identifier_case = Simfile(string='#Title:A;#subtitle:B;')
-        sm_value_case = Simfile(string='#TITLE:a;#SUBTITLE:b;')
-        sm_chart = Simfile(string='#TITLE:A;#SUBTITLE:B;#NOTES::::1::;')
-        sm_chart_2 = Simfile(string='#TITLE:A;#SUBTITLE:B;#NOTES::::2::;')
+        sm = Simfile.from_string('#TITLE:A;#SUBTITLE:B;')
+        sm_whitespace = Simfile.from_string(' #  TITLE   :\tA\n;#\r\rSUBTITLE:\nB\t\n;')
+        sm_order = Simfile.from_string('#SUBTITLE:B;#TITLE:A;')
+        sm_identifier_case = Simfile.from_string('#Title:A;#subtitle:B;')
+        sm_value_case = Simfile.from_string('#TITLE:a;#SUBTITLE:b;')
+        sm_chart = Simfile.from_string('#TITLE:A;#SUBTITLE:B;#NOTES::::1::;')
+        sm_chart_2 = Simfile.from_string('#TITLE:A;#SUBTITLE:B;#NOTES::::2::;')
         self.assertEqual(sm, sm_whitespace)
         self.assertNotEqual(sm, sm_order)
         self.assertEqual(sm, sm_identifier_case)
@@ -296,7 +345,7 @@ class TestSimfile(unittest.TestCase):
             sm3 = get_simfile('save.sm', {})
             self.assertEqual(sm2, sm3)
             self.assertNotEqual(sm1, sm3)
-            sm4 = Simfile(string='#TITLE:String;')
+            sm4 = Simfile.from_string('#TITLE:String;')
             self.assertRaises(ValueError, sm4.save)
         finally:
             os.remove('testdata/save.sm')
@@ -315,10 +364,10 @@ class TestSimfile(unittest.TestCase):
         self.assertIn('STOPS', sm)
     
     def test_len(self):
-        sm_empty = Simfile(string='')
-        sm_only_params = Simfile(string='#TITLE:Title;')
-        sm_only_charts = Simfile(string=unicode(get_default_chart()))
-        sm_both = Simfile(string=unicode(sm_only_params) + unicode(sm_only_charts))
+        sm_empty = Simfile.from_string('')
+        sm_only_params = Simfile.from_string('#TITLE:Title;')
+        sm_only_charts = Simfile.from_string(unicode(get_default_chart()))
+        sm_both = Simfile.from_string(unicode(sm_only_params) + unicode(sm_only_charts))
         self.assertEqual(len(sm_empty), 0)
         self.assertEqual(len(sm_only_params), 1)
         self.assertEqual(len(sm_only_charts), 1)
@@ -354,7 +403,7 @@ class TestSimfile(unittest.TestCase):
         # representation of the original simfile. This also serves as a "test"
         # of Simfile.save(), which essentially writes unicode(self) to a file.
         sm1 = get_simfile('Tribal Style.sm')
-        sm2 = Simfile(string=unicode(sm1))
+        sm2 = Simfile.from_string(unicode(sm1))
         self.assertEqual(sm1, sm2)
 
 
