@@ -1,6 +1,7 @@
 from __future__ import with_statement, unicode_literals
 import codecs
 import collections
+import copy
 from cStringIO import StringIO
 from decimal import Decimal
 from fractions import Fraction, gcd
@@ -66,12 +67,16 @@ class Notes(list):
         # The line may be empty; use filter(None, ...) to account for this
         return line
 
-    def __init__(self, notedata=None):
+    def __init__(self, notedata):
         super(Notes, self).__init__()
         self.arrows = None
-
-        if not notedata:
+        
+        if isinstance(notedata, Notes):
+            self[:] = copy.deepcopy(notedata)
+            self.arrows = notedata.arrows
             return
+        elif not isinstance(notedata, basestring):
+            raise TypeError('Notes.__init__ takes a Notes object or string')
 
         # Iterate over measures
         for m, measuredata in enumerate(notedata.split(',')):
@@ -151,22 +156,18 @@ class Chart(object):
     to break down difficulty into five components, although it can be safely
     set to an empty string. `notes` is a string of note data or a Notes object.
     """
-    attrs = {
-        'stepstype': unicode,
-        'description': unicode,
-        'difficulty': unicode,
-        'meter': int,
-        'radar': unicode,
-        'notes': Notes,
-    }
+    attrs = [
+        ('stepstype', unicode),
+        ('description', unicode),
+        ('difficulty', unicode),
+        ('meter', int),
+        ('radar', unicode),
+        ('notes', Notes),
+    ]
     
-    def _from_list(self, chart):
-        self.stepstype = chart[0]
-        self.description = chart[1]
-        self.difficulty = chart[2]
-        self.meter = int(chart[3])
-        self.radar = chart[4]
-        self.notes = Notes(chart[5])
+    def _from_seq(self, chart):
+        for a, (attr, attr_type) in enumerate(Chart.attrs):
+            setattr(self, attr, attr_type(chart[a]))
     
     def __init__(self, chart):
         if isinstance(chart, Chart):
@@ -178,8 +179,8 @@ class Chart(object):
         else:
             raise TypeError('Chart.__init__ takes a Chart, mapping, '
                             'or sequence')
-        for attr, attr_type in Chart.attrs.items():
-            getattr(self, attr) = chart_get(attr)
+        for attr, attr_type in Chart.attrs:
+            setattr(self, attr, attr_type(chart_get(attr)))
     
     def __repr__(self):
         rtn = '<Chart: {type} {difficulty} {meter}'.format(
@@ -211,7 +212,8 @@ class Chart(object):
                     notes=self.notes)
 
     def __eq__(self, other):
-        return self.__dict__ == other.__dict__
+        return all(getattr(self, attr) == getattr(other, attr)
+                   for attr, _ in Chart.attrs)
 
 
 class Charts(SimfileList):
@@ -291,43 +293,54 @@ class Simfile(OrderedDict):
     `from_string` class method.
     """
     DEFAULT_RADAR = '0,0,0,0,0'
-    filename = dirname = None
+    filename = None
     charts = None
+    
+    def _add_param(self, param):
+        # StepMania treats the first identifier case-insensitively and leading
+        # identifiers are traditionally uppercase
+        param[0] = param[0].upper()
+        # Charts go into self.charts
+        if param[0] == 'NOTES':
+            self.charts.append(Chart(param[1:]))
+        # BPMS and STOPS go into self, but with extra methods
+        elif param[0] in ('BPMS', 'STOPS'):
+            self[param[0]] = Timing(param[1])
+        # Everything else goes into self
+        else:
+            self[param[0]] = ':'.join(param[1:])
 
-    def __init__(self, filename=None, string=None):
-        super(Simfile, self).__init__()
-        self.charts = Charts()
-        msddata = None
+    def __init__(self, file=None):
+        # Always close the file object when done
         try:
-            if filename:
-                if string:
-                    raise TypeError('Simfile() takes either a filename '
-                                    'or a string -- not both')
-                self.filename = filename
-                self.dirname = os.path.dirname(filename)
-                msddata = codecs.open(filename, 'r', 'utf-8')
-            elif string:
-                msddata = string
-            else:
-                # Empty simfile
+            super(Simfile, self).__init__()
+            self.charts = Charts()
+            msddata = None
+            if isinstance(file, basestring):
+                # Convert filename argument to file object
+                self.filename = file
+                file = codecs.open(file, 'r', 'utf-8')
+            elif hasattr(file, 'close'):
+                # Get filename from file object
+                self.filename = file.name
+            elif file is None:
+                # No argument: empty simfile
                 return
-            # Iterate over simfile's parameters
-            for param in MSDParser(msddata):
-                # StepMania treats the first identifier case-insensitively,
-                # and leading identifiers are traditionally all-caps
-                param[0] = param[0].upper()
-                # Charts go into self.charts
-                if param[0] == 'NOTES':
-                    self.charts.append(Chart(param[1:]))
-                # BPMS and STOPS go into self, but with extra methods
-                elif param[0] in ('BPMS', 'STOPS'):
-                    self[param[0]] = Timing(param[1])
-                # Everything else goes into self
-                else:
-                    self[param[0]] = ':'.join(param[1:])
+            else:
+                # Argument isn't a filename or a file
+                raise TypeError('Simfile.__init__ takes a filename or file')
+            for param in MSDParser(file):
+                self._add_param(param)
         finally:
-            if msddata and hasattr(msddata, 'close'):
-                msddata.close()
+            if file and hasattr(file, 'close'):
+                file.close()
+    
+    @classmethod
+    def from_string(cls, string):
+        instance = cls()
+        for param in MSDParser(string):
+            instance._add_param(param)
+        return instance
 
     def save(self, filename=None):
         """
