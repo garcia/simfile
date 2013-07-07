@@ -12,34 +12,58 @@ Members
 Basic usage
 -----------
 
-.. testsetup:: *
+.. testsetup:: import
     
-    from os import chdir
-    from simfile import *
-    chdir('..')
-    sim = Simfile('testdata/Tribal Style.sm')
+    import os
+    if not hasattr(os, 'changed_dir'):
+        os.chdir('..')
+        os.changed_dir = True
 
-There are two ways to import simfiles. To import a simfile from the filesystem, pass the filename as the sole argument to the constructor::
+There are multiple ways to import simfiles. The most common method is to pass a filename:
+
+.. doctest:: import
 
     >>> from simfile import *
-    >>> sim = Simfile('testdata/Tribal Style.sm')
+    >>> filename = 'testdata/Tribal Style.sm'
+    >>> sim = Simfile(filename)
     >>> sim
     <Simfile: Tribal Style>
 
-Alternatively, a string containing simfile data can be imported using the named argument `string`:
+Simfiles can also be imported from any file-like object:
 
-.. doctest::
+.. doctest:: import
 
     >>> import codecs
-    >>> with codecs.open('testdata/Tribal Style.sm', 'r', encoding='utf-8') as infile:
-    ...     sim = Simfile(string=infile.read())
+    >>> with codecs.open(filename, 'r', encoding='utf-8') as infile:
+    ...     sim = Simfile(infile)
     ...
     >>> sim
     <Simfile: Tribal Style>
 
+Simfiles can also be imported from strings containing simfile data using the class method :meth:`from_string`:
+
+.. doctest:: import
+
+    >>> with codecs.open('testdata/Tribal Style.sm', 'r', encoding='utf-8') as infile:
+    ...     sim = Simfile.from_string(infile.read())
+    ...
+    >>> sim
+    <Simfile: Tribal Style>
+
+All of the import methods listed above yield equivalent Simfile objects.
+
+.. testsetup:: given_sim
+    
+    import os
+    from simfile import *
+    if not hasattr(os, 'changed_dir'):
+        os.chdir('..')
+        os.changed_dir = True
+    sim = Simfile('testdata/Tribal Style.sm')
+
 The simfile's parameters are accessible through a :py:class:`dict`-like interface:
 
-.. doctest::
+.. doctest:: given_sim
 
     >>> sim['TITLE']
     u'Tribal Style'
@@ -52,7 +76,7 @@ The simfile's parameters are accessible through a :py:class:`dict`-like interfac
 
 Timing data (specifically, the BPMS and STOPS parameters) can be manipulated through the methods exposed by the :class:`Timing` class:
 
-.. doctest::
+.. doctest:: given_sim
 
     >>> bpms = sim['BPMS']
     >>> bpms
@@ -65,7 +89,7 @@ Timing data (specifically, the BPMS and STOPS parameters) can be manipulated thr
 
 Charts are stored in a :class:`Charts` object that provides two methods for retrieving charts. The first is :meth:`get`, which gets a single chart or raises :py:exc:`LookupError` if zero or two or more charts match:
 
-.. doctest::
+.. doctest:: given_sim
 
     >>> single_novice = sim.charts.get(difficulty='Beginner')
     >>> single_novice
@@ -86,7 +110,7 @@ Charts are stored in a :class:`Charts` object that provides two methods for retr
 
 The second method is :meth:`filter`, which gets any and all charts that match the query:
 
-.. doctest::
+.. doctest:: given_sim
 
     >>> expert_charts = sim.charts.filter(difficulty='Challenge')
     >>> expert_charts
@@ -96,23 +120,51 @@ The second method is :meth:`filter`, which gets any and all charts that match th
     >>> len(sim.charts.filter(meter=100))
     0
 
-Charts can also be retrieved directly from the :class:`Charts` object:
+Charts can also be retrieved by indexing or iterating over the :class:`Charts` object. Their order in the original simfile is preserved.
 
-.. doctest::
+.. doctest:: given_sim
 
-    >>> first_chart = sim.charts[0]
-    >>> print first_chart.stepstype, first_chart.difficulty, first_chart.meter
-    dance-single Hard 9
+    >>> for chart in sim.charts:
+    ...  print repr(chart)
+    ...
+    <Chart: dance-single Hard 9 (K.Ward)>
+    <Chart: dance-single Medium 6 (K. Ward)>
+    <Chart: dance-single Easy 3 (K. Ward)>
+    <Chart: dance-single Challenge 10 (C. Foy)>
+    <Chart: dance-single Beginner 1 (K. Ward)>
+    <Chart: dance-double Easy 3 (M.Emirzian)>
+    <Chart: dance-double Medium 5 (M.Emirzian)>
+    <Chart: dance-double Hard 9 (M.Emirzian)>
+    <Chart: dance-double Challenge 11 (J.Casarino)>
 
-In addition to the fields illustrated above, :class:`Chart` instances expose their note data as a :class:`Notes` object:
+:class:`Chart` instances expose their metadata through various attributes:
 
-.. doctest::
+.. doctest:: given_sim
 
-    >>> notes = sim.charts.get(stepstype='dance-double', meter=11).notes
-    >>> notes
+    >>> chart = sim.charts.get(stepstype='dance-double', meter=11)
+    >>> print chart.stepstype
+    dance-double
+    >>> print chart.meter
+    11
+    >>> print chart.description
+    J.Casarino
+    >>> print chart.difficulty
+    Challenge
+    >>> print chart.radar
+    0.785,0.695,0.511,0.206,0.893
+    >>> chart.notes
     <simfile.simfile.Notes object at 0x...>
-    >>> notes[0]
+    >>> chart.notes[0]
     [Fraction(16, 1), u'02002000']
+
+After modifying a :class:`Simfile`, it can be saved using the :meth:`save` method, which writes it to a given filename or, if no filename is given, to the file from which it was originally read::
+
+    >>> print sim.filename
+    testdata/Tribal Style.sm
+    >>> sim.save('testdata/Tribal Style (edited).sm') # Writes to testdata/Tribal Style (edited).sm
+    >>> sim.save()                                    # Writes to testdata/Tribal Style.sm
+
+Note that simfiles created using :meth:`from_string` require the filename argument to :meth:`save`.
 
 Examples
 --------
