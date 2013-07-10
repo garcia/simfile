@@ -70,3 +70,6 @@ def MSDParser(infile):
     if state == READ_VALUE:
         param.append(_encode_value(value))
         yield param
+    # Close file object after reading all values
+    if hasattr(infile, 'close'):
+        infile.close()
