@@ -28,12 +28,12 @@ def get_default_chart():
 class TestMSD(unittest.TestCase):
     
     def test_empty(self):
-        parser = get_parser('empty.sm')
-        # Generator should exist
-        self.assertTrue(parser)
-        # Generator should yield absolutely nothing
-        for param in parser:
-            self.fail()
+        with get_parser('empty.sm') as parser:
+            # Generator should exist
+            self.assertTrue(parser)
+            # Generator should yield absolutely nothing
+            for param in parser:
+                self.fail()
     
     def test_comments(self):
         expected = [
@@ -41,9 +41,10 @@ class TestMSD(unittest.TestCase):
             ['SUBTITLE', 'Split into two lines'],
             ['ARTIST', 'Grant/Garcia'],
         ]
-        for i, param in enumerate(get_parser('comments.sm')):
-            self.assertEqual(param, expected[i])
-        self.assertEqual(i + 1, len(expected))
+        with get_parser('comments.sm') as parser:
+            for i, param in enumerate(parser):
+                self.assertEqual(param, expected[i])
+            self.assertEqual(i + 1, len(expected))
     
     def test_duplicates(self):
         expected = [
@@ -52,9 +53,10 @@ class TestMSD(unittest.TestCase):
             ['SUBTITLE', 'CASE INSENSITIVITY'],
             ['Subtitle', 'case insensitivity'],
         ]
-        for i, param in enumerate(get_parser('duplicates.sm')):
-            self.assertEqual(param, expected[i])
-        self.assertEqual(i + 1, len(expected))
+        with get_parser('duplicates.sm') as parser:
+            for i, param in enumerate(parser):
+                self.assertEqual(param, expected[i])
+            self.assertEqual(i + 1, len(expected))
     
     def test_multivalue(self):
         expected = [
@@ -62,27 +64,30 @@ class TestMSD(unittest.TestCase):
             ['SUBTITLE', 'First value', 'second value'],
             ['ARTIST', 'One', 'two', 'three'],
         ]
-        for i, param in enumerate(get_parser('multivalue.sm')):
-            self.assertEqual(param, expected[i])
-        self.assertEqual(i + 1, len(expected))
+        with get_parser('multivalue.sm') as parser:
+            for i, param in enumerate(parser):
+                self.assertEqual(param, expected[i])
+            self.assertEqual(i + 1, len(expected))
     
     def test_no_semicolon(self):
         expected = [
             ['TITLE', 'No semicolon'],
             ['SUBTITLE', 'EOF'],
         ]
-        for i, param in enumerate(get_parser('no semicolon.sm')):
-            self.assertEqual(param, expected[i])
-        self.assertEqual(i + 1, len(expected))
+        with get_parser('no semicolon.sm') as parser:
+            for i, param in enumerate(parser):
+                self.assertEqual(param, expected[i])
+            self.assertEqual(i + 1, len(expected))
     
     def test_unicode(self):
         expected = [
             ['TITLE', '実例'],
             ['ARTIST', '楽士'],
         ]
-        for i, param in enumerate(get_parser('unicode.sm')):
-            self.assertEqual(param, expected[i])
-        self.assertEqual(i + 1, len(expected))
+        with get_parser('unicode.sm') as parser:
+            for i, param in enumerate(parser):
+                self.assertEqual(param, expected[i])
+            self.assertEqual(i + 1, len(expected))
 
 
 class TestNotes(unittest.TestCase):
