@@ -36,38 +36,53 @@ class TestMSD(unittest.TestCase):
             self.fail()
     
     def test_comments(self):
-        parser = get_parser('comments.sm')
-        self.assertEqual(parser.next(), ['TITLE', 'Comments'])
-        self.assertEqual(parser.next(), ['SUBTITLE', 'Split into two lines'])
-        self.assertEqual(parser.next(), ['ARTIST', 'Grant/Garcia'])
-        self.assertRaises(StopIteration, parser.next)
+        expected = [
+            ['TITLE', 'Comments'],
+            ['SUBTITLE', 'Split into two lines'],
+            ['ARTIST', 'Grant/Garcia'],
+        ]
+        for i, param in enumerate(get_parser('comments.sm')):
+            self.assertEqual(param, expected[i])
+        self.assertEqual(i + 1, len(expected))
     
     def test_duplicates(self):
-        parser = get_parser('duplicates.sm')
-        self.assertEqual(parser.next(), ['TITLE', 'First duplicate field'])
-        self.assertEqual(parser.next(), ['TITLE', 'Second duplicate field'])
-        self.assertEqual(parser.next(), ['SUBTITLE', 'CASE INSENSITIVITY'])
-        self.assertEqual(parser.next(), ['Subtitle', 'case insensitivity'])
-        self.assertRaises(StopIteration, parser.next)
+        expected = [
+            ['TITLE', 'First duplicate field'],
+            ['TITLE', 'Second duplicate field'],
+            ['SUBTITLE', 'CASE INSENSITIVITY'],
+            ['Subtitle', 'case insensitivity'],
+        ]
+        for i, param in enumerate(get_parser('duplicates.sm')):
+            self.assertEqual(param, expected[i])
+        self.assertEqual(i + 1, len(expected))
     
     def test_multivalue(self):
-        parser = get_parser('multivalue.sm')
-        self.assertEqual(parser.next(), ['TITLE', 'One value'])
-        self.assertEqual(parser.next(), ['SUBTITLE', 'First value', 'second value'])
-        self.assertEqual(parser.next(), ['ARTIST', 'One', 'two', 'three'])
-        self.assertRaises(StopIteration, parser.next)
+        expected = [
+            ['TITLE', 'One value'],
+            ['SUBTITLE', 'First value', 'second value'],
+            ['ARTIST', 'One', 'two', 'three'],
+        ]
+        for i, param in enumerate(get_parser('multivalue.sm')):
+            self.assertEqual(param, expected[i])
+        self.assertEqual(i + 1, len(expected))
     
     def test_no_semicolon(self):
-        parser = get_parser('no semicolon.sm')
-        self.assertEqual(parser.next(), ['TITLE', 'No semicolon'])
-        self.assertEqual(parser.next(), ['SUBTITLE', 'EOF'])
-        self.assertRaises(StopIteration, parser.next)
+        expected = [
+            ['TITLE', 'No semicolon'],
+            ['SUBTITLE', 'EOF'],
+        ]
+        for i, param in enumerate(get_parser('no semicolon.sm')):
+            self.assertEqual(param, expected[i])
+        self.assertEqual(i + 1, len(expected))
     
     def test_unicode(self):
-        parser = get_parser('unicode.sm')
-        self.assertEqual(parser.next(), ['TITLE', '実例'])
-        self.assertEqual(parser.next(), ['ARTIST', '楽士'])
-        self.assertRaises(StopIteration, parser.next)
+        expected = [
+            ['TITLE', '実例'],
+            ['ARTIST', '楽士'],
+        ]
+        for i, param in enumerate(get_parser('unicode.sm')):
+            self.assertEqual(param, expected[i])
+        self.assertEqual(i + 1, len(expected))
 
 
 class TestNotes(unittest.TestCase):
@@ -121,12 +136,11 @@ class TestNotes(unittest.TestCase):
     
     def test_unicode(self):
         # Get un-parsed notedata
-        parser = get_parser('Tribal Style.sm')
-        for param in parser:
-            if param[0] == 'NOTES':
-                notedata = param[-1]
-                break
-        parser.close()
+        with get_parser('Tribal Style.sm') as parser:
+            for param in parser:
+                if param[0] == 'NOTES':
+                    notedata = param[-1]
+                    break
         notes = Notes(notedata)
         self.assertEqual(unicode(notes), notedata)
     
