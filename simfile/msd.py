@@ -45,7 +45,13 @@ class MSDParser(object):
                 # This is the most frequent scenario, so it sits at the front of
                 # the loop for optimization purposes.
                 if state == READ_VALUE and c not in '#:;/':
-                    value.write(c.encode(encoding))
+                    # Try to write it without encoding first. This only works
+                    # for ASCII characters, but the vast majority of characters
+                    # in any simfile will be ASCII. Yields a ~25% speed boost.
+                    try:
+                        value.write(c)
+                    except UnicodeEncodeError:
+                        value.write(c.encode(encoding))
                     continue
                 # Start of comment
                 if c == '/' and i + 1 < len(line) and line[i + 1] == '/':
@@ -79,6 +85,8 @@ class MSDParser(object):
                         param = []
                         value = StringIO()
                         state = NEXT_PARAM
+                    # Only reached if c == '/' and isn't part of a comment;
+                    # no need to encode.
                     else:
                         value.write(c)
         # Add partial parameter (i.e. if the last one was missing a semicolon)
