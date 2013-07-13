@@ -13,6 +13,21 @@ def _encode_value(value):
     return value.getvalue().strip().decode('utf-8')
 
 class MSDParser(object):
+    """
+    Parser for MSD files.
+    
+    The sole constructor argument should be a file-like object or a string
+    containing MSD data. Iterating over an instance yields each parameter as a
+    list of strings. The class also implements context management, e.g.
+    ``with MSDParser(file) as parser:``; the file will be closed upon
+    completion of the block.
+    
+    MSDFile should be used instead of Simfile in situations where the chart
+    data is not needed, as parsing can be halted before the charts are read in.
+    
+    The parser is based off of StepMania's `MsdFile.cpp
+    <https://code.google.com/p/stepmania/source/browse/src/MsdFile.cpp>`_.
+    """
     
     encoding = 'utf-8'
 
