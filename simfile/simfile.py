@@ -89,7 +89,7 @@ class Notes(list):
             measure_len = len(measure_lines)
             # Iterate over lines of measure
             for l, line in enumerate(measure_lines):
-                line_pos = (m + Fraction(l, measure_len)) * 4
+                line_pos = Fraction(4 * ((m * measure_len) + l), measure_len)
                 # Set the number of arrows to the first line's length
                 if self.arrows is None:
                     self.arrows = len(line)
@@ -103,7 +103,7 @@ class Notes(list):
     def _measure_to_str(self, m, measure):
         rtn = []
         rows = _lcm(*[r[0].denominator for r in measure])
-        for r in [(m * 4 + Fraction(n, rows)) for n in xrange(rows * 4)]:
+        for r in [Fraction(4 * m * rows + n, rows) for n in xrange(rows * 4)]:
             if measure and measure[0][0] == r:
                 rtn.append(measure.pop(0)[1])
             else:
