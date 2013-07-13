@@ -9,26 +9,28 @@ __all__ = ['MSDParser']
 
 NEXT_PARAM, READ_VALUE, COMMENT = xrange(3)
 
+
 def _encode_value(value):
     return value.getvalue().strip().decode('utf-8')
+
 
 class MSDParser(object):
     """
     Parser for MSD files.
-    
+
     The sole constructor argument should be a file-like object or a string
     containing MSD data. Iterating over an instance yields each parameter as a
     list of strings. The class also implements context management, e.g.
     ``with MSDParser(file) as parser:``; the file will be closed upon
     completion of the block.
-    
+
     MSDFile should be used instead of Simfile in situations where the chart
     data is not needed, as parsing can be halted before the charts are read in.
-    
+
     The parser is based off of StepMania's `MsdFile.cpp
     <https://code.google.com/p/stepmania/source/browse/src/MsdFile.cpp>`_.
     """
-    
+
     encoding = 'utf-8'
 
     def __init__(self, infile):
@@ -52,13 +54,13 @@ class MSDParser(object):
         param = []
         value = StringIO()
         i = 0
-        # Convert strings into objects that behave like files when iterated over
+        # Convert strings into objects that behave like files upon iteration
         if isinstance(infile, basestring):
             infile = infile.splitlines(True)
         for line in infile:
             for i, c in enumerate(line):
-                # This is the most frequent scenario, so it sits at the front of
-                # the loop for optimization purposes.
+                # This is the most frequent scenario, so it sits at the front
+                # of the loop for optimization purposes.
                 if state == READ_VALUE and c not in '#:;/':
                     # Try to write it without encoding first. This only works
                     # for ASCII characters, but the vast majority of characters
