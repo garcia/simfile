@@ -1,17 +1,9 @@
-from __future__ import with_statement, unicode_literals
 import codecs
-try:
-    from cStringIO import StringIO
-except ImportError:
-    from StringIO import StringIO
+from io import StringIO
 
 __all__ = ['MSDParser']
 
-NEXT_PARAM, READ_VALUE, COMMENT = xrange(3)
-
-
-def _encode_value(value):
-    return value.getvalue().strip().decode('utf-8')
+NEXT_PARAM, READ_VALUE, COMMENT = range(3)
 
 
 class MSDParser(object):
@@ -28,14 +20,10 @@ class MSDParser(object):
     data is not needed, as parsing can be halted before the charts are read in.
 
     The parser is based off of StepMania's `MsdFile.cpp
-    <https://code.google.com/p/stepmania/source/browse/src/MsdFile.cpp>`_.
+    <https://github.com/stepmania/stepmania/blob/master/src/MsdFile.cpp>`_.
     """
 
-    encoding = 'utf-8'
-
     def __init__(self, infile):
-        if hasattr(infile, 'encoding') and infile.encoding:
-            self.encoding = infile.encoding
         self.infile = infile
 
     def __enter__(self):
@@ -48,27 +36,20 @@ class MSDParser(object):
     def __iter__(self):
         # Quick access to speed up innermost loop
         infile = self.infile
-        encoding = self.encoding
         # Initialization
         state = NEXT_PARAM
         param = []
         value = StringIO()
         i = 0
         # Convert strings into objects that behave like files upon iteration
-        if isinstance(infile, basestring):
+        if isinstance(infile, str):
             infile = infile.splitlines(True)
         for line in infile:
             for i, c in enumerate(line):
                 # This is the most frequent scenario, so it sits at the front
                 # of the loop for optimization purposes.
                 if state == READ_VALUE and c not in '#:;/':
-                    # Try to write it without encoding first. This only works
-                    # for ASCII characters, but the vast majority of characters
-                    # in any simfile will be ASCII. Yields a ~25% speed boost.
-                    try:
-                        value.write(c)
-                    except UnicodeEncodeError:
-                        value.write(c.encode(encoding))
+                    value.write(c)
                     continue
                 # Start of comment
                 if c == '/' and i + 1 < len(line) and line[i + 1] == '/':
@@ -87,17 +68,17 @@ class MSDParser(object):
                 elif state == READ_VALUE:
                     # Fix missing semicolon
                     if c == '#' and i == 0:
-                        param.append(_encode_value(value))
+                        param.append(value.getvalue())
                         yield param
                         param = []
                         value = StringIO()
                     # Next value
                     elif c == ':':
-                        param.append(_encode_value(value))
+                        param.append(value.getvalue())
                         value = StringIO()
                     # Next parameter
                     elif c == ';':
-                        param.append(_encode_value(value))
+                        param.append(value.getvalue())
                         yield param
                         param = []
                         value = StringIO()
@@ -108,5 +89,5 @@ class MSDParser(object):
                         value.write(c)
         # Add partial parameter (i.e. if the last one was missing a semicolon)
         if state == READ_VALUE:
-            param.append(_encode_value(value))
+            param.append(value.getvalue())
             yield param
