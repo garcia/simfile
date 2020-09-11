@@ -4,7 +4,7 @@ from typing import Any, Collection, FrozenSet, Generator, Mapping, NewType, \
                    Optional, Sequence, TextIO
 
 
-__all__ = ['Chart', 'Charts', 'Simfile']
+__all__ = ['BaseChart', 'BaseCharts', 'BaseSimfile']
 
 
 class ListWithRepr(UserList):
@@ -21,7 +21,7 @@ class Serializable(metaclass=ABCMeta):
         pass
 
 
-class Chart(Serializable, metaclass=ABCMeta):
+class BaseChart(Serializable, metaclass=ABCMeta):
     """
     One chart from a simfile.
     """
@@ -60,16 +60,16 @@ class Chart(Serializable, metaclass=ABCMeta):
         return f'<{cls}: {self.stepstype} {self.difficulty} {self.meter}>'
 
 
-class Charts(ListWithRepr, Serializable, metaclass=ABCMeta):
+class BaseCharts(ListWithRepr, Serializable, metaclass=ABCMeta):
     """
-    A filterable list of Chart objects.
+    A filterable list of BaseChart objects.
     """
     @property
     @abstractmethod
     def supported_fields(self) -> FrozenSet[str]:
         pass
 
-    def _match(self, chart: Chart, fields: Mapping[str, Any]):
+    def _match(self, chart: BaseChart, fields: Mapping[str, Any]):
         for field, value in fields.items():
             if getattr(chart, field) != value:
                 return False
@@ -119,17 +119,17 @@ class Charts(ListWithRepr, Serializable, metaclass=ABCMeta):
             file.write('\n')
 
 
-class Simfile(OrderedDict, Serializable, metaclass=ABCMeta):
+class BaseSimfile(OrderedDict, Serializable, metaclass=ABCMeta):
     """
-    The Simfile class encapsulates simfile parameters and charts.
+    The BaseSimfile class encapsulates simfile parameters and charts.
 
-    Simfile objects can be created from filenames or file-like objects. They
+    BaseSimfile objects can be created from filenames or file-like objects. They
     can also be created from strings containing simfile data using the
     `from_string` class method.
 
     Parameters are accessed through a dict-like interface. Identifiers are
-    case-sensitive, but coerced to uppercase when importing. Charts are stored
-    in a `Charts` object under the `charts` attribute.
+    case-sensitive, but coerced to uppercase when importing. BaseCharts are stored
+    in a `BaseCharts` object under the `charts` attribute.
     """
     def __init__(self, *,
                  file: Optional[TextIO] = None,
@@ -154,7 +154,7 @@ class Simfile(OrderedDict, Serializable, metaclass=ABCMeta):
 
     @property
     @abstractmethod
-    def charts(self) -> Sequence[Charts]:
+    def charts(self) -> Sequence[BaseCharts]:
         pass
 
     def __repr__(self):
@@ -167,7 +167,7 @@ class Simfile(OrderedDict, Serializable, metaclass=ABCMeta):
 
     def __eq__(self, other):
         """
-        Test for equality with another Simfile.
+        Test for equality with another BaseSimfile.
 
         Two simfiles are equal if they have the same type, parameters, and
         charts.

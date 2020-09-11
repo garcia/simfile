@@ -1,6 +1,6 @@
 from collections import OrderedDict
 
-from .abstract import *
+from .base import BaseChart, BaseCharts, BaseSimfile
 from .common import *
 from msdparser import MSDParser
 
@@ -21,7 +21,7 @@ def _chart_property(private_name):
     return chart_property
 
 
-class SMChart(Chart):
+class SMChart(BaseChart):
     """
     The Chart class represents chart metadata through its attributes.
 
@@ -90,14 +90,14 @@ class SMChart(Chart):
                 self.notes == other.notes)
 
 
-class SMCharts(Charts):
+class SMCharts(BaseCharts):
 
     @property
     def supported_fields(self):
         return frozenset({'stepstype', 'description', 'difficulty', 'meter', 'radarvalues'})
 
 
-class SMSimfile(Simfile):
+class SMSimfile(BaseSimfile):
 
     def _parse(self):
         with MSDParser(file=self.file, string=self.string) as parser:

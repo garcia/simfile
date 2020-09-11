@@ -1,6 +1,6 @@
 from collections import OrderedDict
 
-from .abstract import *
+from .base import BaseChart, BaseCharts, BaseSimfile
 from .common import *
 from msdparser import MSDParser
 
@@ -21,7 +21,7 @@ def _chart_property(name):
     return chart_property
 
 
-class SSCChart(Chart, OrderedDict):
+class SSCChart(BaseChart, OrderedDict):
     chartname = _chart_property('CHARTNAME')
     stepstype = _chart_property('STEPSTYPE')
     description = _chart_property('DESCRIPTION')
@@ -40,7 +40,7 @@ class SSCChart(Chart, OrderedDict):
         file.write('\n')
 
 
-class SSCCharts(Charts):
+class SSCCharts(BaseCharts):
 
     @property
     def supported_fields(self):
@@ -49,7 +49,7 @@ class SSCCharts(Charts):
                           'credit', 'displaybpm'})
 
 
-class SSCSimfile(Simfile):
+class SSCSimfile(BaseSimfile):
 
     def _parse(self):
         with MSDParser(file=self.file, string=self.string) as parser:
