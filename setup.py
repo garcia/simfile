@@ -15,6 +15,6 @@ setuptools.setup(
     url='https://github.com/garcia/simfile',
     packages=['simfile'],
     install_requires=[
-        'msdparser',
+        'msdparser>=0.1.3',
     ],
 )
