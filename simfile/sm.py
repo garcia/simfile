@@ -1,7 +1,6 @@
 from collections import OrderedDict
 
 from .base import BaseChart, BaseCharts, BaseSimfile
-from .common import *
 from msdparser import MSDParser
 
 
@@ -70,15 +69,16 @@ class SMChart(BaseChart):
         )
 
     def __init__(self, string: str):
-        values = iter(string.split(':'))
+        values = string.split(':')
         if len(values) != 6:
             raise ValueError(f'expected 6 chart components, got {len(values)}')
-        self.stepstype = next(values).strip()
-        self.description = next(values).strip()
-        self.difficulty = next(values).strip()
-        self.meter = int(next(values).strip())
-        self.radarvalues = next(values).strip()
-        self.notes = next(values).strip()
+        iterator = iter(values)
+        self.stepstype = next(iterator).strip()
+        self.description = next(iterator).strip()
+        self.difficulty = next(iterator).strip()
+        self.meter = int(next(iterator).strip())
+        self.radarvalues = next(iterator).strip()
+        self.notes = next(iterator).strip()
 
     def __eq__(self, other):
         return (type(self) is type(other) and
