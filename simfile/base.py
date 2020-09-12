@@ -1,7 +1,7 @@
 from abc import ABCMeta, abstractmethod
 from collections import OrderedDict, UserList
-from typing import Any, Collection, FrozenSet, Generator, Mapping, NewType, \
-                   Optional, Sequence, TextIO
+from typing import Any, Collection, FrozenSet, Generator, Iterator, Mapping, \
+                   NewType, Optional, Sequence, TextIO, Union
 
 
 __all__ = ['BaseChart', 'BaseCharts', 'BaseSimfile']
@@ -132,7 +132,7 @@ class BaseSimfile(OrderedDict, Serializable, metaclass=ABCMeta):
     in a `BaseCharts` object under the `charts` attribute.
     """
     def __init__(self, *,
-                 file: Optional[TextIO] = None,
+                 file: Optional[Union[TextIO, Iterator[str]]] = None,
                  string: Optional[str] = None):
         if file is None and string is None:
             raise ValueError("must provide either a file or a string")
@@ -159,9 +159,9 @@ class BaseSimfile(OrderedDict, Serializable, metaclass=ABCMeta):
 
     def __repr__(self):
         rtn = '<' + self.__class__.__name__
-        if 'TITLE' in self:
+        if self.get('TITLE'):
             rtn += ': ' + self['TITLE']
-            if 'SUBTITLE' in self:
+            if self.get('SUBTITLE'):
                 rtn += ' ' + self['SUBTITLE']
         return rtn + '>'
 
