@@ -20,7 +20,7 @@ def item_property(name, type=Any):
     def item_property(self) -> type:
         return self[name]
 
-    @attr_property.setter
+    @item_property.setter
     def item_property(self, value: type) -> None:
         self[name] = value
 
