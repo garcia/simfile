@@ -1,3 +1,5 @@
+import builtins
+from contextlib import contextmanager
 from io import FileIO, StringIO, TextIOWrapper
 from itertools import tee
 from typing import cast, Iterator, TextIO, Tuple, TypeVar, Union
@@ -5,14 +7,19 @@ from typing import cast, Iterator, TextIO, Tuple, TypeVar, Union
 from msdparser import MSDParser
 from .ssc import SSCSimfile
 from .sm import SMSimfile
-from ._tee_file import tee_file
+from ._private.tee_file import tee_file
 
 
-__all__ = ['load', 'loads', 'open']
+__all__ = ['load', 'loads', 'open', 'CancelMutation', 'mutate']
 
 
-builtin_open = open
 AnySimfile = Union[SSCSimfile, SMSimfile]
+
+
+def _open_args(kwargs):
+    open_args = {'encoding': 'utf-8'}
+    open_args.update(kwargs)
+    return open_args
 
 
 def load(file: Union[TextIO, Iterator[str]]) -> AnySimfile:
@@ -33,7 +40,7 @@ def load(file: Union[TextIO, Iterator[str]]) -> AnySimfile:
         elif suffix == '.sm':
             return SMSimfile(file=file)    
 
-    # 
+    # Split file into two streams for peeking
     peek, file = tee_file(file)
 
     # Default first_key to a string so we can easily fall back to SMSimfile
@@ -50,9 +57,42 @@ def load(file: Union[TextIO, Iterator[str]]) -> AnySimfile:
 
 
 def loads(string: str = None) -> AnySimfile:
+    """
+    Load a string as a simfile using the correct implementation.
+    """
     return load(StringIO(string))
 
 
-def open(filename: str, encoding: str = 'utf-8', **kwargs) -> AnySimfile:
-    return load(builtin_open(filename, 'r', encoding=encoding, **kwargs))
+def open(filename: str, **kwargs) -> AnySimfile:
+    """
+    Load a simfile from the given filename using the correct implementation.
 
+    Keyword arguments are passed to the builtin `open` function. Encoding
+    default to UTF-8.
+    """
+    return load(builtins.open(filename, 'r', **_open_args(kwargs)))
+
+
+class CancelMutation(BaseException):
+    pass
+
+
+@contextmanager
+def mutate(filename: str, **kwargs):
+    """
+    Context manager that loads a simfile by filename on entry, then saves
+    it to the disk on exit.
+
+    To abort the mutation without causing the context manager to re-throw
+    an exception, raise CancelMutation.
+    """
+    simfile = open(filename, **kwargs)
+    try:
+        yield simfile
+    except CancelMutation:
+        return
+    except:
+        raise
+    else:
+        with builtins.open(filename, 'w', **_open_args(kwargs)) as writer:
+            simfile.serialize(writer)

@@ -1,24 +1,22 @@
 from abc import ABCMeta, abstractmethod
 from collections import OrderedDict, UserList
-from typing import Any, Collection, FrozenSet, Generator, Iterator, Mapping, \
-                   NewType, Optional, Sequence, TextIO, Union
+from io import StringIO
+from typing import Any, Callable, Collection, FrozenSet, Generator, Generic, \
+                   Iterator, Mapping, NewType, Optional, Sequence, TextIO, \
+                   TypeVar, Union
+
+from _private.serializable import Serializable
 
 
 __all__ = ['BaseChart', 'BaseCharts', 'BaseSimfile']
 
 
-class ListWithRepr(UserList):
+class _ListWithRepr(UserList):
     """
     Subclass of UserLis that overrides __repr__.
     """
     def __repr__(self):
         return '%s(%s)' % (self.__class__.__name__, super().__repr__())
-
-
-class Serializable(metaclass=ABCMeta):
-    @abstractmethod
-    def serialize(self, file):
-        pass
 
 
 class BaseChart(Serializable, metaclass=ABCMeta):
@@ -60,7 +58,7 @@ class BaseChart(Serializable, metaclass=ABCMeta):
         return f'<{cls}: {self.stepstype} {self.difficulty} {self.meter}>'
 
 
-class BaseCharts(ListWithRepr, Serializable, metaclass=ABCMeta):
+class BaseCharts(_ListWithRepr, Serializable, metaclass=ABCMeta):
     """
     A filterable list of BaseChart objects.
     """
@@ -113,7 +111,8 @@ class BaseCharts(ListWithRepr, Serializable, metaclass=ABCMeta):
 
         raise LookupError('multiple charts match these parameters')
 
-    def serialize(self, file):
+    @Serializable.enable_string_output
+    def serialize(self, file: TextIO):
         for chart in self:
             chart.serialize(file)
             file.write('\n')
@@ -146,7 +145,8 @@ class BaseSimfile(OrderedDict, Serializable, metaclass=ABCMeta):
     def _parse(self):
         pass
 
-    def serialize(self, file):
+    @Serializable.enable_string_output
+    def serialize(self, file: TextIO):
         for (key, value) in self.items():
             file.write(f'#{key}:{value};\n')
         file.write('\n')
@@ -154,7 +154,7 @@ class BaseSimfile(OrderedDict, Serializable, metaclass=ABCMeta):
 
     @property
     @abstractmethod
-    def charts(self) -> Sequence[BaseCharts]:
+    def charts(self) -> BaseCharts:
         pass
 
     def __repr__(self):

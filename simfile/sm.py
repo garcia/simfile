@@ -1,23 +1,12 @@
 from collections import OrderedDict
 
-from .base import BaseChart, BaseCharts, BaseSimfile
 from msdparser import MSDParser
+
+from .base import BaseChart, BaseCharts, BaseSimfile
+from ._private.property import attr_property
 
 
 __all__ = ['SMChart', 'SMCharts', 'SMSimfile']
-
-
-def _chart_property(private_name):
-
-    @property
-    def chart_property(self):
-        return getattr(self, private_name)
-
-    @chart_property.setter
-    def chart_property(self, value):
-        setattr(self, private_name, value)
-
-    return chart_property
 
 
 class SMChart(BaseChart):
@@ -49,12 +38,12 @@ class SMChart(BaseChart):
 
     `notes` is the note data as a string.
     """
-    stepstype = _chart_property('_stepstype')
-    description = _chart_property('_description')
-    difficulty = _chart_property('_difficulty')
-    meter = _chart_property('_meter')
-    radarvalues = _chart_property('_radarvalues')
-    notes = _chart_property('_notes')
+    stepstype = attr_property('_stepstype')
+    description = attr_property('_description')
+    difficulty = attr_property('_difficulty')
+    meter = attr_property('_meter')
+    radarvalues = attr_property('_radarvalues')
+    notes = attr_property('_notes')
 
     def serialize(self, file):
         file.write(
@@ -103,6 +92,7 @@ class SMSimfile(BaseSimfile):
         with MSDParser(file=self.file, string=self.string) as parser:
             self._charts = SMCharts()
             for (key, value) in parser:
+                key = key.upper()
                 if key == 'NOTES':
                     self._charts.append(SMChart(string=value))
                 else:

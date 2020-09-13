@@ -1,37 +1,26 @@
 from collections import OrderedDict
 from typing import Optional
 
-from .base import BaseChart, BaseCharts, BaseSimfile
 from msdparser import MSDParser
+
+from .base import BaseChart, BaseCharts, BaseSimfile
+from ._private.property import item_property
 
 
 __all__ = ['SSCChart', 'SSCCharts', 'SSCSimfile']
 
 
-def _chart_property(name):
-
-    @property
-    def chart_property(self):
-        return self[name]
-
-    @chart_property.setter
-    def chart_property(self, value):
-        self[name] = value
-
-    return chart_property
-
-
 class SSCChart(BaseChart, OrderedDict):
-    chartname = _chart_property('CHARTNAME')
-    stepstype = _chart_property('STEPSTYPE')
-    description = _chart_property('DESCRIPTION')
-    chartstyle = _chart_property('CHARTSTYLE')
-    difficulty = _chart_property('DIFFICULTY')
-    meter = _chart_property('METER')
-    radarvalues = _chart_property('RADARVALUES')
-    credit = _chart_property('CREDIT')
-    displaybpm = _chart_property('DISPLAYBPM')
-    notes = _chart_property('NOTES')
+    chartname = item_property('CHARTNAME')
+    stepstype = item_property('STEPSTYPE')
+    description = item_property('DESCRIPTION')
+    chartstyle = item_property('CHARTSTYLE')
+    difficulty = item_property('DIFFICULTY')
+    meter = item_property('METER')
+    radarvalues = item_property('RADARVALUES')
+    credit = item_property('CREDIT')
+    displaybpm = item_property('DISPLAYBPM')
+    notes = item_property('NOTES')
 
     def serialize(self, file):
         file.write('#NOTEDATA:;\n')
@@ -56,6 +45,7 @@ class SSCSimfile(BaseSimfile):
             self._charts = SSCCharts()
             partial_chart: Optional[SSCChart] = None
             for (key, value) in parser:
+                key = key.upper()
                 if key == 'NOTEDATA':
                     if partial_chart is not None:
                         self._charts.append(partial_chart)
