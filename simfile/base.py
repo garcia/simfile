@@ -180,4 +180,8 @@ class BaseSimfile(OrderedDict, Serializable, metaclass=ABCMeta):
                 self.charts == other.charts)
     
     def __ne__(self, other):
+        """
+        Test for inequality with another BaseSimfile.
+        """
         return not self.__eq__(other)
+                
