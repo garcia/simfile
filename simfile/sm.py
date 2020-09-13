@@ -38,7 +38,7 @@ class SMChart(BaseChart):
     stepstype = attr_property('_stepstype', str)
     description = attr_property('_description', str)
     difficulty = attr_property('_difficulty', str)
-    meter = attr_property('_meter', int)
+    meter = attr_property('_meter', str)
     radarvalues = attr_property('_radarvalues', str)
     notes = attr_property('_notes', str)
 
@@ -63,7 +63,7 @@ class SMChart(BaseChart):
         self.stepstype = next(iterator).strip()
         self.description = next(iterator).strip()
         self.difficulty = next(iterator).strip()
-        self.meter = int(next(iterator).strip())
+        self.meter = next(iterator).strip()
         self.radarvalues = next(iterator).strip()
         self.notes = next(iterator).strip()
 

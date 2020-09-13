@@ -36,14 +36,13 @@ class TestChart(unittest.TestCase):
         self.assertEqual(chart.stepstype, 'dance-single')
         self.assertEqual(chart.description, 'Brackets')
         self.assertEqual(chart.difficulty, 'Edit')
-        self.assertEqual(chart.meter, 12)
+        self.assertEqual(chart.meter, '12')
         self.assertEqual(chart.radarvalues, '0.793,1.205,0.500,0.298,0.961')
         self.assertEqual(chart.notes, '0000\n0000\n0000\n0000')
 
     def test_repr(self):
         chart = get_default_chart()
-        self.assertEqual(repr(chart),
-                         '<SMChart: dance-single Edit 12>')
+        self.assertEqual(repr(chart), '<SMChart: dance-single Edit 12>')
 
 
 class TestCharts(unittest.TestCase):

@@ -6,16 +6,16 @@ from ..sm import *
 
 def testing_chart():
     return (
-        "\n"
-        "     dance-single:\n"
-        "     Brackets:\n"
-        "     Edit:\n"
-        "     12:\n"
-        "     0.793,1.205,0.500,0.298,0.961:\n"
-        "0000\n"
-        "0000\n"
-        "0000\n"
-        "0000\n"
+        '\n'
+        '     dance-single:\n'
+        '     Brackets:\n'
+        '     Edit:\n'
+        '     12:\n'
+        '     0.793,1.205,0.500,0.298,0.961:\n'
+        '0000\n'
+        '0000\n'
+        '0000\n'
+        '0000\n'
     )
 
 
@@ -24,7 +24,7 @@ def testing_charts():
     variants[1].stepstype = 'dance-double'
     variants[2].description = 'Footswitches'
     variants[3].difficulty = 'Challenge'
-    variants[4].meter = 13
+    variants[4].meter = '13'
     variants[5].radarvalues = '1.000,1.000,1.000,1.000,1.000'
     variants[6].notes = '1000\n0100\n0010\n0001'
     return variants
@@ -32,8 +32,8 @@ def testing_charts():
 
 def testing_simfile():
     return (
-        "#TITLE:My Cool Song;\n"
-        "#ARTIST:My Cool Alias;\n"
+        '#TITLE:My Cool Song;\n'
+        '#ARTIST:My Cool Alias;\n'
     ) + SMCharts(testing_charts()).serialize()
     
 
@@ -46,7 +46,7 @@ class TestSMChart(unittest.TestCase):
         self.assertEqual('dance-single', unit.stepstype)
         self.assertEqual('Brackets', unit.description)
         self.assertEqual('Edit', unit.difficulty)
-        self.assertEqual(12, unit.meter)
+        self.assertEqual('12', unit.meter)
         self.assertEqual('0.793,1.205,0.500,0.298,0.961', unit.radarvalues)
         self.assertEqual('0000\n0000\n0000\n0000', unit.notes)
     
