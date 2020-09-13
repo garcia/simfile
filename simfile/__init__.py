@@ -13,7 +13,7 @@ from ._private.tee_file import tee_file
 __all__ = ['load', 'loads', 'open', 'CancelMutation', 'mutate']
 
 
-AnySimfile = Union[SSCSimfile, SMSimfile]
+_AnySimfile = Union[SSCSimfile, SMSimfile]
 
 
 def _open_args(kwargs):
@@ -22,14 +22,14 @@ def _open_args(kwargs):
     return open_args
 
 
-def load(file: Union[TextIO, Iterator[str]]) -> AnySimfile:
+def load(file: Union[TextIO, Iterator[str]]) -> _AnySimfile:
     """
     Load a text file object as a simfile using the correct implementation.
 
     If the file object has a filename with a matching extension, it will be
     used to infer the correct implementation. Otherwise, the first property
-    in the file is peeked at. If the first property key is "VERSION", the
-    file is treated as an SSC file; otherwise, it's treated as an SM file.
+    in the file is peeked at. If its key is "VERSION", the file is treated
+    as an SSC file; otherwise, it's treated as an SM file.
     """
     
     # Check for filename hint first
@@ -40,10 +40,8 @@ def load(file: Union[TextIO, Iterator[str]]) -> AnySimfile:
         elif suffix == '.sm':
             return SMSimfile(file=file)    
 
-    # Split file into two streams for peeking
+    # Peek at the first property next
     peek, file = tee_file(file)
-
-    # Default first_key to a string so we can easily fall back to SMSimfile
     parser = MSDParser(file=peek)
     first_key = ''
     for first_key, _ in parser:
@@ -56,19 +54,19 @@ def load(file: Union[TextIO, Iterator[str]]) -> AnySimfile:
         return SMSimfile(file=file)
 
 
-def loads(string: str = None) -> AnySimfile:
+def loads(string: str = None) -> _AnySimfile:
     """
     Load a string as a simfile using the correct implementation.
     """
     return load(StringIO(string))
 
 
-def open(filename: str, **kwargs) -> AnySimfile:
+def open(filename: str, **kwargs) -> _AnySimfile:
     """
     Load a simfile from the given filename using the correct implementation.
 
     Keyword arguments are passed to the builtin `open` function. Encoding
-    default to UTF-8.
+    defaults to UTF-8.
     """
     return load(builtins.open(filename, 'r', **_open_args(kwargs)))
 
@@ -78,13 +76,16 @@ class CancelMutation(BaseException):
 
 
 @contextmanager
-def mutate(filename: str, **kwargs):
+def mutate(filename: str, **kwargs) -> Iterator[_AnySimfile]:
     """
     Context manager that loads a simfile by filename on entry, then saves
     it to the disk on exit.
 
     To abort the mutation without causing the context manager to re-throw
     an exception, raise CancelMutation.
+
+    Keyword arguments are passed to the builtin `open` function. Encoding
+    defaults to UTF-8.
     """
     simfile = open(filename, **kwargs)
     try:
