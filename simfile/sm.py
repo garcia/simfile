@@ -79,7 +79,7 @@ class SMChart(BaseChart):
                 self.notes == other.notes)
 
 
-class SMCharts(BaseCharts):
+class SMCharts(BaseCharts[SMChart]):
 
     @property
     def supported_fields(self):

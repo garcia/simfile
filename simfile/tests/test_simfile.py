@@ -48,45 +48,6 @@ class TestChart(unittest.TestCase):
 
 class TestCharts(unittest.TestCase):
 
-    def test_get(self):
-        charts = get_simfile('Tribal Style.sm').charts
-        chart_sx = charts.get(stepstype='dance-single', difficulty='Challenge')
-        self.assertIsInstance(chart_sx, SMChart)
-        self.assertEqual(chart_sx.meter, 10)
-        chart_sh = charts.get(stepstype='dance-single', difficulty='Hard')
-        self.assertEqual(chart_sh.meter, 9)
-        chart_dx = charts.get(stepstype='dance-double', difficulty='Challenge')
-        self.assertEqual(chart_dx.meter, 11)
-        chart_dh = charts.get(stepstype='dance-double', difficulty='Hard')
-        self.assertEqual(chart_dh.meter, 9)
-        chart_sn = charts.get(difficulty='Beginner')
-        self.assertEqual(chart_sn.meter, 1)
-        self.assertEqual(charts.get(description='J.Casarino'), chart_dx)
-        self.assertRaises(LookupError, charts.get, difficulty='Easy')
-        self.assertRaises(LookupError, charts.get, meter=9)
-        self.assertRaises(LookupError, charts.get, description='K. Ward')
-
-    def test_filter(self):
-        charts = get_simfile('Tribal Style.sm').charts
-        chart_sx = charts.get(stepstype='dance-single', difficulty='Challenge')
-        chart_dx = charts.get(stepstype='dance-double', difficulty='Challenge')
-        
-        filter_result = charts.filter(stepstype='dance-single', difficulty='Challenge')
-        filter_iter = iter(filter_result)
-        self.assertEqual(chart_sx, next(filter_iter))
-        self.assertRaises(StopIteration, next, filter_iter)
-
-        filter_result = charts.filter(difficulty='Challenge')
-        filter_iter = iter(filter_result)
-        self.assertEqual(chart_sx, next(filter_iter))
-        self.assertEqual(chart_dx, next(filter_iter))
-        self.assertRaises(StopIteration, next, filter_iter)
-
-        self.assertEqual(len(list(charts.filter(stepstype='dance-single'))), 5)
-        self.assertEqual(len(list(charts.filter(stepstype='dance-double'))), 4)
-        # A filter that matches nothing should yield nothing, not raise
-        self.assertFalse(list(charts.filter(stepstype='dance-triple')))
-
     def test_repr(self):
         charts = get_simfile('Tribal Style.sm').charts
         repr_charts = repr(charts)

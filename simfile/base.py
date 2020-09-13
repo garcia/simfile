@@ -3,17 +3,10 @@ from collections import OrderedDict, UserList
 from typing import Any, FrozenSet, Iterator, Mapping, Optional, TextIO, Union
 
 from ._private.serializable import Serializable
+from ._private.generic import E, ListWithRepr
 
 
 __all__ = ['BaseChart', 'BaseCharts', 'BaseSimfile']
-
-
-class _ListWithRepr(UserList):
-    """
-    Subclass of UserList that overrides __repr__.
-    """
-    def __repr__(self):
-        return '%s(%s)' % (self.__class__.__name__, super().__repr__())
 
 
 class BaseChart(Serializable, metaclass=ABCMeta):
@@ -55,61 +48,12 @@ class BaseChart(Serializable, metaclass=ABCMeta):
         return f'<{cls}: {self.stepstype} {self.difficulty} {self.meter}>'
 
 
-class BaseCharts(_ListWithRepr, Serializable, metaclass=ABCMeta):
+class BaseCharts(ListWithRepr[E], Serializable, metaclass=ABCMeta):
     """
-    A filterable list of BaseChart objects.
+    A list of BaseChart objects.
     """
     def __init__(self, data=None):
         super().__init__(data)
-
-    @property
-    @abstractmethod
-    def supported_fields(self) -> FrozenSet[str]:
-        pass
-
-    def _match(self, chart: BaseChart, fields: Mapping[str, Any]):
-        for field, value in fields.items():
-            if getattr(chart, field) != value:
-                return False
-        return True
-
-    def filter(self, **fields: Any):
-        """
-        Filter charts according to the provided field values.
-        
-        All provided fields must be present in the implementation's
-        `supported_fields()`, otherwise KeyError will be raised.
-
-        In order for a chart to be yielded, all fields must exactly match
-        the provided value.
-        """
-        unsupported_fields = set(fields.keys()) - self.supported_fields
-        if unsupported_fields:
-            raise KeyError('unsupported fields:', unsupported_fields)
-        for chart in self:
-            if self._match(chart, fields):
-                yield chart
-
-    def get(self, **fields: Any):
-        """
-        Get a chart that matches the given criteria.
-
-        Arguments are identical to those of `filter`. Raises ``LookupError``
-        if any number of charts other than one are matched.
-        """
-        generator = self.filter(**fields)
-
-        try:
-            match = next(generator)
-        except StopIteration:
-            raise LookupError('no charts match these parameters')
-
-        try:
-            next(generator)
-        except StopIteration:
-            return match
-
-        raise LookupError('multiple charts match these parameters')
 
     @Serializable.enable_string_output
     def serialize(self, file: TextIO):

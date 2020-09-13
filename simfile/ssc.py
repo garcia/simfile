@@ -31,13 +31,8 @@ class SSCChart(BaseChart, OrderedDict):
         file.write('\n')
 
 
-class SSCCharts(BaseCharts):
-
-    @property
-    def supported_fields(self):
-        return frozenset({'chartname', 'stepstype', 'description',
-                          'chartstyle', 'difficulty', 'meter', 'radarvalues',
-                          'credit', 'displaybpm'})
+class SSCCharts(BaseCharts[SSCChart]):
+    pass
 
 
 class SSCSimfile(BaseSimfile):
