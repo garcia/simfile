@@ -34,8 +34,8 @@ def testing_simfile():
     return (
         "#TITLE:My Cool Song;\n"
         "#ARTIST:My Cool Alias;\n"
-    )
-    SMCharts(testing_charts()).serialize()
+    ) + SMCharts(testing_charts()).serialize()
+    
 
 
 class TestSMChart(unittest.TestCase):
@@ -107,11 +107,41 @@ class TestSMCharts(unittest.TestCase):
 
 
 class TestSMSimfile(unittest.TestCase):
-    def test_init(self):
-        unit = SMSimfile(testing_simfile())
+    
+    def test_init_and_properties(self):
+        unit = SMSimfile(string=testing_simfile())
+        
+        self.assertEqual('My Cool Song', unit['TITLE'])
+        self.assertEqual('My Cool Alias', unit['ARTIST'])
+        self.assertNotIn('SUBTITLE', unit)
+        self.assertEqual(7, len(unit.charts))
+
+    def test_repr(self):
+        unit = SMSimfile(string=testing_simfile())
+
+        self.assertEqual('<SMSimfile: My Cool Song>', repr(unit))
+
+        unit['SUBTITLE'] = '(edited)'
+
+        self.assertEqual('<SMSimfile: My Cool Song (edited)>', repr(unit))
+
+    def test_eq(self):
+        variants = tuple(SMSimfile(string=testing_simfile()) for _ in range(3))
+        variants[1]['TITLE'] = 'Cool Song 2'
+        variants[2].charts[0].description = 'Footswitches'
+        base = variants[0]
+        copy = deepcopy(base)
+
+        # Identity check
+        self.assertEqual(base, base)
+
+        # Equality check
+        self.assertEqual(base, copy)
+
+        # Inequality checks
+        self.assertNotEqual(base, variants[1])
+        self.assertNotEqual(base, variants[2])
 
 
-
-
-if __name__ == "__main__":
+if __name__ == '__main__':
     unittest.main()
