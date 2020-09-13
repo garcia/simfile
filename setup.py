@@ -8,7 +8,7 @@ setuptools.setup(
     name='simfile',
     version='2.0.0-alpha',
     author='Ash Garcia',
-    author_email='python-simfile@garcia.sh'
+    author_email='python-simfile@garcia.sh',
     description='A simfile parser for Python',
     long_description=long_description,
     long_description_content_type='text/markdown',
