@@ -68,7 +68,8 @@ def open(filename: str, **kwargs) -> _AnySimfile:
     Keyword arguments are passed to the builtin `open` function. Encoding
     defaults to UTF-8.
     """
-    return load(builtins.open(filename, 'r', **_open_args(kwargs)))
+    with builtins.open(filename, 'r', **_open_args(kwargs)) as file:
+        return load(file)
 
 
 class CancelMutation(BaseException):
