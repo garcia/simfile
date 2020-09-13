@@ -1,9 +1,6 @@
 from abc import ABCMeta, abstractmethod
 from collections import OrderedDict, UserList
-from io import StringIO
-from typing import Any, Callable, Collection, FrozenSet, Generator, Generic, \
-                   Iterator, Mapping, NewType, Optional, Sequence, TextIO, \
-                   TypeVar, Union
+from typing import Any, FrozenSet, Iterator, Mapping, Optional, TextIO, Union
 
 from ._private.serializable import Serializable
 
