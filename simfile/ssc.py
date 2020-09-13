@@ -1,8 +1,6 @@
 from collections import OrderedDict
 from typing import Optional
 
-from msdparser import MSDParser
-
 from .base import BaseChart, BaseCharts, BaseSimfile
 from ._private.property import item_property
 from ._private.serializable import Serializable
@@ -37,22 +35,21 @@ class SSCCharts(BaseCharts[SSCChart]):
 
 class SSCSimfile(BaseSimfile):
 
-    def _parse(self):
-        with MSDParser(file=self.file, string=self.string) as parser:
-            self._charts = SSCCharts()
-            partial_chart: Optional[SSCChart] = None
-            for (key, value) in parser:
-                key = key.upper()
-                if key == 'NOTEDATA':
-                    if partial_chart is not None:
-                        self._charts.append(partial_chart)
-                    partial_chart = SSCChart()
-                elif partial_chart is not None:
-                    partial_chart[key] = value
-                else:
-                    self[key] = value
-            if partial_chart is not None:
-                self._charts.append(partial_chart)
+    def _parse(self, parser):
+        self._charts = SSCCharts()
+        partial_chart: Optional[SSCChart] = None
+        for (key, value) in parser:
+            key = key.upper()
+            if key == 'NOTEDATA':
+                if partial_chart is not None:
+                    self._charts.append(partial_chart)
+                partial_chart = SSCChart()
+            elif partial_chart is not None:
+                partial_chart[key] = value
+            else:
+                self[key] = value
+        if partial_chart is not None:
+            self._charts.append(partial_chart)
     
     @property
     def charts(self):

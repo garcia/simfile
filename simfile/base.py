@@ -2,6 +2,8 @@ from abc import ABCMeta, abstractmethod
 from collections import OrderedDict, UserList
 from typing import Any, FrozenSet, Iterator, Mapping, Optional, TextIO, Union
 
+from msdparser import MSDParser
+
 from ._private.serializable import Serializable
 from ._private.generic import E, ListWithRepr
 
@@ -77,16 +79,12 @@ class BaseSimfile(OrderedDict, Serializable, metaclass=ABCMeta):
     def __init__(self, *,
                  file: Optional[Union[TextIO, Iterator[str]]] = None,
                  string: Optional[str] = None):
-        if file is None and string is None:
-            raise ValueError("must provide either a file or a string")
-        if file is not None and string is not None:
-            raise ValueError("must provide either a file or a string, not both")
-        self.file = file
-        self.string = string
-        self._parse()
+        if file is not None or string is not None:
+            with MSDParser(file=file, string=string) as parser:
+                self._parse(parser)
     
     @abstractmethod
-    def _parse(self):
+    def _parse(self, parser: MSDParser):
         pass
 
     @Serializable.enable_string_output

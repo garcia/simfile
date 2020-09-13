@@ -1,5 +1,3 @@
-from msdparser import MSDParser
-
 from .base import BaseChart, BaseCharts, BaseSimfile
 from ._private.property import attr_property
 from ._private.serializable import Serializable
@@ -88,15 +86,14 @@ class SMCharts(BaseCharts[SMChart]):
 
 class SMSimfile(BaseSimfile):
 
-    def _parse(self):
-        with MSDParser(file=self.file, string=self.string) as parser:
-            self._charts = SMCharts()
-            for (key, value) in parser:
-                key = key.upper()
-                if key == 'NOTES':
-                    self._charts.append(SMChart(string=value))
-                else:
-                    self[key] = value
+    def _parse(self, parser):
+        self._charts = SMCharts()
+        for (key, value) in parser:
+            key = key.upper()
+            if key == 'NOTES':
+                self._charts.append(SMChart(string=value))
+            else:
+                self[key] = value
     
     @property
     def charts(self):
