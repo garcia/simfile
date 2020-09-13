@@ -5,7 +5,7 @@ from typing import Any, Callable, Collection, FrozenSet, Generator, Generic, \
                    Iterator, Mapping, NewType, Optional, Sequence, TextIO, \
                    TypeVar, Union
 
-from _private.serializable import Serializable
+from ._private.serializable import Serializable
 
 
 __all__ = ['BaseChart', 'BaseCharts', 'BaseSimfile']
@@ -13,7 +13,7 @@ __all__ = ['BaseChart', 'BaseCharts', 'BaseSimfile']
 
 class _ListWithRepr(UserList):
     """
-    Subclass of UserLis that overrides __repr__.
+    Subclass of UserList that overrides __repr__.
     """
     def __repr__(self):
         return '%s(%s)' % (self.__class__.__name__, super().__repr__())
@@ -62,6 +62,9 @@ class BaseCharts(_ListWithRepr, Serializable, metaclass=ABCMeta):
     """
     A filterable list of BaseChart objects.
     """
+    def __init__(self, data=None):
+        super().__init__(data)
+
     @property
     @abstractmethod
     def supported_fields(self) -> FrozenSet[str]:
@@ -173,5 +176,8 @@ class BaseSimfile(OrderedDict, Serializable, metaclass=ABCMeta):
         charts.
         """
         return (type(self) is type(other) and
-                super(OrderedDict, self) == super(OrderedDict, other) and
+                OrderedDict.__eq__(self, other) and
                 self.charts == other.charts)
+    
+    def __ne__(self, other):
+        return not self.__eq__(other)
