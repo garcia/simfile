@@ -28,9 +28,12 @@ class Timing(UserList):
     The sole constructor argument should be a string of BPM or stop values.
     """
     def __init__(self, string: str):
-        for row in string.split(','):
-            beat, value = row.strip().split('=')
-            self.append((decimal_to_192nd(beat), Decimal(value)))
+        super().__init__()
+        
+        if string.strip():
+            for row in string.split(','):
+                beat, value = row.strip().split('=')
+                self.append((decimal_to_192nd(beat), Decimal(value)))
 
     def __str__(self):
         return ',\n'.join(f'{decimal_from_192nd(beat)}:{value}'
