@@ -5,6 +5,7 @@ from msdparser import MSDParser
 
 from .base import BaseChart, BaseCharts, BaseSimfile
 from ._private.property import item_property
+from ._private.serializable import Serializable
 
 
 __all__ = ['SSCChart', 'SSCCharts', 'SSCSimfile']
@@ -22,6 +23,7 @@ class SSCChart(BaseChart, OrderedDict):
     displaybpm = item_property('DISPLAYBPM')
     notes = item_property('NOTES')
 
+    @Serializable.enable_string_output
     def serialize(self, file):
         file.write('#NOTEDATA:;\n')
         for (key, value) in self.items():

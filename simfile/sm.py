@@ -1,9 +1,8 @@
-from collections import OrderedDict
-
 from msdparser import MSDParser
 
 from .base import BaseChart, BaseCharts, BaseSimfile
 from ._private.property import attr_property
+from ._private.serializable import Serializable
 
 
 __all__ = ['SMChart', 'SMCharts', 'SMSimfile']
@@ -45,14 +44,15 @@ class SMChart(BaseChart):
     radarvalues = attr_property('_radarvalues', str)
     notes = attr_property('_notes', str)
 
+    @Serializable.enable_string_output
     def serialize(self, file):
         file.write(
             f'#NOTES:\n'
-            f'     {self.stepstype},\n'
-            f'     {self.description},\n'
-            f'     {self.difficulty},\n'
-            f'     {self.meter},\n'
-            f'     {self.radarvalues},\n'
+            f'     {self.stepstype}:\n'
+            f'     {self.description}:\n'
+            f'     {self.difficulty}:\n'
+            f'     {self.meter}:\n'
+            f'     {self.radarvalues}:\n'
             f'{self.notes}\n'
             f';'
         )
