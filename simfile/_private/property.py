@@ -1,23 +1,27 @@
-def attr_property(private_name):
+from typing import Any
+
+
+def attr_property(private_name, type=Any):
 
     @property
-    def chart_property(self):
+    def attr_property(self):
         return getattr(self, private_name)
 
-    @chart_property.setter
-    def chart_property(self, value):
+    @attr_property.setter
+    def attr_property(self, value):
         setattr(self, private_name, value)
 
-    return chart_property
+    return attr_property
 
-def item_property(name):
+
+def item_property(name, type=Any):
 
     @property
-    def chart_property(self):
+    def item_property(self) -> type:
         return self[name]
 
-    @chart_property.setter
-    def chart_property(self, value):
+    @attr_property.setter
+    def item_property(self, value: type) -> None:
         self[name] = value
 
-    return chart_property
+    return item_property

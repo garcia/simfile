@@ -38,12 +38,12 @@ class SMChart(BaseChart):
 
     `notes` is the note data as a string.
     """
-    stepstype = attr_property('_stepstype')
-    description = attr_property('_description')
-    difficulty = attr_property('_difficulty')
-    meter = attr_property('_meter')
-    radarvalues = attr_property('_radarvalues')
-    notes = attr_property('_notes')
+    stepstype = attr_property('_stepstype', str)
+    description = attr_property('_description', str)
+    difficulty = attr_property('_difficulty', str)
+    meter = attr_property('_meter', int)
+    radarvalues = attr_property('_radarvalues', str)
+    notes = attr_property('_notes', str)
 
     def serialize(self, file):
         file.write(
