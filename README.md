@@ -1,19 +1,11 @@
-simfile
-=======
+# simfile
 
-A simfile parser for Python. This module currently only supports the .SM
-format; .SSC support is planned for the future.
+A modern simfile library for Python 3 that supports .sm and .ssc files.
 
-Requirements
-------------
+## Installing
 
-Python 2.6 requires [ordereddict](https://pypi.python.org/pypi/ordereddict),
-which is packaged with Python from 2.7 onward.
+    pip install simfile
 
-`simfile` for Python 3 is available on the
-[py3](https://github.com/grantgarcia/simfile/tree/py3) branch.
+## Documentation
 
-Documentation
--------------
-
-Documentation is available [here](https://grantgarcia.org/simfile).
+https://simfile.readthedocs.io/en/latest/
