@@ -4,7 +4,6 @@ import sys
 
 import sphinx_rtd_theme
 
-import simfile
 
 # Configuration file for the Sphinx documentation builder.
 #
@@ -22,14 +21,13 @@ import simfile
 # import sys
 # sys.path.insert(0, os.path.abspath('.'))
 
-import os
-import sys
 sys.path.insert(0, os.path.abspath('../../'))
+
+import simfile
 
 
 # -- Project information -----------------------------------------------------
 
-import simfile
 project = 'simfile'
 release = simfile.__version__
 copyright = '2020, Ash Garcia'
