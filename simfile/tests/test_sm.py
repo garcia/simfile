@@ -34,7 +34,7 @@ def testing_simfile():
     return (
         '#TITLE:My Cool Song;\n'
         '#ARTIST:My Cool Alias;\n'
-    ) + SMCharts(testing_charts()).serialize()
+    ) + str(SMCharts(testing_charts()))
     
 
 
@@ -53,7 +53,7 @@ class TestSMChart(unittest.TestCase):
     def test_serialize(self):
         unit = SMChart(testing_chart())
 
-        self.assertEqual(f'#NOTES:{testing_chart()};', unit.serialize())
+        self.assertEqual(f'#NOTES:{testing_chart()};', str(unit))
 
     def test_eq(self):
         variants = testing_charts()
@@ -92,7 +92,9 @@ class TestSMCharts(unittest.TestCase):
     def test_serialize(self):
         unit = SMCharts(testing_charts())
 
-        value = unit.serialize()
+        serialized = str(unit)
+        self.assertTrue(serialized.startswith(str(testing_charts()[0])))
+        self.assertTrue(serialized.endswith(str(testing_charts()[-1]) + '\n'))
     
     def test_repr(self):
         chart = SMChart(testing_chart())

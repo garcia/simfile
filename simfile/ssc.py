@@ -21,7 +21,6 @@ class SSCChart(BaseChart, OrderedDict):
     displaybpm = item_property('DISPLAYBPM')
     notes = item_property('NOTES')
 
-    @Serializable.enable_string_output
     def serialize(self, file):
         file.write('#NOTEDATA:;\n')
         for (key, value) in self.items():

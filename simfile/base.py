@@ -57,7 +57,6 @@ class BaseCharts(ListWithRepr[E], Serializable, metaclass=ABCMeta):
     def __init__(self, data=None):
         super().__init__(data)
 
-    @Serializable.enable_string_output
     def serialize(self, file: TextIO):
         for chart in self:
             chart.serialize(file)
@@ -87,7 +86,6 @@ class BaseSimfile(OrderedDict, Serializable, metaclass=ABCMeta):
     def _parse(self, parser: MSDParser):
         pass
 
-    @Serializable.enable_string_output
     def serialize(self, file: TextIO):
         for (key, value) in self.items():
             file.write(f'#{key}:{value};\n')

@@ -42,7 +42,6 @@ class SMChart(BaseChart):
     radarvalues = attr_property('_radarvalues', str)
     notes = attr_property('_notes', str)
 
-    @Serializable.enable_string_output
     def serialize(self, file):
         file.write(
             f'#NOTES:\n'
