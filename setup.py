@@ -17,5 +17,8 @@ setup(
     install_requires=[
         'msdparser>=0.1.3',
     ],
+    tests_require=[
+        'pyfakefs'
+    ],
     zip_safe=False,
 )

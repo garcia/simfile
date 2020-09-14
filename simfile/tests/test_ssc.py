@@ -35,6 +35,7 @@ def testing_charts():
 
 def testing_simfile():
     return (
+        '#VERSION:0.83;\n'
         '#TITLE:My Cool Song;\n'
         '#ARTIST:My Cool Alias;\n'
     ) + SSCCharts(testing_charts()).serialize()
