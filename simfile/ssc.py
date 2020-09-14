@@ -33,6 +33,21 @@ class SSCCharts(BaseCharts[SSCChart]):
 
 
 class SSCSimfile(BaseSimfile):
+    version = item_property('VERSION')
+    origin = item_property('ORIGIN')
+    previewvid = item_property('PREVIEWVID')
+    jacket = item_property('JACKET')
+    cdimage = item_property('CDIMAGE')
+    discimage = item_property('DISCIMAGE')
+    delays = item_property('DELAYS')
+    warps = item_property('WARPS')
+    timesignatures = item_property('TIMESIGNATURES')
+    tickcounts = item_property('TICKCOUNTS')
+    combos = item_property('COMBOS')
+    speeds = item_property('SPEEDS')
+    scrolls = item_property('SCROLLS')
+    fakes = item_property('FAKES')
+    labels = item_property('LABELS')
 
     def _parse(self, parser):
         self._charts = SSCCharts()
