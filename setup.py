@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 from setuptools import setup
 
 from simfile import __version__ as version
@@ -24,6 +23,8 @@ setup(
         'Topic :: Software Development :: Libraries :: Python Modules',
         'Typing :: Typed',
     ],
+    license='MIT',
+    keywords='stepmania simfile sm ssc',
     zip_safe=False,
     install_requires=[
         'msdparser>=0.1.3',
