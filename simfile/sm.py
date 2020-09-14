@@ -7,6 +7,9 @@ __all__ = ['SMChart', 'SMCharts', 'SMSimfile']
 
 
 class SMChart(BaseChart):
+    """
+    SM implementation of :class:`~simfile.base.BaseChart`.
+    """
     stepstype = attr_property('_stepstype', str)
     description = attr_property('_description', str)
     difficulty = attr_property('_difficulty', str)
@@ -49,13 +52,20 @@ class SMChart(BaseChart):
 
 
 class SMCharts(BaseCharts[SMChart]):
+    """
+    SM implementation of :class:`~simfile.base.BaseCharts`.
 
+    List elements are :class:`SMChart` instances.
+    """
     @property
     def supported_fields(self):
         return frozenset({'stepstype', 'description', 'difficulty', 'meter', 'radarvalues'})
 
 
 class SMSimfile(BaseSimfile):
+    """
+    SM implementation of :class:`~simfile.base.BaseSimfile`.
+    """
 
     def _parse(self, parser):
         self._charts = SMCharts()
