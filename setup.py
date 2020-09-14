@@ -1,12 +1,15 @@
 #!/usr/bin/env python3
 from setuptools import setup
 
+from simfile import __version__ as version
+
+
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setup(
     name='simfile',
-    version='2.0.0-alpha',
+    version=version,
     author='Ash Garcia',
     author_email='python-simfile@garcia.sh',
     description='Modern simfile library for Python',
@@ -14,6 +17,11 @@ setup(
     long_description_content_type='text/markdown',
     url='https://github.com/garcia/simfile',
     packages=['simfile'],
+    command_options={
+        'build_sphinx': {
+            'version': ('setup.py', version),
+        },
+    },
     classifiers=[
         'Development Status :: 3 - Alpha',
         'Programming Language :: Python :: 3',

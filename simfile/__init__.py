@@ -5,11 +5,13 @@ from itertools import tee
 from typing import cast, Iterator, TextIO, Tuple, TypeVar, Union
 
 from msdparser import MSDParser
+
 from .ssc import SSCSimfile
 from .sm import SMSimfile
 from ._private.tee_file import tee_file
 
 
+__version__ = '2.0.0-alpha.1'
 __all__ = ['load', 'loads', 'open', 'CancelMutation', 'mutate']
 
 
@@ -73,7 +75,9 @@ def open(filename: str, **kwargs) -> _AnySimfile:
 
 
 class CancelMutation(BaseException):
-    pass
+    """
+    Raise to abort a mutation (the simfile won't be saved to disk).
+    """
 
 
 @contextmanager
