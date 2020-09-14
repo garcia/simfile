@@ -1,7 +1,7 @@
-from typing import Any
+from typing import Any, MutableMapping, Optional
 
 
-def attr_property(private_name, type=Any):
+def attr_property(private_name, type=str):
 
     @property
     def attr_property(self):
@@ -14,14 +14,18 @@ def attr_property(private_name, type=Any):
     return attr_property
 
 
-def item_property(name, type=Any):
+def item_property(name):
 
     @property
-    def item_property(self) -> type:
-        return self[name]
+    def item_property(self: MutableMapping[str, str]) -> Optional[str]:
+        return self.get(name)
 
     @item_property.setter
-    def item_property(self, value: type) -> None:
+    def item_property(self: MutableMapping[str, str], value: str) -> None:
         self[name] = value
+    
+    @item_property.deleter
+    def item_property(self: MutableMapping[str, str]) -> None:
+        del self[name]
 
     return item_property
