@@ -14,6 +14,13 @@ setup(
     long_description_content_type='text/markdown',
     url='https://github.com/garcia/simfile',
     packages=['simfile'],
+    classifiers=[
+        'Development Status :: 3 - Alpha',
+        'Programming Language :: Python :: 3',
+        'Topic :: Games/Entertainment',
+        'Topic :: Software Development :: Libraries :: Python Modules',
+        'Typing :: Typed',
+    ],
     install_requires=[
         'msdparser>=0.1.3',
     ],
