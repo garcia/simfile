@@ -42,7 +42,7 @@ def testing_simfile():
     
 
 
-class TestSMChart(unittest.TestCase):
+class TestSSCChart(unittest.TestCase):
     
     def test_init_and_properties(self):
         unit = SSCChart(testing_chart())
@@ -104,7 +104,7 @@ class TestSMChart(unittest.TestCase):
         self.assertEqual('<SSCChart: dance-single Edit 12>', repr(unit))
 
 
-class TestSMCharts(unittest.TestCase):
+class TestSSCCharts(unittest.TestCase):
     
     def test_init_and_list_methods(self):
         unit = SSCCharts(testing_charts())
@@ -130,13 +130,15 @@ class TestSMCharts(unittest.TestCase):
         self.assertEqual(f'SSCCharts([{repr_chart}, {repr_chart}])', repr(unit))
 
 
-class TestSMSimfile(unittest.TestCase):
+class TestSSCSimfile(unittest.TestCase):
     
     def test_init_and_properties(self):
         unit = SSCSimfile(string=testing_simfile())
         
         self.assertEqual('My Cool Song', unit['TITLE'])
+        self.assertEqual('My Cool Song', unit.title)
         self.assertEqual('My Cool Alias', unit['ARTIST'])
+        self.assertEqual('My Cool Alias', unit.artist)
         self.assertNotIn('SUBTITLE', unit)
         self.assertEqual(10, len(unit.charts))
 

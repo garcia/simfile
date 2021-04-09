@@ -114,7 +114,9 @@ class TestSMSimfile(unittest.TestCase):
         unit = SMSimfile(string=testing_simfile())
         
         self.assertEqual('My Cool Song', unit['TITLE'])
+        self.assertEqual('My Cool Song', unit.title)
         self.assertEqual('My Cool Alias', unit['ARTIST'])
+        self.assertEqual('My Cool Alias', unit.artist)
         self.assertNotIn('SUBTITLE', unit)
         self.assertEqual(7, len(unit.charts))
 

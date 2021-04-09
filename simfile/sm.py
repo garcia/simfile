@@ -10,12 +10,12 @@ class SMChart(BaseChart):
     """
     SM implementation of :class:`~simfile.base.BaseChart`.
     """
-    stepstype = attr_property('_stepstype', str)
-    description = attr_property('_description', str)
-    difficulty = attr_property('_difficulty', str)
-    meter = attr_property('_meter', str)
-    radarvalues = attr_property('_radarvalues', str)
-    notes = attr_property('_notes', str)
+    stepstype = attr_property('_stepstype')
+    description = attr_property('_description')
+    difficulty = attr_property('_difficulty')
+    meter = attr_property('_meter')
+    radarvalues = attr_property('_radarvalues')
+    notes = attr_property('_notes')
 
     def serialize(self, file):
         file.write(
