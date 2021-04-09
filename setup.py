@@ -16,6 +16,10 @@ setup(
     author_email='python-simfile@garcia.sh',
     url='https://github.com/garcia/simfile',
     packages=find_packages(exclude=['*.tests']),
+    package_data={
+        'simfile': ['py.typed'],
+    },
+    include_package_data=True,
     classifiers=[
         'Development Status :: 3 - Alpha',
         'Programming Language :: Python :: 3',
@@ -27,7 +31,7 @@ setup(
     keywords='stepmania simfile sm ssc',
     zip_safe=False,
     install_requires=[
-        'msdparser>=1.0.0-alpha.2',
+        'msdparser>=1.0.0-alpha.3',
     ],
     python_requires='>=3.6',
     tests_require=[
