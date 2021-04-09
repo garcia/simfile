@@ -8,14 +8,12 @@ from msdparser import MSDParser
 
 from .ssc import SSCSimfile
 from .sm import SMSimfile
+from .types import Simfile
 from ._private.tee_file import tee_file
 
 
 __version__ = '2.0.0-alpha.2'
 __all__ = ['load', 'loads', 'open', 'CancelMutation', 'mutate']
-
-
-_AnySimfile = Union[SSCSimfile, SMSimfile]
 
 
 def _open_args(kwargs):
@@ -24,7 +22,7 @@ def _open_args(kwargs):
     return open_args
 
 
-def load(file: Union[TextIO, Iterator[str]]) -> _AnySimfile:
+def load(file: Union[TextIO, Iterator[str]]) -> Simfile:
     """
     Load a text file object as a simfile using the correct implementation.
 
@@ -56,14 +54,14 @@ def load(file: Union[TextIO, Iterator[str]]) -> _AnySimfile:
         return SMSimfile(file=file)
 
 
-def loads(string: str = None) -> _AnySimfile:
+def loads(string: str = None) -> Simfile:
     """
     Load a string as a simfile using the correct implementation.
     """
     return load(StringIO(string))
 
 
-def open(filename: str, **kwargs) -> _AnySimfile:
+def open(filename: str, **kwargs) -> Simfile:
     """
     Load a simfile from the given filename using the correct implementation.
 
@@ -81,7 +79,7 @@ class CancelMutation(BaseException):
 
 
 @contextmanager
-def mutate(filename: str, **kwargs) -> Iterator[_AnySimfile]:
+def mutate(filename: str, **kwargs) -> Iterator[Simfile]:
     """
     Context manager that loads a simfile by filename on entry, then saves
     it to the disk on exit.
