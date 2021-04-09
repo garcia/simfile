@@ -1,4 +1,4 @@
-from setuptools import setup
+from setuptools import setup, find_packages
 
 from simfile import __version__ as version
 
@@ -15,7 +15,7 @@ setup(
     author='Ash Garcia',
     author_email='python-simfile@garcia.sh',
     url='https://github.com/garcia/simfile',
-    packages=['simfile'],
+    packages=find_packages(exclude=['*.tests']),
     classifiers=[
         'Development Status :: 3 - Alpha',
         'Programming Language :: Python :: 3',
