@@ -119,3 +119,21 @@ class TestTimedNoteStream(unittest.TestCase):
             Note(beat=Beat(48,4), column=3, note_type=NoteType.TAIL),
             timed_notes[-1].note
         )
+
+
+class TestNoteCounter(unittest.TestCase):
+    def test_add_chart(self):
+        nc = NoteCounter()
+        nc.add_chart(testing_chart())
+        self.assertEqual(19, nc.count)
+    
+    def test_count_jumps_once_false(self):
+        nc = NoteCounter(count_jumps_once=False)
+        nc.add_chart(testing_chart())
+        self.assertEqual(23, nc.count)
+    
+    def test_add_chart_multiple_calls(self):
+        nc = NoteCounter()
+        nc.add_chart(testing_chart())
+        nc.add_chart(testing_chart())
+        self.assertEqual(38, nc.count)
