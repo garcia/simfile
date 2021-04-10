@@ -111,7 +111,7 @@ class TimedEvent(NamedTuple):
 
 class SimfileTiming(object):
     """
-    Utility class for converting time 
+    Utility class for converting time in a simfile to beats and vice-versa.
     """
     bpms: BeatEvents
     stops: BeatEvents
