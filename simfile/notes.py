@@ -1,11 +1,11 @@
 from enum import Enum
 from typing import NamedTuple, Generator
 
-from .timing import Beat
-from .types import Chart
+from .timing import Beat, SongTime, SimfileTiming
+from .types import Chart, Simfile
 
 
-__all__ = ['NoteType', 'Note', 'NoteStream']
+__all__ = ['NoteType', 'Note', 'NoteStream', 'TimedNote', 'TimedNoteStream']
 
 
 class NoteType(Enum):
@@ -44,3 +44,17 @@ class NoteStream(object):
     def from_chart(cls, chart: Chart) -> Generator[Note, None, None]:
         return cls.from_str(chart.notes)
 
+
+class TimedNote(NamedTuple):
+    time: SongTime
+    note: Note
+
+
+class TimedNoteStream(object):
+    def __init__(self, simfile: Simfile):
+        self.simfile_timing = SimfileTiming(simfile)
+
+    def from_chart(self, chart: Chart) -> Generator[TimedNote, None, None]:
+        for note in NoteStream.from_chart(chart):
+            time = self.simfile_timing.time_at(note.beat)
+            yield TimedNote(time=time, note=note)

@@ -4,7 +4,16 @@ import unittest
 
 from ..notes import *
 from ..timing import Beat
-from ..sm import SMChart
+from ..sm import SMSimfile, SMChart
+
+
+def testing_simfile():
+    return SMSimfile(string=
+        '#BPMS:0.000=60.000,\n'
+        '4.000=120.000;\n'
+        '#STOPS:6.000=1.000;\n'
+        '#OFFSET:0.000;\n'
+    )
 
 
 def testing_chart():
@@ -88,3 +97,25 @@ class TestNoteStream(unittest.TestCase):
             Note(beat=Beat(48,4), column=2, note_type=NoteType.MINE),
             Note(beat=Beat(48,4), column=3, note_type=NoteType.TAIL),
         ], notes)
+
+
+class TestTimedNoteStream(unittest.TestCase):
+    def test_from_chart(self):
+        timed_note_stream = TimedNoteStream(testing_simfile())
+        timed_notes = list(timed_note_stream.from_chart(testing_chart()))
+
+        self.assertAlmostEqual(4.000, timed_notes[0].time)
+        self.assertEqual(
+            Note(beat=Beat(16,4), column=0, note_type=NoteType.TAP),
+            timed_notes[0].note
+        )
+        self.assertAlmostEqual(4.250, timed_notes[1].time)
+        self.assertEqual(
+            Note(beat=Beat(18,4), column=2, note_type=NoteType.TAP),
+            timed_notes[1].note
+        )
+        self.assertAlmostEqual(9.000, timed_notes[-1].time)
+        self.assertEqual(
+            Note(beat=Beat(48,4), column=3, note_type=NoteType.TAIL),
+            timed_notes[-1].note
+        )
