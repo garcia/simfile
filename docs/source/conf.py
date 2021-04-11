@@ -30,7 +30,7 @@ import simfile
 
 project = 'simfile'
 release = simfile.__version__
-copyright = '2020, Ash Garcia'
+copyright = '2021, Ash Garcia'
 author = 'Ash Garcia'
 
 

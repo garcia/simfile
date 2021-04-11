@@ -23,3 +23,15 @@ simfile.ssc
 
 .. automodule:: simfile.ssc
     :members:
+
+simfile.notes
+-------------
+
+.. automodule:: simfile.notes
+    :members:
+
+simfile.timing
+--------------
+
+.. automodule:: simfile.timing
+    :members:

@@ -56,7 +56,7 @@ class BeatEvent(NamedTuple):
 
 class BeatEvents(ListWithRepr[BeatEvent]):
     """
-    A list of :class:`BeatEvent`s.
+    A list of :class:`BeatEvent` instances.
     """
     @classmethod
     def from_str(cls, string: str):

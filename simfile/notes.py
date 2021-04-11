@@ -89,8 +89,8 @@ class TimedNoteStream(object):
 
 class SameBeatNotes(Enum):
     """
-    Configuration options for :class:`~simfile.notes.NoteCounter`'s
-    `same_beat_notes` constructor parameter.
+    Configuration options for :class:`NoteCounter`'s `same_beat_notes`
+    constructor parameter.
     
     When multiple notes land on the same beat...
 
