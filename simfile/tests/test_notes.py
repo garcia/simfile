@@ -63,7 +63,7 @@ def testing_chart():
 
 
 class TestNoteStream(unittest.TestCase):
-    def test_from_str(self):
+    def test_from_chart(self):
         notes = list(NoteStream.from_chart(testing_chart()))
         self.assertListEqual([
             Note(beat=Beat(16,4), column=0, note_type=NoteType.TAP),
@@ -127,13 +127,39 @@ class TestNoteCounter(unittest.TestCase):
         nc.add_chart(testing_chart())
         self.assertEqual(19, nc.count)
     
-    def test_count_jumps_once_false(self):
-        nc = NoteCounter(count_jumps_once=False)
-        nc.add_chart(testing_chart())
-        self.assertEqual(23, nc.count)
-    
-    def test_add_chart_multiple_calls(self):
+    def test_add_chart_with_multiple_calls(self):
         nc = NoteCounter()
         nc.add_chart(testing_chart())
         nc.add_chart(testing_chart())
         self.assertEqual(38, nc.count)
+    
+    def test_constructor_note_types(self):
+        nc = NoteCounter(note_types=set((NoteType.TAP,)))
+        nc.add_chart(testing_chart())
+        self.assertEqual(15, nc.count)
+
+    def test_constructor_same_beat_notes_count_note_types(self):
+        nc = NoteCounter(
+            note_types=set((NoteType.MINE, NoteType.TAIL)),
+            same_beat_notes=SameBeatNotes.COUNT_NOTE_TYPES,
+        )
+        nc.add_chart(testing_chart())
+        self.assertEqual(4, nc.count)
+    
+    def test_constructor_same_beat_notes_count_all(self):
+        nc = NoteCounter(
+            note_types=set((NoteType.MINE, NoteType.TAIL)),
+            same_beat_notes=SameBeatNotes.COUNT_ALL,
+        )
+        nc.add_chart(testing_chart())
+        self.assertEqual(7, nc.count)
+    
+    def test_constructor_same_beat_minimum_2(self):
+        nc = NoteCounter(same_beat_minimum=2)
+        nc.add_chart(testing_chart())
+        self.assertEqual(4, nc.count)
+    
+    def test_constructor_same_beat_minimum_3(self):
+        nc = NoteCounter(same_beat_minimum=3)
+        nc.add_chart(testing_chart())
+        self.assertEqual(0, nc.count)
