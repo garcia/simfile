@@ -5,7 +5,7 @@ from enum import IntEnum
 from fractions import Fraction
 from functools import total_ordering
 from heapq import merge
-from typing import Tuple, MutableSequence, TypeVar, NamedTuple, Generic
+from typing import Iterable, Tuple, MutableSequence, TypeVar, NamedTuple, Generic
 
 from ._private.generic import ListWithRepr
 from .types import Simfile
