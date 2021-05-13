@@ -83,11 +83,11 @@ class TestSimfile(unittest.TestCase):
         self.assertEqual(sm['ARTIST'], 'KaW')
 
     def test_from_string(self):
-        with open('testdata/Tribal Style.sm', 'r', encoding='utf-8') as infile:
+        with codecs.open('testdata/Tribal Style.sm', 'r', 'utf-8') as infile:
             sm1 = SMSimfile(file=infile)
         # String input should be identical to filename input
-        with codecs.open('testdata/Tribal Style.sm', 'r', 'utf-8') as sm_file:
-            sm2 = simfile.loads(sm_file.read())
+        with codecs.open('testdata/Tribal Style.sm', 'r', 'utf-8') as infile:
+            sm2 = SMSimfile(string=infile.read())
         self.assertEqual(sm1, sm2)
         # Empty string argument is valid
         blank = SMSimfile(string='')
