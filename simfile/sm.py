@@ -72,9 +72,6 @@ class SMCharts(BaseCharts[SMChart]):
 
     List elements are :class:`SMChart` instances.
     """
-    @property
-    def supported_fields(self):
-        return frozenset({'stepstype', 'description', 'difficulty', 'meter', 'radarvalues'})
 
 
 class SMSimfile(BaseSimfile):
