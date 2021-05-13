@@ -7,7 +7,7 @@ from ...timing import Beat
 
 
 def testing_valid_chart():
-    return SMChart(
+    return SMChart.from_str(
         '\n'
         '     dance-single:\n'
         '     Brackets:\n'
@@ -42,7 +42,7 @@ def testing_valid_chart():
 
 
 def testing_invalid_chart():
-    return SMChart(
+    return SMChart.from_str(
         '\n'
         '     dance-single:\n'
         '     Brackets:\n'

@@ -1,6 +1,8 @@
 from collections import OrderedDict
 from typing import Optional
 
+from msdparser.msdparser import MSDParser
+
 from .base import BaseChart, BaseCharts, BaseSimfile
 from ._private.property import item_property
 from ._private.serializable import Serializable
@@ -30,6 +32,18 @@ class SSCChart(BaseChart, OrderedDict):
     credit = item_property('CREDIT')
     displaybpm = item_property('DISPLAYBPM')
     notes = item_property('NOTES')
+
+    def _parse(self, parser: MSDParser) -> None:
+        iterator = iter(parser)
+        
+        first_key, _ = next(iterator)
+        if first_key.upper() != 'NOTEDATA':
+            raise ValueError()
+        
+        for key, value in iterator:
+            self[key] = value
+            if key.upper() == 'NOTES':
+                break
 
     def serialize(self, file):
         file.write('#NOTEDATA:;\n')
@@ -79,7 +93,7 @@ class SSCSimfile(BaseSimfile):
     def _parse(self, parser):
         self._charts = SSCCharts()
         partial_chart: Optional[SSCChart] = None
-        for (key, value) in parser:
+        for key, value in parser:
             key = key.upper()
             if key == 'NOTEDATA':
                 if partial_chart is not None:

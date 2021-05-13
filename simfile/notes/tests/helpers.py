@@ -11,7 +11,7 @@ def testing_simfile():
 
 
 def testing_chart():
-    return SMChart(
+    return SMChart.from_str(
         '\n'
         '     dance-single:\n'
         '     Brackets:\n'

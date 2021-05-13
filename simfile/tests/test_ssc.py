@@ -6,17 +6,24 @@ from ..ssc import *
 
 
 def testing_chart():
-    return OrderedDict([
-        ('CHARTNAME', 'Brackets'),
-        ('STEPSTYPE', 'dance-single'),
-        ('DESCRIPTION', 'Brackets'),
-        ('CHARTSTYLE', ''),
-        ('DIFFICULTY', 'Edit'),
-        ('METER', '12'),
-        ('RADARVALUES', '0.793,1.205,0.500,0.298,0.961'),
-        ('CREDIT', 'shala*'),
-        ('NOTES', '\n\n0000\n0000\n0000\n0000\n'),
-    ])
+    return """
+#NOTEDATA:;
+#CHARTNAME:Brackets;
+#STEPSTYPE:dance-single;
+#DESCRIPTION:Brackets;
+#CHARTSTYLE:;
+#DIFFICULTY:Edit;
+#METER:12;
+#RADARVALUES:0.793,1.205,0.500,0.298,0.961;
+#CREDIT:shala*;
+#NOTES:
+
+0000
+0000
+0000
+0000
+;
+    """
 
 
 def testing_charts():

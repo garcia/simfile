@@ -49,6 +49,15 @@ class BaseChart(Serializable, metaclass=ABCMeta):
     def notes(self) -> str:
         pass
     
+    def __init__(self, string: Optional[str] = None):
+        if string is not None:
+            with MSDParser(string=string) as parser:
+                self._parse(parser)
+    
+    @abstractmethod
+    def _parse(self, parser: MSDParser):
+        pass
+
     def __repr__(self) -> str:
         cls = self.__class__.__name__
         return f'<{cls}: {self.stepstype} {self.difficulty} {self.meter}>'

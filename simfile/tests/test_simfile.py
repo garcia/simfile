@@ -19,7 +19,7 @@ def get_simfile(filename, cache={}):
 
 
 def get_default_chart():
-    return SMChart(
+    return SMChart.from_str(
         'dance-single:'
         'Brackets:'
         'Edit:'

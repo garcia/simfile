@@ -20,7 +20,7 @@ def testing_chart():
 
 
 def testing_charts():
-    variants = tuple(SMChart(testing_chart()) for _ in range(7))
+    variants = tuple(SMChart.from_str(testing_chart()) for _ in range(7))
     variants[1].stepstype = 'dance-double'
     variants[2].description = 'Footswitches'
     variants[3].difficulty = 'Challenge'
@@ -41,7 +41,7 @@ def testing_simfile():
 class TestSMChart(unittest.TestCase):
     
     def test_init_and_properties(self):
-        unit = SMChart(testing_chart())
+        unit = SMChart.from_str(testing_chart())
 
         self.assertEqual('dance-single', unit.stepstype)
         self.assertEqual('Brackets', unit.description)
@@ -51,7 +51,7 @@ class TestSMChart(unittest.TestCase):
         self.assertEqual('0000\n0000\n0000\n0000', unit.notes)
     
     def test_serialize(self):
-        unit = SMChart(testing_chart())
+        unit = SMChart.from_str(testing_chart())
 
         self.assertEqual(f'#NOTES:{testing_chart()};', str(unit))
 
@@ -75,7 +75,7 @@ class TestSMChart(unittest.TestCase):
         self.assertNotEqual(base, variants[6])
 
     def test_repr(self):
-        unit = SMChart(testing_chart())
+        unit = SMChart.from_str(testing_chart())
 
         self.assertEqual('<SMChart: dance-single Edit 12>', repr(unit))
 
@@ -97,7 +97,7 @@ class TestSMCharts(unittest.TestCase):
         self.assertTrue(serialized.endswith(str(testing_charts()[-1]) + '\n'))
     
     def test_repr(self):
-        chart = SMChart(testing_chart())
+        chart = SMChart.from_str(testing_chart())
         repr_chart = repr(chart)
         unit = SMCharts([chart])
 

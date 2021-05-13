@@ -1,3 +1,4 @@
+from msdparser.msdparser import MSDParser
 from .base import BaseChart, BaseCharts, BaseSimfile
 from ._private.property import attr_property
 from ._private.serializable import Serializable
@@ -16,6 +17,32 @@ class SMChart(BaseChart):
     meter = attr_property('_meter')
     radarvalues = attr_property('_radarvalues')
     notes = attr_property('_notes')
+    
+    def _from_str(self, string: str) -> None:
+        values = string.split(':')
+        if len(values) != 6:
+            raise ValueError(f'expected 6 chart components, got {len(values)}')
+        
+        iterator = iter(values)
+        self.stepstype = next(iterator).strip()
+        self.description = next(iterator).strip()
+        self.difficulty = next(iterator).strip()
+        self.meter = next(iterator).strip()
+        self.radarvalues = next(iterator).strip()
+        self.notes = next(iterator).strip()
+
+    @classmethod
+    def from_str(cls, string: str) -> 'SMChart':
+        instance = cls()
+        instance._from_str(string)
+        return instance
+    
+    def _parse(self, parser: MSDParser):
+        key, value = next(iter(parser))
+        if key.upper() != 'NOTES':
+            raise ValueError()
+        
+        self._from_str(value)
 
     def serialize(self, file):
         file.write(
@@ -28,18 +55,6 @@ class SMChart(BaseChart):
             f'{self.notes}\n'
             f';'
         )
-
-    def __init__(self, string: str):
-        values = string.split(':')
-        if len(values) != 6:
-            raise ValueError(f'expected 6 chart components, got {len(values)}')
-        iterator = iter(values)
-        self.stepstype = next(iterator).strip()
-        self.description = next(iterator).strip()
-        self.difficulty = next(iterator).strip()
-        self.meter = next(iterator).strip()
-        self.radarvalues = next(iterator).strip()
-        self.notes = next(iterator).strip()
 
     def __eq__(self, other):
         return (type(self) is type(other) and
@@ -67,12 +82,12 @@ class SMSimfile(BaseSimfile):
     SM implementation of :class:`~simfile.base.BaseSimfile`.
     """
 
-    def _parse(self, parser):
+    def _parse(self, parser: MSDParser):
         self._charts = SMCharts()
         for (key, value) in parser:
             key = key.upper()
             if key == 'NOTES':
-                self._charts.append(SMChart(string=value))
+                self._charts.append(SMChart.from_str(value))
             else:
                 self[key] = value
     
