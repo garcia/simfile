@@ -1,10 +1,9 @@
 from abc import ABCMeta, abstractmethod
 from io import StringIO
-from typing import Callable, Generic, Optional, TextIO, TypeVar
+from typing import Optional, TextIO
 
 
-T = TypeVar('T')
-class Serializable(Generic[T], metaclass=ABCMeta):
+class Serializable(metaclass=ABCMeta):
 
     @abstractmethod
     def serialize(self, file: TextIO) -> Optional[str]:
