@@ -110,10 +110,20 @@ TYPE_TO_BLANK_DATA: Dict[Type, str] = {
 }
 
 
+DEFAULT_PROPERTIES: Dict[str, str] = {
+    'TIMESIGNATURES': '0.000=4=4',
+    'TICKCOUNTS': '0.000=4',
+    'COMBOS': '0.000=1',
+    'SPEEDS': '0.000=1.000=0.000=0',
+    'SCROLLS': '0.000=1.000',
+    'LABELS': '0.000=Song Start',
+}
+
+
 class InvalidProperty(Enum):
     MUST_IGNORE = 1
     METADATA = 2
-    FILE_REFERENCE = 3
+    FILE_PATH = 3
     GAMEPLAY_EVENT = 4
     TIMING_DATA = 5
 
@@ -122,7 +132,7 @@ TYPE_TO_INVALID_PROPERTIES: Dict[Type, Dict[InvalidProperty, List[str]]] = {
     SMSimfile: {
         InvalidProperty.MUST_IGNORE: ['VERSION'],
         InvalidProperty.METADATA: ['ORIGIN', 'TIMESIGNATURES', 'LABELS'],
-        InvalidProperty.FILE_REFERENCE: [
+        InvalidProperty.FILE_PATH: [
             'PREVIEWVID', 'JACKET', 'CDIMAGE', 'DISCIMAGE',
         ],
         InvalidProperty.GAMEPLAY_EVENT: [
@@ -148,8 +158,8 @@ TYPE_TO_INVALID_PROPERTIES: Dict[Type, Dict[InvalidProperty, List[str]]] = {
 class InvalidPropertyBehavior(Enum):
     COPY_ANYWAY = 1
     IGNORE = 2
-    ERROR_IF_VALUE = 3
-    ERROR_IF_PRESENT = 4
+    ERROR_UNLESS_DEFAULT = 3
+    ERROR = 4
 
 
 InvalidPropertyBehaviorMapping = Dict[InvalidProperty, InvalidPropertyBehavior]
@@ -158,9 +168,9 @@ InvalidPropertyBehaviorMapping = Dict[InvalidProperty, InvalidPropertyBehavior]
 INVALID_PROPERTY_BEHAVIORS: InvalidPropertyBehaviorMapping = {
     InvalidProperty.MUST_IGNORE: InvalidPropertyBehavior.IGNORE,
     InvalidProperty.METADATA: InvalidPropertyBehavior.IGNORE,
-    InvalidProperty.FILE_REFERENCE: InvalidPropertyBehavior.IGNORE,
-    InvalidProperty.GAMEPLAY_EVENT: InvalidPropertyBehavior.ERROR_IF_VALUE,
-    InvalidProperty.TIMING_DATA: InvalidPropertyBehavior.ERROR_IF_PRESENT,
+    InvalidProperty.FILE_PATH: InvalidPropertyBehavior.IGNORE,
+    InvalidProperty.GAMEPLAY_EVENT: InvalidPropertyBehavior.ERROR_UNLESS_DEFAULT,
+    InvalidProperty.TIMING_DATA: InvalidPropertyBehavior.ERROR,
 }
 
 
@@ -193,8 +203,8 @@ def _should_copy_property(
                 return True
             if behavior == InvalidPropertyBehavior.IGNORE:
                 return False
-            if behavior == InvalidPropertyBehavior.ERROR_IF_PRESENT:
-                if not value.strip():
+            if behavior == InvalidPropertyBehavior.ERROR_UNLESS_DEFAULT:
+                if value.strip() != DEFAULT_PROPERTIES.get(property, ''):
                     return False
             raise InvalidPropertyException(
                 invalid_property,
