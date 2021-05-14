@@ -1,8 +1,8 @@
-from collections import OrderedDict
+from collections import OrderedDict, defaultdict
 from copy import deepcopy
 from enum import Enum
 from simfile.types import Simfile, Chart
-from typing import Dict, List, Optional, Type, TypeVar, Union
+from typing import DefaultDict, Dict, List, Optional, Type, TypeVar, Union
 from .sm import SMChart, SMSimfile
 from .ssc import SSCChart, SSCSimfile
 
@@ -110,14 +110,14 @@ TYPE_TO_BLANK_DATA: Dict[Type, str] = {
 }
 
 
-DEFAULT_PROPERTIES: Dict[str, str] = {
+DEFAULT_PROPERTIES: DefaultDict[str, str] = defaultdict(lambda: '', {
     'TIMESIGNATURES': '0.000=4=4',
     'TICKCOUNTS': '0.000=4',
     'COMBOS': '0.000=1',
     'SPEEDS': '0.000=1.000=0.000=0',
     'SCROLLS': '0.000=1.000',
     'LABELS': '0.000=Song Start',
-}
+})
 
 
 class InvalidProperty(Enum):
@@ -204,7 +204,7 @@ def _should_copy_property(
             if behavior == InvalidPropertyBehavior.IGNORE:
                 return False
             if behavior == InvalidPropertyBehavior.ERROR_UNLESS_DEFAULT:
-                if value.strip() != DEFAULT_PROPERTIES.get(property, ''):
+                if value.strip() != DEFAULT_PROPERTIES[property]:
                     return False
             raise InvalidPropertyException(
                 invalid_property,
