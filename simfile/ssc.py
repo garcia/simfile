@@ -11,7 +11,7 @@ from ._private.serializable import Serializable
 __all__ = ['SSCChart', 'SSCCharts', 'SSCSimfile']
 
 
-class SSCChart(BaseChart, OrderedDict):
+class SSCChart(BaseChart):
     """
     SSC implementation of :class:`~simfile.base.BaseChart`.
 
@@ -23,16 +23,10 @@ class SSCChart(BaseChart, OrderedDict):
     `credit`, and `displaybpm`.
     """
     chartname = item_property('CHARTNAME')
-    stepstype = item_property('STEPSTYPE')
-    description = item_property('DESCRIPTION')
     chartstyle = item_property('CHARTSTYLE')
-    difficulty = item_property('DIFFICULTY')
-    meter = item_property('METER')
-    radarvalues = item_property('RADARVALUES')
     credit = item_property('CREDIT')
     displaybpm = item_property('DISPLAYBPM')
-    notes = item_property('NOTES')
-
+    
     def _parse(self, parser: MSDParser) -> None:
         iterator = iter(parser)
         

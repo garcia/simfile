@@ -1,6 +1,6 @@
 from abc import ABCMeta, abstractmethod
-from collections import OrderedDict, UserList
-from typing import Any, FrozenSet, Iterator, Mapping, Optional, TextIO, Union
+from collections import OrderedDict
+from typing import Any, FrozenSet, Iterator, Optional, TextIO, Union
 
 from msdparser import MSDParser
 
@@ -12,42 +12,19 @@ from ._private.serializable import Serializable
 __all__ = ['BaseChart', 'BaseCharts', 'BaseSimfile']
 
 
-class BaseChart(Serializable, metaclass=ABCMeta):
+class BaseChart(OrderedDict, Serializable, metaclass=ABCMeta):
     """
     One chart from a simfile.
 
     All charts have the following string properties: `stepstype`,
     `description`, `difficulty`, `meter`, `radarvalues`, and `notes`.
     """
-    @property
-    @abstractmethod
-    def stepstype(self) -> str:
-        pass
-
-    @property
-    @abstractmethod
-    def description(self) -> str:
-        pass
-
-    @property
-    @abstractmethod
-    def difficulty(self) -> str:
-        pass
-
-    @property
-    @abstractmethod
-    def meter(self) -> int:
-        pass
-
-    @property
-    @abstractmethod
-    def radarvalues(self) -> str:
-        pass
-
-    @property
-    @abstractmethod
-    def notes(self) -> str:
-        pass
+    stepstype = item_property('STEPSTYPE')
+    description = item_property('DESCRIPTION')
+    difficulty = item_property('DIFFICULTY')
+    meter = item_property('METER')
+    radarvalues = item_property('RADARVALUES')
+    notes = item_property('NOTES')
     
     def __init__(self, string: Optional[str] = None):
         if string is not None:
