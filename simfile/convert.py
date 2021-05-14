@@ -114,9 +114,8 @@ class InvalidProperty(Enum):
     MUST_IGNORE = 1
     METADATA = 2
     FILE_REFERENCE = 3
-    CHART_METADATA = 4
-    GAMEPLAY_EVENT = 5
-    TIMING_DATA = 6
+    GAMEPLAY_EVENT = 4
+    TIMING_DATA = 5
 
 
 TYPE_TO_INVALID_PROPERTIES: Dict[Type, Dict[InvalidProperty, List[str]]] = {
@@ -160,7 +159,6 @@ INVALID_PROPERTY_BEHAVIORS: InvalidPropertyBehaviorMapping = {
     InvalidProperty.MUST_IGNORE: InvalidPropertyBehavior.IGNORE,
     InvalidProperty.METADATA: InvalidPropertyBehavior.IGNORE,
     InvalidProperty.FILE_REFERENCE: InvalidPropertyBehavior.IGNORE,
-    InvalidProperty.CHART_METADATA: InvalidPropertyBehavior.IGNORE,
     InvalidProperty.GAMEPLAY_EVENT: InvalidPropertyBehavior.ERROR_IF_VALUE,
     InvalidProperty.TIMING_DATA: InvalidPropertyBehavior.ERROR_IF_PRESENT,
 }
