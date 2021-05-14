@@ -1,17 +1,21 @@
 from bisect import bisect
-from collections import UserList
+from collections import ChainMap, defaultdict
 from decimal import Decimal
 from enum import IntEnum
 from fractions import Fraction
 from functools import total_ordering
 from heapq import merge
-from typing import Iterable, Tuple, MutableSequence, TypeVar, NamedTuple, Generic
+from simfile.ssc import SSCChart
+from typing import Iterable, MutableSequence, Type, NamedTuple
 
 from ._private.generic import ListWithRepr
 from .types import Simfile
 
 
-__all__ = ['Beat', 'BeatEvent', 'BeatEvents', 'SongTime', 'SimfileTiming']
+__all__ = [
+    'Beat', 'BeatEvent', 'BeatEvents', 'SongTime', 'TimingData',
+    'TimingConverter',
+]
 
 
 MEASURE_SUBDIVISION = 192
@@ -59,7 +63,7 @@ class BeatEvents(ListWithRepr[BeatEvent]):
     A list of :class:`BeatEvent` instances.
     """
     @classmethod
-    def from_str(cls, string: str):
+    def from_str(cls: Type['BeatEvents'], string: str) -> 'BeatEvents':
         instance = cls()
         
         if string.strip():
@@ -109,10 +113,37 @@ class TimedEvent(NamedTuple):
     time: SongTime
 
 
-class SimfileTiming(object):
+class TimingData(NamedTuple):
+    bpms: BeatEvents
+    stops: BeatEvents
+    delays: BeatEvents
+    warps: BeatEvents
+    offset: Decimal
+
+    @classmethod
+    def from_simfile(
+        cls: Type['TimingData'],
+        simfile: Simfile,
+        ssc_chart: SSCChart = SSCChart()
+    ) -> 'TimingData':
+        combined_properties = defaultdict(
+            lambda: '',
+            ChainMap(ssc_chart, simfile),
+        )
+        return TimingData(
+            bpms=BeatEvents.from_str(combined_properties['BPMS']),
+            stops=BeatEvents.from_str(combined_properties['STOPS']),
+            delays=BeatEvents.from_str(combined_properties['DELAYS']),
+            warps=BeatEvents.from_str(combined_properties['WARPS']),
+            offset=Decimal(combined_properties['OFFSET']),
+        )
+
+
+class TimingConverter(object):
     """
-    Utility class for converting time in a simfile to beats and vice-versa.
+    Utility class for converting song time to beats and vice-versa.
     """
+    timing_data: TimingData
     bpms: BeatEvents
     stops: BeatEvents
     offset: Decimal
@@ -120,23 +151,21 @@ class SimfileTiming(object):
     timed_event_times: MutableSequence[SongTime]
     timed_events: MutableSequence[TimedEvent]
 
-    def __init__(self, simfile: Simfile):
-        self.bpms = BeatEvents.from_str(simfile.bpms)
-        self.stops = BeatEvents.from_str(simfile.stops)
-        self.offset = Decimal(simfile.offset)
+    def __init__(self, timing_data: TimingData):
+        self.timing_data = timing_data
         self._retime_events()
     
     def _retime_events(self):
         # Set the instance variables `timed_*` based on the simfile-backed
         # instance variables (bpms, stops, offset)
-        first_bpm = self.bpms[0]
+        first_bpm = self.timing_data.bpms[0]
         if first_bpm.beat != Beat(0):
             raise ValueError('first BPM change should be on beat 0')
 
         self.timed_events: MutableSequence[TimedEvent] = [
             TimedEvent(
                 event=TaggedBeatEvent(event=first_bpm, tag=EventTag.BPM),
-                time=-SongTime(self.offset),
+                time=-SongTime(self.timing_data.offset),
             ),
         ]
 
@@ -145,8 +174,8 @@ class SimfileTiming(object):
                 lambda event: TaggedBeatEvent(event=event, tag=tag),
                 events,
             )) for (events, tag) in [
-                (self.bpms[1:], EventTag.BPM),
-                (self.stops, EventTag.STOP),
+                (self.timing_data.bpms[1:], EventTag.BPM),
+                (self.timing_data.stops, EventTag.STOP),
             ]
         ]))
         
@@ -193,7 +222,7 @@ class SimfileTiming(object):
 
     def bpm_at(self, beat: Beat) -> Decimal:
         if beat < Beat(0):
-            return Decimal(self.bpms[0].value)
+            return Decimal(self.timing_data.bpms[0].value)
         
         previous_event_index = bisect(self.timed_event_beats, beat) - 1
         for i in range(previous_event_index, -1, -1):

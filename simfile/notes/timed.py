@@ -1,8 +1,7 @@
-from simfile.ssc import SSCChart
-from typing import Generator, Iterator, NamedTuple
+from typing import Iterator, NamedTuple
 
 from . import Note, NoteSource, note_iterator
-from ..timing import SongTime, SimfileTiming
+from ..timing import SongTime, TimingConverter, TimingData
 from ..types import Simfile, Chart
 
 
@@ -19,13 +18,13 @@ class TimedNote(NamedTuple):
 
 def timed_note_iterator(
     note_source: NoteSource,
-    timing_source: Simfile
+    timing_data: TimingData
 ) -> Iterator[TimedNote]:
     """
     Generate a time-synchronized stream of notes from the timing data
     in its simfile.
     """
-    timing = SimfileTiming(timing_source)
+    timing = TimingConverter(timing_data)
 
     for note in note_iterator(note_source):
         time = timing.time_at(note.beat)

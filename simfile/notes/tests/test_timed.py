@@ -3,16 +3,16 @@ import unittest
 from .helpers import *
 from .. import *
 from ..timed import timed_note_iterator
-from ...timing import Beat
+from ...timing import Beat, TimingData
 
 
 class TestTimedNoteStream(unittest.TestCase):
     def test_from_chart(self):
         timed_notes = list(timed_note_iterator(
             note_source=testing_chart(),
-            timing_source=testing_simfile(),
+            timing_data=TimingData.from_simfile(testing_simfile()),
         ))
-        
+
         self.assertAlmostEqual(4.000, timed_notes[0].time)
         self.assertEqual(
             Note(beat=Beat(16,4), column=0, note_type=NoteType.TAP),
