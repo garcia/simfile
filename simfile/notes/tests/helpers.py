@@ -1,3 +1,5 @@
+from simfile.notes import Note, note_iterator
+from typing import Iterator
 from ...sm import SMSimfile, SMChart
 
 
@@ -54,3 +56,7 @@ def testing_chart():
         '0000\n'
         '0000\n'
     )
+
+
+def testing_notes() -> Iterator[Note]:
+    return note_iterator(testing_chart())
