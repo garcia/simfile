@@ -1,4 +1,0 @@
-.sm & .ssc simfiles
-===================
-
-TODO

@@ -1,4 +1,0 @@
-Timing & note data
-==================
-
-TODO
