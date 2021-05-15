@@ -7,9 +7,9 @@ Version 1.0 of the :code:`simfile` library was released in 2013. It only
 supported :code:`.sm` files and was primarily developed for Python 2, with
 support for Python 3 on a separate branch.
 
-Version 2.0 is a near-complete rewrite of the library, with :code:`.ssc`
-support as the flagship feature. Aside from this and other features, the design
-of the software has changed significantly to bring :code:`simfile` in line with
+Version 2.0 is a near-complete rewrite of the library exclusively for Python 3,
+with :code:`.ssc` support as the flagship feature. Aside from new features, the
+design of the library has changed significantly to bring it in line with
 similar modern Python libraries.
 
 Simfile & chart classes
@@ -18,25 +18,31 @@ Simfile & chart classes
 In 1.0, the simfile & chart classes were :code:`simfile.Simfile` and
 :code:`simfile.Chart`.
 
-In 2.0, the simfile & chart classes are split by simfile type: for :code:`.sm`
-files, the classes are :class:`simfile.sm.SMSimfile` and
-:class:`simfile.sm.SMChart`, and for :code:`.ssc` files, the classes are
-:class:`simfile.ssc.SSCSimfile` and :class:`simfile.ssc.SSCChart`.
+In 2.0, the simfile & chart classes are split by simfile type:
 
-Reading & writing simfiles
---------------------------
+*   For SM files, the classes are :class:`simfile.sm.SMSimfile` and
+    :class:`simfile.sm.SMChart`.
+*   For SSC files, the classes are :class:`simfile.ssc.SSCSimfile` and
+    :class:`simfile.ssc.SSCChart`.
+
+Additionally, the union types :data:`simfile.types.Simfile` and
+:data:`simfile.types.Chart` are used to annotate parameters & return types
+where either implementation is acceptable.
+
+Reading simfiles
+----------------
 
 In 1.0, the :code:`Simfile` constructor accepted a filename or file object, and
 a :code:`.from_string` class method handled loading from string data:
 
     >>> from simfile import Simfile # 1.0
-    >>> sm = Simfile('testdata/Robotix.sm')
+    >>> from_filename = Simfile('testdata/Robotix.sm')
     >>> # or...
     >>> with open('testdata/Robotix.sm', 'r') as infile:
-    ...     sm = Simfile(infile)
+    ...     from_file_obj = Simfile(infile)
     ...
     >>> # or...
-    >>> sm = Simfile.from_string(str(sm))
+    >>> from_string = Simfile.from_string(str(from_file_obj))
 
 In 2.0, each of these options has a corresponding function in the top-level
 :mod:`simfile` module:
@@ -44,13 +50,13 @@ In 2.0, each of these options has a corresponding function in the top-level
 .. doctest::
 
     >>> import simfile # 2.0
-    >>> sm = simfile.open('testdata/Robotix.sm')
+    >>> from_filename = simfile.open('testdata/Robotix.sm')
     >>> # or...
     >>> with open('testdata/Robotix.sm', 'r') as infile:
-    ...     sm = simfile.load(infile)
+    ...     from_file_obj = simfile.load(infile)
     ...
     >>> # or...
-    >>> sm = simfile.loads(str(sm))
+    >>> from_string = simfile.loads(str(from_file_obj))
 
 These methods determine which simfile format to use automatically, but you can
 alternatively instantiate the simfile classes directly. They take a *named*
@@ -60,29 +66,52 @@ alternatively instantiate the simfile classes directly. They take a *named*
 
     >>> from simfile.sm import SMSimfile # 2.0
     >>> with open('testdata/Robotix.sm', 'r') as infile:
-    ...     sm = SMSimfile(file=infile)
+    ...     from_file_obj = SMSimfile(file=infile)
     ...
     >>> # or...
-    >>> sm = SMSimfile(string=str(sm))
+    >>> from_string = SMSimfile(string=str(from_file_obj))
+
+Writing simfiles
+----------------
 
 In 1.0, simfile objects had a :code:`.save` method that took a *maybe-optional*
 filename parameter:
 
     >>> from simfile import Simfile # 1.0
-    >>> sm = Simfile('testdata/Robotix.sm') # filename supplied
-    >>> sm.save() # writes to testdata/Robotix.sm
-    >>> sm = Simfile.from_string(str(sm)) # no filename supplied
+    >>> from_filename = Simfile('testdata/Robotix.sm')        # filename supplied
+    >>> from_filename.save()                                  # no problem!
+    >>> from_string = Simfile.from_string(str(from_filename)) # no filename supplied
     >>> try:
-    ...     sm.save() # to where?
+    ...     from_string.save()                                # to where?
     ... except ValueError:
-    ...     sm.save('testdata/Robotix.sm') # much better 🙄
+    ...     from_string.save('testdata/Robotix.sm')           # much better 🙄
 
 In 2.0, simfile objects no longer know their own filenames. Either pass a file
 object to :meth:`simfile.base.BaseSimfile.serialize` or use
 :func:`simfile.mutate` for a more guided workflow.
 
-Simfile & chart data
---------------------
+Finding charts
+--------------
+
+In 1.0, the list of charts at :code:`Simfile.charts` offered convenience
+methods for getting a single chart or finding multiple charts:
+
+    >>> from simfile import Simfile # 1.0
+    >>> sm = Simfile('testdata/Robotix.sm')
+    >>> single_novice = sm.charts.get(difficulty='Beginner')
+    >>> single_novice.stepstype
+    dance-single
+    >>> expert_charts = sm.charts.filter(difficulty='Challenge')
+    >>> [ex.stepstype for ex in expert_charts]
+    ['dance-double', 'dance-single']
+
+In 2.0, these convenience methods have been removed in favor of for-loops and
+the built-in :code:`filter` function. Writing your own predicates as Python
+code is much more flexibile than the 1.0 convenience methods, which could only
+find charts by exact property matches.
+
+Special property types
+----------------------
 
 In 1.0, certain properties of simfiles and charts were automatically converted
 from strings to richer representations.
@@ -113,7 +142,30 @@ prevents wasting CPU cycles for use cases that don't benefit from the richer
 representations, keeps the underlying data structures homogeneously typed, and
 simplifies the serialization logic.
 
-If you need rich timing data, use the :mod:`simfile.timing` module. If you need
-rich note data, use the :mod:`simfile.notes` package and its submodules.
+If you need rich timing data, use the :mod:`simfile.timing` module:
+
+    >>> import simfile # 2.0
+    >>> from simfile.timing import TimingData
+    >>> robotix = simfile.open('testdata/Robotix.sm')
+    >>> timing_data = TimingData.from_simfile(robotix)
+    >>> print(timing_data.bpms[0])
+    BeatEvent(beat=<Beat 0>, value=Decimal('150.000'))
+
+If you need rich note data, use the :mod:`simfile.notes` package and its
+submodules:
+
+    >>> import simfile # 2.0
+    >>> from simfile.notes import note_iterator
+    >>> from simfile.timing import Beat
+    >>> robotix = simfile.open('testdata/Robotix.sm')
+    >>> for note in note_iterator(robotix.charts[0]):
+    ...     if note.beat > Beat(18): break
+    ...     print(note)
+    ...
+    Note(beat=<Beat 16.250>, column=3, note_type=<NoteType.TAP: '1'>)
+    Note(beat=<Beat 16.500>, column=2, note_type=<NoteType.TAP: '1'>)
+    Note(beat=<Beat 17.250>, column=2, note_type=<NoteType.TAP: '1'>)
+    Note(beat=<Beat 17.500>, column=3, note_type=<NoteType.TAP: '1'>)
+
 Keeping these modules separate from the core simfile & chart classes enables
 them to be much more fully-featured than their 1.0 counterparts.
