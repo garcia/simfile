@@ -70,3 +70,7 @@ html_static_path = ['_static']
 autoapi_type = 'python'
 autoapi_dirs = ['../../simfile']
 autoapi_ignore = ['*tests*', '*_private*']
+autoapi_options = [
+    'members', 'undoc-members', 'show-inheritance', 'show-module-summary',
+    'special-members', 'imported-members',
+]
