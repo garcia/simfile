@@ -1,3 +1,4 @@
 sphinx==3.2.1
+sphinx-autoapi==1.8.1
 sphinx-rtd-theme>=0.5.0
-msdparser>=1.0.0-alpha.2
+msdparser>=1.0.0-alpha.3

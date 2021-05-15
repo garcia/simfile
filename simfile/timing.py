@@ -114,6 +114,9 @@ class TimedEvent(NamedTuple):
 
 
 class TimingData(NamedTuple):
+    """
+    Timing data for a simfile, possibly enriched with SSC chart timing.
+    """
     bpms: BeatEvents
     stops: BeatEvents
     delays: BeatEvents
