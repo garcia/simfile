@@ -83,6 +83,13 @@ class BeatEvents(ListWithRepr[BeatEvent]):
     """
     @classmethod
     def from_str(cls: Type['BeatEvents'], string: str) -> 'BeatEvents':
+        """
+        Parse the MSD value component of a timing data list.
+
+        Specifically, `BPMS`, `STOPS`, `DELAYS`, and `WARPS` are
+        the timing data lists whose values can be parsed by this
+        method.
+        """
         instance = cls()
         
         if string.strip():

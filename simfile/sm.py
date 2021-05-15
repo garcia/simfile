@@ -21,6 +21,10 @@ SM_CHART_PROPERTIES = (
 class SMChart(BaseChart):
     """
     SM implementation of :class:`~simfile.base.BaseChart`.
+
+    Unlike :class:`~simfile.ssc.SSCChart`, SM chart metadata is stored
+    as a fixed list of 6 properties, so this class prohibits adding or
+    deleting keys from its backing OrderedDict.
     """
     
     @classmethod
@@ -133,6 +137,7 @@ class SMSimfile(BaseSimfile):
     """
     SM implementation of :class:`~simfile.base.BaseSimfile`.
     """
+    _charts: SMCharts
 
     def _parse(self, parser: MSDParser):
         self._charts = SMCharts()

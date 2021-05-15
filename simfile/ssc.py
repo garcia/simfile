@@ -17,8 +17,8 @@ class SSCChart(BaseChart):
     SSC implementation of :class:`~simfile.base.BaseChart`.
 
     Unlike :class:`~simfile.sm.SMChart`, SSC chart metadata is stored
-    as key-value pairs, so this class acts extends OrderedDict for its
-    attributes. All named properties are backed by this OrderedDict.
+    as key-value pairs, so this class allows full modification of its
+    backing OrderedDict.
 
     Adds the following known properties, all categorized as metadata:
     `chartname`, `chartstyle`, `credit`, and `displaybpm`.
@@ -91,6 +91,8 @@ class SSCSimfile(BaseSimfile):
       `fakes` 
     * Timing data: `delays`, `warps`
     """
+    _charts: SSCCharts
+    
     version = item_property('VERSION')
     origin = item_property('ORIGIN')
     previewvid = item_property('PREVIEWVID')
