@@ -34,8 +34,8 @@ class TestConvert(unittest.TestCase):
         sm = ssc_to_sm(
             ssc,
             invalid_property_behaviors={
-                InvalidProperty.GAMEPLAY_EVENT: InvalidPropertyBehavior.IGNORE,
-                InvalidProperty.TIMING_DATA: InvalidPropertyBehavior.IGNORE,
+                KnownProperty.GAMEPLAY_EVENT: InvalidPropertyBehavior.IGNORE,
+                KnownProperty.TIMING_DATA: InvalidPropertyBehavior.IGNORE,
             },
         )
 
