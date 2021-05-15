@@ -24,26 +24,43 @@ BEAT_SUBDIVISION = MEASURE_SUBDIVISION // 4
 
 class Beat(Fraction):
     """
-    A fractional beat value, denoting vertical positioning / spacing in a
-    simfile.
+    A fractional beat value, denoting vertical position in a simfile.
     """
 
     @classmethod
     def tick(cls) -> 'Beat':
+        """
+        1/48 of a beat (1/192 of a measure).
+        """
         return cls(1, BEAT_SUBDIVISION)
     
     @classmethod
     def from_str(cls, beat_str) -> 'Beat':
+        """
+        Convert a decimal string to a beat, rounding to the nearest tick.
+        """
         return Beat(beat_str).round_to_tick()
     
     def round_to_tick(self) -> 'Beat':
+        """
+        Round the beat to the nearest tick.
+        """
         return Beat(int(round(self * BEAT_SUBDIVISION)), BEAT_SUBDIVISION)
     
     def __str__(self):
+        """
+        Convert the beat to a string with 3 decimal digits.
+        """
         return f'{float(self):.3f}'
     
     def __repr__(self):
-        return f'beat {self}'.rstrip('0').rstrip('.')
+        """
+        Pretty repr() for beats.
+
+        Includes the string representation with at most 3 decimal
+        digits, with trailing zeros removed.
+        """
+        return f'<Beat {self}>'.rstrip('0').rstrip('.')
 
 
 class BeatEvent(NamedTuple):
@@ -103,8 +120,7 @@ class TaggedBeatEvent(NamedTuple):
 
 class SongTime(float):
     """
-    A floating-point time value, denoting a temporal position / duration in a
-    simfile.
+    A floating-point time value, denoting a temporal position in a simfile.
     """
     def __repr__(self):
         return f'{self:.3f}'
@@ -131,6 +147,15 @@ class TimingData(NamedTuple):
         simfile: Simfile,
         ssc_chart: SSCChart = SSCChart()
     ) -> 'TimingData':
+        """
+        Obtain timing data from a simfile and optionally an SSC chart.
+
+        If an SSC chart is provided, any timing data properties it
+        contains will take precedence over the simfile's timing data.
+        This is true regardless of the property's value; for example, a
+        blank `STOPS` value in the SSC chart overrides a non-blank
+        value from the simfile.
+        """
         combined_properties = defaultdict(
             lambda: '',
             ChainMap(ssc_chart, simfile),
@@ -144,7 +169,7 @@ class TimingData(NamedTuple):
         )
 
 
-class TimingConverter(object):
+class TimingConverter:
     """
     Utility class for converting song time to beats and vice-versa.
 

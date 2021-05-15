@@ -5,7 +5,7 @@ from ..timing import SongTime, TimingConverter, TimingData
 from ..types import Simfile, Chart
 
 
-__all__ = ['TimedNote', 'TimedNoteStream']
+__all__ = ['TimedNote', 'timed_note_iterator']
 
 
 class TimedNote(NamedTuple):
@@ -21,8 +21,7 @@ def timed_note_iterator(
     timing_data: TimingData
 ) -> Iterator[TimedNote]:
     """
-    Generate a time-synchronized stream of notes from the timing data
-    in its simfile.
+    Generate a stream of timed notes from the supplied notes & timing data.
     """
     timing = TimingConverter(timing_data)
 

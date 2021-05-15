@@ -26,10 +26,11 @@ def load(file: Union[TextIO, Iterator[str]]) -> Simfile:
     """
     Load a text file object as a simfile using the correct implementation.
 
-    If the file object has a filename with a matching extension, it will be
-    used to infer the correct implementation. Otherwise, the first property
-    in the file is peeked at. If its key is "VERSION", the file is treated
-    as an SSC file; otherwise, it's treated as an SM file.
+    If the file object has a filename with a matching extension, it
+    will be used to infer the correct implementation. Otherwise, the
+    first property in the file is peeked at. If its key is "VERSION",
+    the file is treated as an SSC simfile; otherwise, it's treated as
+    an SM simfile.
     """
     
     # Check for filename hint first
@@ -63,10 +64,10 @@ def loads(string: str = None) -> Simfile:
 
 def open(filename: str, **kwargs) -> Simfile:
     """
-    Load a simfile from the given filename using the correct implementation.
+    Load a simfile by filename using the correct implementation.
 
-    Keyword arguments are passed to the builtin `open` function. Encoding
-    defaults to UTF-8.
+    Keyword arguments are passed to the builtin `open` function.
+    Encoding defaults to UTF-8.
     """
     with builtins.open(filename, 'r', **_open_args(kwargs)) as file:
         return load(file)
@@ -74,21 +75,21 @@ def open(filename: str, **kwargs) -> Simfile:
 
 class CancelMutation(BaseException):
     """
-    Raise to abort a mutation (the simfile won't be saved to disk).
+    Raise from inside a :func:`mutate` block to prevent saving the simfile.
     """
 
 
 @contextmanager
 def mutate(filename: str, **kwargs) -> Iterator[Simfile]:
     """
-    Context manager that loads a simfile by filename on entry, then saves
-    it to the disk on exit.
+    Context manager that loads & saves a simfile by filename.
 
-    To abort the mutation without causing the context manager to re-throw
-    an exception, raise CancelMutation.
+    The simfile is saved upon exit unless the context manager catches
+    an exception. To prevent saving without causing the context manager
+    to re-throw an exception, raise CancelMutation.
 
-    Keyword arguments are passed to the builtin `open` function. Encoding
-    defaults to UTF-8.
+    Keyword arguments are passed to the builtin `open` function.
+    Encoding defaults to UTF-8.
     """
     simfile = open(filename, **kwargs)
     try:

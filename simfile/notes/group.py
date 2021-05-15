@@ -31,8 +31,7 @@ GroupedNotes = Sequence[_NoteMaybeWithTail]
 
 class SameBeatNotes(Enum):
     """
-    Configuration options for :func:`group_notes`' `same_beat_notes`
-    constructor parameter.
+    Choices for :func:`group_notes`' `same_beat_notes` parameter.
     
     When multiple notes land on the same beat...
 
@@ -51,8 +50,7 @@ class OrphanedNoteException(Exception):
 
 class OrphanedNotes(Enum):
     """
-    Configuration options for :func:`group_notes`' `orphaned_head`
-    and `orphaned_tail` constructor parameters.
+    Choices for :func:`group_notes`' `orphaned_head|tail` parameters.
 
     When `join_heads_to_tails` is True and a head or tail note is
     missing its counterpart...

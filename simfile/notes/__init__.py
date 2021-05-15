@@ -36,6 +36,9 @@ NoteSource = Union[Chart, str]
 
 
 def note_iterator(note_source: NoteSource) -> Iterator[Note]:
+    """
+    Generate a stream of notes from a chart or string of note data.
+    """
     if isinstance(note_source, str):
         note_data = note_source
     else:
