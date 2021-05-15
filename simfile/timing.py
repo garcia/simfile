@@ -60,7 +60,7 @@ class Beat(Fraction):
         Includes the string representation with at most 3 decimal
         digits, with trailing zeros removed.
         """
-        return f'<Beat {self}>'.rstrip('0').rstrip('.')
+        return f"<Beat {str(self).rstrip('0').rstrip('.')}>"
 
 
 class BeatEvent(NamedTuple):
