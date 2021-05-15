@@ -154,12 +154,9 @@ class TimingConverter(object):
     :meth:`time_at` / :meth:`beat_at` call.
     """
     timing_data: TimingData
-    bpms: BeatEvents
-    stops: BeatEvents
-    offset: Decimal
-    timed_event_beats: MutableSequence[Beat]
-    timed_event_times: MutableSequence[SongTime]
-    timed_events: MutableSequence[TimedEvent]
+    _event_beats: MutableSequence[Beat]
+    _event_times: MutableSequence[SongTime]
+    _events: MutableSequence[TimedEvent]
 
     def __init__(self, timing_data: TimingData):
         self.timing_data = timing_data
@@ -172,7 +169,7 @@ class TimingConverter(object):
         if first_bpm.beat != Beat(0):
             raise ValueError('first BPM change should be on beat 0')
 
-        self.timed_events: MutableSequence[TimedEvent] = [
+        self._events: MutableSequence[TimedEvent] = [
             TimedEvent(
                 event=TaggedBeatEvent(event=first_bpm, tag=EventTag.BPM),
                 time=-SongTime(self.timing_data.offset),
@@ -195,12 +192,12 @@ class TimingConverter(object):
             event: BeatEvent = tagged_event.event
             tag: EventTag = tagged_event.tag
             
-            previous_timed_event = self.timed_events[-1]
+            previous_timed_event = self._events[-1]
             beats_elapsed = event.beat - previous_timed_event.event.event.beat
             time_elapsed = beats_elapsed * 60 / float(current_bpm)
             new_time = previous_timed_event.time + time_elapsed
             
-            self.timed_events.append(TimedEvent(
+            self._events.append(TimedEvent(
                 event=tagged_event,
                 time=SongTime(new_time),
             ))
@@ -212,7 +209,7 @@ class TimingConverter(object):
                 after_stop = Beat(event.beat + Beat.tick())
                 time_elapsed = Beat.tick() * 60 / float(current_bpm) + float(event.value)
                 new_time += time_elapsed
-                self.timed_events.append(TimedEvent(
+                self._events.append(TimedEvent(
                     event=TaggedBeatEvent(
                         event=BeatEvent(beat=after_stop, value=Decimal(0)),
                         tag=EventTag.AFTER_STOP,
@@ -220,14 +217,14 @@ class TimingConverter(object):
                     time=SongTime(new_time),
                 ))
         
-        self.timed_event_beats = list(map(
+        self._event_beats = list(map(
             lambda timed_event: timed_event.event.event.beat,
-            self.timed_events,
+            self._events,
         ))
 
-        self.timed_event_times = list(map(
+        self._event_times = list(map(
             lambda timed_event: timed_event.time,
-            self.timed_events,
+            self._events,
         ))
 
     def bpm_at(self, beat: Beat) -> Decimal:
@@ -237,9 +234,9 @@ class TimingConverter(object):
         if beat < Beat(0):
             return Decimal(self.timing_data.bpms[0].value)
         
-        previous_event_index = bisect(self.timed_event_beats, beat) - 1
+        previous_event_index = bisect(self._event_beats, beat) - 1
         for i in range(previous_event_index, -1, -1):
-            tagged_event: TaggedBeatEvent = self.timed_events[i].event
+            tagged_event: TaggedBeatEvent = self._events[i].event
             if tagged_event.tag == EventTag.BPM:
                 return tagged_event.event.value
         
@@ -253,9 +250,9 @@ class TimingConverter(object):
         # is negative, it will be clamped to index 0 (the initial BPM) which
         # comes after the beat. This works because the initial BPM applies to
         # negative beats and the signed math functions as expected.
-        previous_event_index = max(0, bisect(self.timed_event_beats, beat) - 1)
-        previous_event_beat = self.timed_event_beats[previous_event_index]
-        previous_timed_event = self.timed_events[previous_event_index]
+        previous_event_index = max(0, bisect(self._event_beats, beat) - 1)
+        previous_event_beat = self._event_beats[previous_event_index]
+        previous_timed_event = self._events[previous_event_index]
         
         beats_elapsed = beat - previous_event_beat
         time_elapsed = beats_elapsed * 60 / float(self.bpm_at(beat))
@@ -267,9 +264,9 @@ class TimingConverter(object):
         Determine the beat at a given time in the song.
         """
         # Same caveat as `time_at`
-        previous_event_index = max(0, bisect(self.timed_event_times, time) - 1)
-        previous_event_time = self.timed_event_times[previous_event_index]
-        previous_timed_event = self.timed_events[previous_event_index]
+        previous_event_index = max(0, bisect(self._event_times, time) - 1)
+        previous_event_time = self._event_times[previous_event_index]
+        previous_timed_event = self._events[previous_event_index]
         previous_event_beat = previous_timed_event.event.event.beat
 
         if previous_timed_event.event.tag == EventTag.STOP:
