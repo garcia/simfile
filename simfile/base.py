@@ -94,6 +94,7 @@ class BaseSimfile(OrderedDict, Serializable, metaclass=ABCMeta):
     samplestart = item_property('SAMPLESTART')
     samplelength = item_property('SAMPLELENGTH')
     selectable = item_property('SELECTABLE')
+    displaybpm = item_property('DISPLAYBPM')
     bpms = item_property('BPMS')
     stops = item_property('STOPS')
     bgchanges = item_property('BGCHANGES')
