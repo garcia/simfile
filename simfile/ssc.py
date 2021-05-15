@@ -1,5 +1,6 @@
 from collections import OrderedDict
-from typing import Optional
+from simfile._private.dedent import dedent_and_trim
+from typing import Optional, Type
 
 from msdparser.msdparser import MSDParser
 
@@ -19,13 +20,36 @@ class SSCChart(BaseChart):
     as key-value pairs, so this class acts extends OrderedDict for its
     attributes. All named properties are backed by this OrderedDict.
 
-    Adds the following known properties: `chartname`, `chartstyle`,
-    `credit`, and `displaybpm`.
+    Adds the following known properties, all categorized as metadata:
+    `chartname`, `chartstyle`, `credit`, and `displaybpm`.
     """
     chartname = item_property('CHARTNAME')
     chartstyle = item_property('CHARTSTYLE')
     credit = item_property('CREDIT')
     displaybpm = item_property('DISPLAYBPM')
+
+    @classmethod
+    def blank(cls: Type['SSCChart']) -> 'SSCChart':
+        with MSDParser(string="""
+            #NOTEDATA:;
+            #CHARTNAME:;
+            #STEPSTYPE:;
+            #DESCRIPTION:;
+            #CHARTSTYLE:;
+            #DIFFICULTY:;
+            #METER:1;
+            #RADARVALUES:0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000;
+            #CREDIT:;
+            #NOTES:
+            0000
+            0000
+            0000
+            0000
+            ;
+        """) as parser:
+            blank = SSCChart()
+            blank._parse(parser)
+            return blank
     
     def _parse(self, parser: MSDParser) -> None:
         iterator = iter(parser)
@@ -52,7 +76,6 @@ class SSCCharts(BaseCharts[SSCChart]):
 
     List elements are :class:`SSCChart` instances.
     """
-    pass
 
 
 class SSCSimfile(BaseSimfile):
@@ -62,11 +85,11 @@ class SSCSimfile(BaseSimfile):
     Adds the following known properties:
     
     * SSC version: `version`
-    * Song metadata: `origin`
-    * Relative file paths: `previewvid`, `jacket`, `cdimage`,
-      `discimage`
-    * Timed gameplay events: `delays`, `warps`, `timesignatures`,
-      `tickcounts`, `combos`, `speeds`, `scrolls`, `fakes`, `labels`
+    * Metadata: `origin`, `timesignatures`, `labels`
+    * File paths: `previewvid`, `jacket`, `cdimage`, `discimage`
+    * Gameplay events: `tickcounts`, `combos`, `speeds`, `scrolls`,
+      `fakes` 
+    * Timing data: `delays`, `warps`
     """
     version = item_property('VERSION')
     origin = item_property('ORIGIN')
@@ -83,6 +106,48 @@ class SSCSimfile(BaseSimfile):
     scrolls = item_property('SCROLLS')
     fakes = item_property('FAKES')
     labels = item_property('LABELS')
+
+    @classmethod
+    def blank(cls: Type['SSCSimfile']) -> 'SSCSimfile':
+        return SSCSimfile(string=dedent_and_trim("""
+            #VERSION:0.83;
+            #TITLE:;
+            #SUBTITLE:;
+            #ARTIST:;
+            #TITLETRANSLIT:;
+            #SUBTITLETRANSLIT:;
+            #ARTISTTRANSLIT:;
+            #GENRE:;
+            #ORIGIN:;
+            #CREDIT:;
+            #BANNER:;
+            #BACKGROUND:;
+            #PREVIEWVID:;
+            #JACKET:;
+            #CDIMAGE:;
+            #DISCIMAGE:;
+            #LYRICSPATH:;
+            #CDTITLE:;
+            #MUSIC:;
+            #OFFSET:0.000000;
+            #SAMPLESTART:100.000000;
+            #SAMPLELENGTH:12.000000;
+            #SELECTABLE:YES;
+            #BPMS:0.000=60.000;
+            #STOPS:;
+            #DELAYS:;
+            #WARPS:;
+            #TIMESIGNATURES:0.000=4=4;
+            #TICKCOUNTS:0.000=4;
+            #COMBOS:0.000=1;
+            #SPEEDS:0.000=1.000=0.000=0;
+            #SCROLLS:0.000=1.000;
+            #FAKES:;
+            #LABELS:0.000=Song Start;
+            #BGCHANGES:;
+            #KEYSOUNDS:;
+            #ATTACKS:;
+        """))
 
     def _parse(self, parser):
         self._charts = SSCCharts()
@@ -101,5 +166,5 @@ class SSCSimfile(BaseSimfile):
             self._charts.append(partial_chart)
     
     @property
-    def charts(self):
+    def charts(self) -> SSCCharts:
         return self._charts

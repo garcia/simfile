@@ -48,11 +48,13 @@ class Beat(Fraction):
 
 class BeatEvent(NamedTuple):
     """
-    An event that occurs on a particular beat, i.e. a BPM change or stop.
+    An event that occurs on a particular beat, e.g. a BPM change or stop.
 
-    The decimal value's semantics vary based on the type of event: for BPM
-    changes, the value is the BPM, whereas for stops, the value is a duration
-    in seconds.
+    The decimal value's semantics vary based on the type of event:
+    
+    * BPMS: the new BPM value
+    * STOPS, DELAYS: number of seconds to pause
+    * WARPS: number of beats to skip
     """
     beat: Beat
     value: Decimal
@@ -145,6 +147,11 @@ class TimingData(NamedTuple):
 class TimingConverter(object):
     """
     Utility class for converting song time to beats and vice-versa.
+
+    Under the hood, this class arranges timing events chronologically,
+    determines the song time and BPM at each event, then extrapolates
+    from those calculated values for each :meth:`bpm_at` /
+    :meth:`time_at` / :meth:`beat_at` call.
     """
     timing_data: TimingData
     bpms: BeatEvents
@@ -224,6 +231,9 @@ class TimingConverter(object):
         ))
 
     def bpm_at(self, beat: Beat) -> Decimal:
+        """
+        Determine the song's BPM at a given beat.
+        """
         if beat < Beat(0):
             return Decimal(self.timing_data.bpms[0].value)
         
@@ -236,6 +246,9 @@ class TimingConverter(object):
         raise ValueError('first BPM change should be on beat 0')
     
     def time_at(self, beat: Beat) -> SongTime:
+        """
+        Determine the song time at a given beat.
+        """
         # This variable name is a slight misnomer because if the provided beat
         # is negative, it will be clamped to index 0 (the initial BPM) which
         # comes after the beat. This works because the initial BPM applies to
@@ -250,6 +263,9 @@ class TimingConverter(object):
         return SongTime(previous_timed_event.time + time_elapsed)
     
     def beat_at(self, time: SongTime) -> Beat:
+        """
+        Determine the beat at a given time in the song.
+        """
         # Same caveat as `time_at`
         previous_event_index = max(0, bisect(self.timed_event_times, time) - 1)
         previous_event_time = self.timed_event_times[previous_event_index]

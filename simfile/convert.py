@@ -13,103 +13,6 @@ __all__ = [
 ]
 
 
-TYPE_TO_BLANK_DATA: Dict[Type, str] = {
-    SMSimfile: """
-#TITLE:;
-#SUBTITLE:;
-#ARTIST:;
-#TITLETRANSLIT:;
-#SUBTITLETRANSLIT:;
-#ARTISTTRANSLIT:;
-#GENRE:;
-#CREDIT:;
-#BANNER:;
-#BACKGROUND:;
-#LYRICSPATH:;
-#CDTITLE:;
-#MUSIC:;
-#OFFSET:0.000000;
-#SAMPLESTART:100.000000;
-#SAMPLELENGTH:12.000000;
-#SELECTABLE:YES;
-#BPMS:0.000000=60.000000;
-#STOPS:;
-#BGCHANGES:;
-#KEYSOUNDS:;
-#ATTACKS:;
-    """.strip(),
-    SMChart: """
-#NOTES:
-    :
-    :
-    :
-    1:
-    0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000:
-0000
-0000
-0000
-0000
-;
-    """.strip(),
-    SSCSimfile: """
-#VERSION:0.83;
-#TITLE:;
-#SUBTITLE:;
-#ARTIST:;
-#TITLETRANSLIT:;
-#SUBTITLETRANSLIT:;
-#ARTISTTRANSLIT:;
-#GENRE:;
-#ORIGIN:;
-#CREDIT:;
-#BANNER:;
-#BACKGROUND:;
-#PREVIEWVID:;
-#JACKET:;
-#CDIMAGE:;
-#DISCIMAGE:;
-#LYRICSPATH:;
-#CDTITLE:;
-#MUSIC:;
-#OFFSET:0.000000;
-#SAMPLESTART:100.000000;
-#SAMPLELENGTH:12.000000;
-#SELECTABLE:YES;
-#BPMS:0.000=60.000;
-#STOPS:;
-#DELAYS:;
-#WARPS:;
-#TIMESIGNATURES:0.000=4=4;
-#TICKCOUNTS:0.000=4;
-#COMBOS:0.000=1;
-#SPEEDS:0.000=1.000=0.000=0;
-#SCROLLS:0.000=1.000;
-#FAKES:;
-#LABELS:0.000=Song Start;
-#BGCHANGES:;
-#KEYSOUNDS:;
-#ATTACKS:;
-    """.strip(),
-    SSCChart: """
-#NOTEDATA:;
-#CHARTNAME:;
-#STEPSTYPE:;
-#DESCRIPTION:;
-#CHARTSTYLE:;
-#DIFFICULTY:;
-#METER:1;
-#RADARVALUES:0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000;
-#CREDIT:;
-#NOTES:
-0000
-0000
-0000
-0000
-;
-    """.strip(),
-}
-
-
 DEFAULT_PROPERTIES: DefaultDict[str, str] = defaultdict(lambda: '', {
     'TIMESIGNATURES': '0.000=4=4',
     'TICKCOUNTS': '0.000=4',
@@ -185,9 +88,6 @@ _CONVERT_TYPE = TypeVar(
 _CONVERT_SIMFILE = TypeVar('_CONVERT_SIMFILE', SMSimfile, SSCSimfile)
 _CONVERT_CHART = TypeVar('_CONVERT_CHART', SMChart, SSCChart)
 
-def _blank(t: Type[_CONVERT_TYPE]) -> _CONVERT_TYPE:
-    return t(string=TYPE_TO_BLANK_DATA[t])
-
 
 def _should_copy_property(
     property: str,
@@ -238,7 +138,7 @@ def _convert(
     chart_template: Optional[_CONVERT_CHART] = None,
     invalid_property_behaviors: InvalidPropertyBehaviorMapping = {}
 ) -> _CONVERT_SIMFILE:
-    output_simfile = deepcopy(simfile_template) or _blank(output_simfile_type)
+    output_simfile = deepcopy(simfile_template) or output_simfile_type.blank()
 
     _copy_properties(
         source=simfile,
@@ -249,7 +149,7 @@ def _convert(
     
     for _chart in simfile.charts:
         chart: Chart = _chart # typing workaround
-        output_chart = deepcopy(chart_template) or _blank(output_chart_type)
+        output_chart = deepcopy(chart_template) or output_chart_type.blank()
         if isinstance(chart, SMSimfile):
             output_chart.stepstype = chart.stepstype
             output_chart.description = chart.description

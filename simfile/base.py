@@ -1,4 +1,4 @@
-from abc import ABCMeta, abstractmethod
+from abc import ABCMeta, abstractclassmethod, abstractmethod
 from collections import OrderedDict
 from typing import Any, FrozenSet, Iterator, Optional, TextIO, Union
 
@@ -35,7 +35,21 @@ class BaseChart(OrderedDict, Serializable, metaclass=ABCMeta):
     def _parse(self, parser: MSDParser):
         pass
 
+    @abstractclassmethod
+    def blank(cls):
+        """
+        Generate a blank, valid chart populated with standard keys.
+
+        This should approximately match blank charts produced by the
+        StepMania editor. 
+        """
+
     def __repr__(self) -> str:
+        """
+        Pretty repr() for charts.
+        
+        Includes the class name, stepstype, difficulty, and meter.
+        """
         cls = self.__class__.__name__
         return f'<{cls}: {self.stepstype} {self.difficulty} {self.meter}>'
 
@@ -64,14 +78,14 @@ class BaseSimfile(OrderedDict, Serializable, metaclass=ABCMeta):
     Additionally, properties recognized by the current stable version
     of StepMania are exposed through lower-case properties on the
     object for easy (and implicitly spell-checked) access. The
-    following properties are defined:
+    following known properties are defined:
 
-    * Song metadata: `title`, `subtitle`, `artist`, `titletranslit`,
-      `subtitletranslit`, `artisttranslit`, `genre`
-    * Simfile metadata: `credit`, `samplestart`, `samplelength`,
-      `selectable`, `bgchanges`, `keysounds`, `attacks`
-    * Relative file paths: `banner`, `background`, `lyricspath`,
-      `cdtitle`, `music`
+    * Metadata: `title`, `subtitle`, `artist`, `titletranslit`,
+      `subtitletranslit`, `artisttranslit`, `genre`, `credit`,
+      `samplestart`, `samplelength`, `selectable`, 
+    * File paths: `banner`, `background`, `lyricspath`, `cdtitle`,
+      `music`
+    * Gameplay events: `bgchanges`, `keysounds`, `attacks`
     * Timing data: `offset`, `bpms`, `stops`
 
     If a desired simfile property isn't in this list, it can still be
@@ -111,6 +125,15 @@ class BaseSimfile(OrderedDict, Serializable, metaclass=ABCMeta):
     @abstractmethod
     def _parse(self, parser: MSDParser):
         pass
+    
+    @abstractclassmethod
+    def blank(cls):
+        """
+        Generate a blank, valid simfile populated with standard keys.
+
+        This should approximately match the simfile produced by the
+        StepMania editor in a directory with no .sm or .ssc files. 
+        """
 
     def serialize(self, file: TextIO):
         for (key, value) in self.items():
@@ -120,10 +143,17 @@ class BaseSimfile(OrderedDict, Serializable, metaclass=ABCMeta):
 
     @property
     @abstractmethod
-    def charts(self) -> BaseCharts:
-        pass
+    def charts(self):
+        """
+        List of charts associated with this simfile.
+        """
 
     def __repr__(self):
+        """
+        Pretty repr() for simfiles.
+
+        Includes the class name, title, and subtitle.
+        """
         rtn = '<' + self.__class__.__name__
         if self.get('TITLE'):
             rtn += ': ' + self['TITLE']

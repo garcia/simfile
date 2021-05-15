@@ -1,5 +1,7 @@
 from collections import UserDict
 from collections.abc import Mapping
+from typing import Type
+from simfile._private.dedent import dedent_and_trim
 
 from msdparser.msdparser import MSDParser
 
@@ -21,6 +23,33 @@ class SMChart(BaseChart):
     SM implementation of :class:`~simfile.base.BaseChart`.
     """
     
+    @classmethod
+    def blank(cls: Type['SMChart']) -> 'SMChart':
+        return SMChart.from_str(dedent_and_trim("""
+                 :
+                 :
+                 :
+                 1:
+                 0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000:
+            0000
+            0000
+            0000
+            0000
+        """))
+
+    @classmethod
+    def from_str(cls: Type['SMChart'], string: str) -> 'SMChart':
+        """
+        Parse the MSD value component of a NOTES property.
+
+        The string should contain exactly six colon-separated
+        components, corresponding to each of the base known properties
+        documented in :class:`simfile.base.BaseChart`.
+        """
+        instance = cls()
+        instance._from_str(string)
+        return instance
+    
     def _from_str(self, string: str) -> None:
         values = string.split(':')
         if len(values) != len(SM_CHART_PROPERTIES):
@@ -31,12 +60,6 @@ class SMChart(BaseChart):
         
         for property, value in zip(SM_CHART_PROPERTIES, values):
             self[property] = value.strip()
-
-    @classmethod
-    def from_str(cls, string: str) -> 'SMChart':
-        instance = cls()
-        instance._from_str(string)
-        return instance
     
     def _parse(self, parser: MSDParser):
         property, value = next(iter(parser))
@@ -69,13 +92,16 @@ class SMChart(BaseChart):
     # Prevent keys from being added or removed
     
     def update(self, *args, **kwargs) -> None:
+        """Raises NotImplementedError."""
         # This could be implemented, but I don't see a use case
         raise NotImplementedError
 
     def pop(self, property, default=None):
+        """Raises NotImplementedError.""" 
         raise NotImplementedError
     
     def popitem(self, last=True):
+        """Raises NotImplementedError."""
         raise NotImplementedError
     
     def __getitem__(self, property):
@@ -91,6 +117,7 @@ class SMChart(BaseChart):
             return super().__setitem__(property, value)
 
     def __delitem__(self, property: str) -> None:
+        """Raises NotImplementedError."""
         raise NotImplementedError
 
 
@@ -116,6 +143,33 @@ class SMSimfile(BaseSimfile):
             else:
                 self[key] = value
     
+    @classmethod
+    def blank(cls: Type['SMSimfile']) -> 'SMSimfile':
+        return SMSimfile(string=dedent_and_trim("""
+            #TITLE:;
+            #SUBTITLE:;
+            #ARTIST:;
+            #TITLETRANSLIT:;
+            #SUBTITLETRANSLIT:;
+            #ARTISTTRANSLIT:;
+            #GENRE:;
+            #CREDIT:;
+            #BANNER:;
+            #BACKGROUND:;
+            #LYRICSPATH:;
+            #CDTITLE:;
+            #MUSIC:;
+            #OFFSET:0.000000;
+            #SAMPLESTART:100.000000;
+            #SAMPLELENGTH:12.000000;
+            #SELECTABLE:YES;
+            #BPMS:0.000000=60.000000;
+            #STOPS:;
+            #BGCHANGES:;
+            #KEYSOUNDS:;
+            #ATTACKS:;
+        """))
+    
     @property
-    def charts(self):
+    def charts(self) -> SMCharts:
         return self._charts
