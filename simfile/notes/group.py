@@ -45,7 +45,9 @@ class SameBeatNotes(Enum):
 
 
 class OrphanedNoteException(Exception):
-    pass
+    """
+    Raised by :func:`group_notes` to flag an orphaned head or tail note.
+    """
 
 
 class OrphanedNotes(Enum):

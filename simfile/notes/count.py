@@ -15,6 +15,11 @@ def count_grouped_notes(
     grouped_notes_iterator: Iterator[GroupedNotes],
     same_beat_minimum: int = 1,
 ) -> int:
+    """
+    Count :class:`simfile.notes.group.GroupedNotes` in a stream.
+
+    To count only groups N or more notes, use `same_beat_minimum`.
+    """
     return sum(len(gn) >= same_beat_minimum for gn in grouped_notes_iterator)
 
 
@@ -34,16 +39,18 @@ def count_steps(
     same_beat_minimum: int = 1,
 ) -> int:
     """
-    Count the number of notes in the supplied charts or note streams.
+    Count the steps in a note stream.
 
-    The definition of "note count" varies by application; the default
+    The definition of "step count" varies by application; the default
     configuration tries to match StepMania's definition as closely as
     possible:
     
     * Taps, holds, rolls, and lifts are eligible for counting.
     * Multiple inputs on the same beat are only counted once.
 
-    These defaults can be changed using the keyword parameters.
+    These defaults can be changed using the keyword parameters. Refer
+    to :class:`simfile.notes.group.SameBeatNotes` for alternative ways
+    to count same-beat notes.
     """
     return count_grouped_notes(
         group_notes(
@@ -61,6 +68,13 @@ def count_jumps(
     include_note_types: FrozenSet[NoteType] = DEFAULT_NOTE_TYPES,
     same_beat_notes: SameBeatNotes = SameBeatNotes.JOIN_ALL,
 ) -> int:
+    """
+    Count the jumps (2+ simultaneous notes) in a note stream.
+
+    This implementation defers to :func:`count_steps` with the same
+    default parameters, except only groups of 2 or more notes are
+    counted (i.e. `same_beat_minimum` is set to 2).
+    """
     return count_steps(
         notes,
         include_note_types=include_note_types,
@@ -70,6 +84,9 @@ def count_jumps(
 
 
 def count_mines(notes: Iterator[Note]) -> int:
+    """
+    Count the mines in a note stream.
+    """
     return sum(note.note_type == NoteType.MINE for note in notes)
 
 
@@ -80,6 +97,13 @@ def count_hands(
     same_beat_notes: SameBeatNotes = SameBeatNotes.JOIN_ALL,
     same_beat_minimum: int = 3
 ) -> int:
+    """
+    Count the hands (3+ simultaneous notes) in a note stream.
+
+    This implementation defers to :func:`count_steps` with the same
+    default parameters, except only groups of 3 or more notes are
+    counted (i.e. `same_beat_minimum` is set to 3).
+    """
     return count_steps(
         notes,
         include_note_types=include_note_types,
@@ -112,6 +136,15 @@ def count_holds(
     orphaned_head: OrphanedNotes = OrphanedNotes.RAISE_EXCEPTION,
     orphaned_tail: OrphanedNotes = OrphanedNotes.RAISE_EXCEPTION
 ) -> int:
+    """
+    Count the hold notes in a note stream.
+
+    By default, this method validates that hold heads connect to their
+    corresponding tails. This validation can be turned off by setting
+    the `orphaned_head` and `orphaned_tail` arguments to `KEEP_ORPHAN`
+    or `DROP_ORPHAN`; see :class:`simfile.notes.group.OrphanedNotes`
+    for more details.
+    """
     return _count_holds_or_rolls(
         notes,
         NoteType.HOLD_HEAD,
@@ -126,6 +159,15 @@ def count_rolls(
     orphaned_head: OrphanedNotes = OrphanedNotes.RAISE_EXCEPTION,
     orphaned_tail: OrphanedNotes = OrphanedNotes.RAISE_EXCEPTION
 ) -> int:
+    """
+    Count the roll notes in a note stream.
+
+    By default, this method validates that roll heads connect to their
+    corresponding tails. This validation can be turned off by setting
+    the `orphaned_head` and `orphaned_tail` arguments to `KEEP_ORPHAN`
+    or `DROP_ORPHAN`; see :class:`simfile.notes.group.OrphanedNotes`
+    for more details.
+    """
     return _count_holds_or_rolls(
         notes,
         NoteType.ROLL_HEAD,

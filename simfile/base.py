@@ -16,7 +16,7 @@ class BaseChart(OrderedDict, Serializable, metaclass=ABCMeta):
     """
     One chart from a simfile.
 
-    All charts have the following string properties: `stepstype`,
+    All charts have the following known properties: `stepstype`,
     `description`, `difficulty`, `meter`, `radarvalues`, and `notes`.
     """
     stepstype = item_property('STEPSTYPE')
