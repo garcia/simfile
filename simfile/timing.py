@@ -6,7 +6,7 @@ from fractions import Fraction
 from functools import total_ordering
 from heapq import merge
 from simfile.ssc import SSCChart
-from typing import Iterable, MutableSequence, Type, NamedTuple
+from typing import Iterable, MutableSequence, Type, NamedTuple, Union
 
 from ._private.generic import ListWithRepr
 from .types import Simfile
@@ -14,7 +14,8 @@ from .types import Simfile
 
 __all__ = [
     'Beat', 'BeatEvent', 'BeatEvents', 'SongTime', 'TimingData',
-    'TimingConverter',
+    'TimingConverter', 'StaticDisplayBPM', 'RangeDisplayBPM',
+    'RandomDisplayBPM', 'DisplayBPM', 'displaybpm',
 ]
 
 
@@ -138,6 +139,10 @@ class TimedEvent(NamedTuple):
     time: SongTime
 
 
+def _ssc_proxy(simfile: Simfile, ssc_chart: SSCChart):
+    return defaultdict(lambda: '', ChainMap(ssc_chart, simfile))
+
+
 class TimingData(NamedTuple):
     """
     Timing data for a simfile, possibly enriched with SSC chart timing.
@@ -163,16 +168,13 @@ class TimingData(NamedTuple):
         blank `STOPS` value in the SSC chart overrides a non-blank
         value from the simfile.
         """
-        combined_properties = defaultdict(
-            lambda: '',
-            ChainMap(ssc_chart, simfile),
-        )
+        properties = _ssc_proxy(simfile, ssc_chart)
         return TimingData(
-            bpms=BeatEvents.from_str(combined_properties['BPMS']),
-            stops=BeatEvents.from_str(combined_properties['STOPS']),
-            delays=BeatEvents.from_str(combined_properties['DELAYS']),
-            warps=BeatEvents.from_str(combined_properties['WARPS']),
-            offset=Decimal(combined_properties['OFFSET']),
+            bpms=BeatEvents.from_str(properties['BPMS']),
+            stops=BeatEvents.from_str(properties['STOPS']),
+            delays=BeatEvents.from_str(properties['DELAYS']),
+            warps=BeatEvents.from_str(properties['WARPS']),
+            offset=Decimal(properties['OFFSET']),
         )
 
 
@@ -308,3 +310,72 @@ class TimingConverter:
         beats_elapsed = time_elapsed / 60 * float(self.bpm_at(previous_event_beat))
 
         return Beat(previous_event_beat + beats_elapsed).round_to_tick()
+
+
+class StaticDisplayBPM(NamedTuple):
+    """A single BPM value."""
+    value: Decimal
+
+    @property
+    def min(self) -> Decimal:
+        """Returns the single BPM value."""
+        return self.value
+
+    @property
+    def max(self) -> Decimal:
+        """Returns the single BPM value."""
+        return self.value
+
+
+class RangeDisplayBPM(NamedTuple):
+    """A range of BPM values."""
+    min: Decimal
+    max: Decimal
+
+
+class RandomDisplayBPM:
+    """
+    Used by StepMania to obfuscate the displayed BPM with random numbers.
+    """
+
+
+DisplayBPM = Union[StaticDisplayBPM, RangeDisplayBPM, RandomDisplayBPM]
+"""Union of the three DisplayBPM variants above."""
+
+
+def displaybpm(
+    simfile: Simfile,
+    ssc_chart: SSCChart = SSCChart()
+) -> DisplayBPM:
+    """
+    Get the display BPM from a simfile and optionally an SSC chart.
+
+    If a DISPLAYBPM property is present, its value is used as follows:
+
+    * A literal "*" maps to :class:`RandomDisplayBPM`
+    * Two ":"-separated numbers maps to :class:`RangeDisplayBPM`
+    * One number maps to :class:`StaticDisplayBPM`
+
+    Otherwise, the BPMS property will be used. A single BPM maps to
+    :class:`StaticDisplayBPM`; if there are multiple, the minimum and
+    maximum will be identified and passed to :class:`RangeDisplayBPM`.
+
+    When an SSC chart is provided, its properties override those in the
+    simfile.
+    """
+    properties = _ssc_proxy(simfile, ssc_chart)
+    if 'DISPLAYBPM' in properties:
+        displaybpm_value = properties['DISPLAYBPM']
+        if displaybpm_value == '*':
+            return RandomDisplayBPM()
+        elif ':' in displaybpm_value:
+            min, _, max = displaybpm_value.partition(':')
+            return RangeDisplayBPM(min=Decimal(min), max=Decimal(max))
+        else:
+            return StaticDisplayBPM(value=Decimal(displaybpm_value))
+    else:
+        bpms = [e.value for e in BeatEvents.from_str(properties['BPMS'])]
+        if len(bpms) == 1:
+            return StaticDisplayBPM(bpms[0])
+        else:
+            return RangeDisplayBPM(min=min(bpms), max=max(bpms))
