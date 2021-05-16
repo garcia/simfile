@@ -33,10 +33,10 @@ class SSCChart(BaseChart):
         with MSDParser(string="""
             #NOTEDATA:;
             #CHARTNAME:;
-            #STEPSTYPE:;
+            #STEPSTYPE:dance-single;
             #DESCRIPTION:;
             #CHARTSTYLE:;
-            #DIFFICULTY:;
+            #DIFFICULTY:Beginner;
             #METER:1;
             #RADARVALUES:0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000;
             #CREDIT:;

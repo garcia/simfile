@@ -30,9 +30,9 @@ class SMChart(BaseChart):
     @classmethod
     def blank(cls: Type['SMChart']) -> 'SMChart':
         return SMChart.from_str(dedent_and_trim("""
+                 dance-single:
                  :
-                 :
-                 :
+                 Beginner:
                  1:
                  0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000:
             0000
