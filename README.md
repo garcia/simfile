@@ -6,9 +6,9 @@ A modern simfile parsing & editing library for Python 3.
 
 * Supports both SM and SSC files
   - Format-agnostic API for reading & writing simfiles
-  - SM ↔ SSC conversion
+  - SM ↔︎ SSC conversion
 * Timing data support
-  - Beat ↔ song time conversion
+  - Beat ↔︎ song time conversion
   - Handles BPM changes and stops _(delays & warps forthcoming)_
   - Accepts "split timing" from SSC charts
 * Note streams from charts
