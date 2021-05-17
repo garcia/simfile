@@ -1,8 +1,8 @@
 import builtins
 from contextlib import contextmanager
-from io import FileIO, StringIO, TextIOWrapper
+from io import StringIO
 from itertools import tee
-from typing import cast, Iterator, TextIO, Tuple, TypeVar, Union
+from typing import Iterator, TextIO, Union
 
 from msdparser import MSDParser
 
