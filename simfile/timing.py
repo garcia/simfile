@@ -1,4 +1,4 @@
-from bisect import bisect
+from bisect import bisect, insort
 from collections import ChainMap, defaultdict
 from decimal import Decimal
 from enum import IntEnum
@@ -6,9 +6,9 @@ from fractions import Fraction
 from functools import total_ordering
 from heapq import merge
 from simfile.ssc import SSCChart
-from typing import Iterable, MutableSequence, Type, NamedTuple, Union
+from typing import Iterable, MutableSequence, Optional, Tuple, Type, NamedTuple, Union, cast
 
-from ._private.generic import ListWithRepr
+from ._private.generic import E, ListWithRepr
 from .types import Simfile
 
 
@@ -104,41 +104,6 @@ class BeatEvents(ListWithRepr[BeatEvent]):
         return ',\n'.join(f'{event.beat}={event.value}' for event in self)
 
 
-class EventTag(IntEnum):
-    # When multiple events occur at the same time,
-    # they should be processed in this order:
-    AFTER_STOP = 0
-    BPM = 1
-    STOP = 2
-
-
-@total_ordering
-class TaggedBeatEvent(NamedTuple):
-    event: BeatEvent
-    tag: EventTag
-
-    def __lt__(self, other):
-        if self.event.beat < other.event.beat:
-            return True
-        if self.event.beat == other.event.beat:
-            if self.tag < other.tag:
-                return True
-        return False
-
-
-class SongTime(float):
-    """
-    A floating-point time value, denoting a temporal position in a simfile.
-    """
-    def __repr__(self):
-        return f'{self:.3f}'
-
-
-class TimedEvent(NamedTuple):
-    event: TaggedBeatEvent
-    time: SongTime
-
-
 def _ssc_proxy(simfile: Simfile, ssc_chart: SSCChart):
     return defaultdict(lambda: '', ChainMap(ssc_chart, simfile))
 
@@ -178,6 +143,170 @@ class TimingData(NamedTuple):
         )
 
 
+class SongTime(float):
+    """
+    A floating-point time value, denoting a temporal position in a simfile.
+    """
+    def __repr__(self):
+        return f'{self:.3f}'
+
+
+class EventTag(IntEnum):
+    # When multiple events occur at the same time,
+    # they should be processed in this order:
+    WARP = 0
+    WARP_END = 1
+    BPM = 2
+    DELAY = 3
+    DELAY_END = 4
+    STOP = 5
+    STOP_END = 6
+
+
+@total_ordering
+class TaggedBeatEvent(NamedTuple):
+    event: BeatEvent
+    tag: EventTag
+
+    def __lt__(self, other):
+        if self.event.beat < other.event.beat:
+            return True
+        if self.event.beat == other.event.beat:
+            if self.tag < other.tag:
+                return True
+        return False
+
+
+class TimedEvent(NamedTuple):
+    event: TaggedBeatEvent
+    time: SongTime
+
+
+class TimingState(NamedTuple):
+    timed_event: TimedEvent
+    bpm: Decimal
+    warp_until: Optional[Beat]
+
+    def time_until(self, beat: Beat, event_tag: EventTag) -> float:
+        beat_event = self.timed_event.event.event
+
+        if self.warp_until:
+            assert beat <= self.warp_until
+            time_until = 0.0
+        else:
+            beats_until = beat - beat_event.beat
+            time_until = beats_until * 60 / float(self.bpm)
+        
+        if self.timed_event.event.tag in (EventTag.STOP, EventTag.DELAY) \
+            and event_tag in (EventTag.STOP_END, EventTag.DELAY_END):
+            time_until += float(beat_event.value)
+        
+        return time_until
+    
+    def beats_until(self, time: SongTime) -> Beat:
+        beat_event = self.timed_event.event.event
+        if self.timed_event.event.tag in (EventTag.STOP, EventTag.DELAY):
+            return Beat(0)
+        
+        time_elapsed = time - self.timed_event.time
+        beats_elapsed = time_elapsed / 60 * float(self.bpm)
+
+        return Beat(beats_elapsed).round_to_tick()
+
+
+class TimingStateMachine(ListWithRepr[TimingState]):
+
+    @property
+    def last(self) -> TimingState:
+        return cast(TimingState, self[-1])
+    
+    def advance(self, tagged_event: TaggedBeatEvent):
+        beat_event = tagged_event.event
+
+        # Insert WARP_END event if we're currently inside a warp and EITHER
+        # 1. advancing past the warp end OR
+        # 2. arriving at the warp end without immediately entering another warp
+        if (tagged_event.tag != EventTag.WARP_END
+            and self.last.warp_until
+            and (beat_event.beat > self.last.warp_until
+                or (beat_event.beat == self.last.warp_until
+                    and tagged_event.tag != EventTag.WARP))):
+            self.advance(TaggedBeatEvent(
+                event=BeatEvent(beat=self.last.warp_until, value=Decimal(0)),
+                tag=EventTag.WARP_END,
+            ))
+        
+        # Update song time
+        time_until = self.last.time_until(beat_event.beat, tagged_event.tag)
+        time = SongTime(self.last.timed_event.time + time_until)
+
+        # Update BPM
+        bpm = self.last.bpm
+        if tagged_event.tag == EventTag.BPM:
+            bpm = beat_event.value
+        
+        # Update warp status
+        warp_until = self.last.warp_until
+        if tagged_event.tag == EventTag.WARP_END:
+            warp_until = None
+        elif tagged_event.tag == EventTag.WARP:
+            warp_end = Beat(beat_event.beat + Beat(beat_event.value))
+            if warp_until is None or warp_end > warp_until:
+                warp_until = warp_end
+        
+        # Make sure we didn't somehow go past the warp end
+        if warp_until:
+            assert beat_event.beat < warp_until
+        
+        self.append(TimingState(
+            timed_event=TimedEvent(event=tagged_event, time=time),
+            bpm=bpm,
+            warp_until=warp_until,
+        ))
+
+
+@total_ordering
+class TaggedBeat(NamedTuple):
+    beat: Beat
+    tag: EventTag
+
+    @classmethod
+    def from_timing_state(cls, state: TimingState) -> 'TaggedBeat':
+        return TaggedBeat(
+            beat=state.timed_event.event.event.beat,
+            tag=state.timed_event.event.tag,
+        )
+
+    def __lt__(self, other):
+        if self.beat < other.beat:
+            return True
+        if self.beat == other.beat:
+            if self.tag < other.tag:
+                return True
+        return False
+
+
+@total_ordering
+class TaggedSongTime(NamedTuple):
+    time: SongTime
+    tag: EventTag
+
+    @classmethod
+    def from_timing_state(cls, state: TimingState) -> 'TaggedSongTime':
+        return TaggedSongTime(
+            time=state.timed_event.time,
+            tag=state.timed_event.event.tag,
+        )
+
+    def __lt__(self, other):
+        if self.time < other.time:
+            return True
+        if self.time == other.time:
+            if self.tag < other.tag:
+                return True
+        return False
+
+
 class TimingConverter:
     """
     Utility class for converting song time to beats and vice-versa.
@@ -188,77 +317,53 @@ class TimingConverter:
     :meth:`time_at` / :meth:`beat_at` call.
     """
     timing_data: TimingData
-    _event_beats: MutableSequence[Beat]
-    _event_times: MutableSequence[SongTime]
-    _events: MutableSequence[TimedEvent]
+    _tagged_beats: MutableSequence[TaggedBeat]
+    _tagged_times: MutableSequence[TaggedSongTime]
+    _state_machine: TimingStateMachine
 
     def __init__(self, timing_data: TimingData):
         self.timing_data = timing_data
         self._retime_events()
     
     def _retime_events(self):
-        # Set the instance variables `timed_*` based on the simfile-backed
-        # instance variables (bpms, stops, offset)
-        first_bpm = self.timing_data.bpms[0]
+        # Set the private instance variables based on the timing data
+        first_bpm: BeatEvent = self.timing_data.bpms[0]
         if first_bpm.beat != Beat(0):
             raise ValueError('first BPM change should be on beat 0')
 
-        self._events: MutableSequence[TimedEvent] = [
-            TimedEvent(
+        self._state_machine = TimingStateMachine([TimingState(
+            timed_event=TimedEvent(
                 event=TaggedBeatEvent(event=first_bpm, tag=EventTag.BPM),
                 time=-SongTime(self.timing_data.offset),
             ),
-        ]
+            bpm=first_bpm.value,
+            warp_until=None,
+        )])
 
-        all_events: Iterable[TaggedBeatEvent] = list(merge(*[
+        all_events: Iterable[TaggedBeatEvent] = merge(*[
             list(map(
                 lambda event: TaggedBeatEvent(event=event, tag=tag),
                 events,
             )) for (events, tag) in [
+                (self.timing_data.warps, EventTag.WARP),
                 (self.timing_data.bpms[1:], EventTag.BPM),
+                (self.timing_data.delays, EventTag.DELAY),
+                (self.timing_data.delays, EventTag.DELAY_END),
                 (self.timing_data.stops, EventTag.STOP),
+                (self.timing_data.stops, EventTag.STOP_END),
             ]
-        ]))
-        
-        current_bpm = first_bpm.value
+        ])
         
         for tagged_event in all_events:
-            event: BeatEvent = tagged_event.event
-            tag: EventTag = tagged_event.tag
-            
-            previous_timed_event = self._events[-1]
-            beats_elapsed = event.beat - previous_timed_event.event.event.beat
-            time_elapsed = beats_elapsed * 60 / float(current_bpm)
-            new_time = previous_timed_event.time + time_elapsed
-            
-            self._events.append(TimedEvent(
-                event=tagged_event,
-                time=SongTime(new_time),
-            ))
-
-            if tag == EventTag.BPM:
-                current_bpm = event.value
-            
-            elif tag == EventTag.STOP:
-                after_stop = Beat(event.beat + Beat.tick())
-                time_elapsed = Beat.tick() * 60 / float(current_bpm) + float(event.value)
-                new_time += time_elapsed
-                self._events.append(TimedEvent(
-                    event=TaggedBeatEvent(
-                        event=BeatEvent(beat=after_stop, value=Decimal(0)),
-                        tag=EventTag.AFTER_STOP,
-                    ),
-                    time=SongTime(new_time),
-                ))
+            self._state_machine.advance(tagged_event)
         
-        self._event_beats = list(map(
-            lambda timed_event: timed_event.event.event.beat,
-            self._events,
+        self._tagged_beats = list(map(
+            TaggedBeat.from_timing_state,
+            self._state_machine,
         ))
-
-        self._event_times = list(map(
-            lambda timed_event: timed_event.time,
-            self._events,
+        self._tagged_times = list(map(
+            TaggedSongTime.from_timing_state,
+            self._state_machine,
         ))
 
     def bpm_at(self, beat: Beat) -> Decimal:
@@ -268,48 +373,81 @@ class TimingConverter:
         if beat < Beat(0):
             return Decimal(self.timing_data.bpms[0].value)
         
-        previous_event_index = bisect(self._event_beats, beat) - 1
-        for i in range(previous_event_index, -1, -1):
-            tagged_event: TaggedBeatEvent = self._events[i].event
-            if tagged_event.tag == EventTag.BPM:
-                return tagged_event.event.value
-        
-        raise ValueError('first BPM change should be on beat 0')
+        tagged_beat = TaggedBeat(beat=beat, tag=EventTag.BPM)
+        prior_state_index = max(0, bisect(self._tagged_beats, tagged_beat) - 1)
+        prior_state: TimingState = self._state_machine[prior_state_index]
+        return prior_state.bpm
     
-    def time_at(self, beat: Beat) -> SongTime:
+    def time_range(self, beat: Beat) -> Tuple[SongTime, SongTime]:
         """
-        Determine the song time at a given beat.
-        """
-        # This variable name is a slight misnomer because if the provided beat
-        # is negative, it will be clamped to index 0 (the initial BPM) which
-        # comes after the beat. This works because the initial BPM applies to
-        # negative beats and the signed math functions as expected.
-        previous_event_index = max(0, bisect(self._event_beats, beat) - 1)
-        previous_event_beat = self._event_beats[previous_event_index]
-        previous_timed_event = self._events[previous_event_index]
-        
-        beats_elapsed = beat - previous_event_beat
-        time_elapsed = beats_elapsed * 60 / float(self.bpm_at(beat))
+        Determine when a given beat visibly overlaps the receptors.
 
-        return SongTime(previous_timed_event.time + time_elapsed)
+        Most beats map to exactly one time, so both values of the range
+        will be the same (and equal to :meth:`time_at`). The one
+        exception is when stops or delays are involved: the range of
+        song times will cover the duration of the pause. The first
+        value is always less than or equal to the second value.
+
+        During warps, this method returns the time at which the
+        enclosing warp occurs for both values.
+        """
+        raise NotImplementedError
+
+    def time_at(
+        self,
+        beat: Beat,
+        event_tag: EventTag = EventTag.STOP
+    ) -> Optional[SongTime]:
+        """
+        Determine the time at which a note on the given beat must be hit.
+
+        Most beats map to exactly one time, so this value will be equal
+        to both values returned by :meth:`time_range`. However, on
+        stops and delays, this value will instead fall somewhere within
+        the :meth:`time_range`:
+
+        * On stops, this value is equal to the range's lower bound.
+        * On delays, this value is equal to the range's upper bound.
+        * On beats with both a stop and delay, this value is equal to
+          the lower bound plus the length of the delay (or,
+          equivalently, the upper bound minus the length of the stop).
+
+        If a note placed at the given beat would be un-hittable due to
+        a warp, this method will return None.
+        """
+        tagged_beat = TaggedBeat(beat=beat, tag=event_tag)
+        
+        # If the provided beat is negative, prior_state_index will be clamped
+        # to index 0 (the initial BPM) which is not really the "prior state".
+        # This works because the initial BPM applies to negative beats, and the
+        # signed math works out correctly.
+        prior_state_index = max(0, bisect(self._tagged_beats, tagged_beat) - 1)
+        prior_state: TimingState = self._state_machine[prior_state_index]
+        
+        return SongTime(prior_state.timed_event.time
+            + prior_state.time_until(beat, event_tag))
     
-    def beat_at(self, time: SongTime) -> Beat:
+    def beat_at(
+        self,
+        time: SongTime,
+        event_tag: EventTag = EventTag.STOP
+    ) -> Beat:
         """
         Determine the beat at a given time in the song.
+
+        No special provisions are made to handle warps; a song time
+        that happens to land exactly on a warp might get mapped to the
+        beat at which the warp starts or ends, depending on floating
+        point rounding.
         """
-        # Same caveat as `time_at`
-        previous_event_index = max(0, bisect(self._event_times, time) - 1)
-        previous_event_time = self._event_times[previous_event_index]
-        previous_timed_event = self._events[previous_event_index]
-        previous_event_beat = previous_timed_event.event.event.beat
-
-        if previous_timed_event.event.tag == EventTag.STOP:
-            return previous_event_beat
+        tagged_time = TaggedSongTime(time=time, tag=event_tag)
         
-        time_elapsed = time - previous_event_time
-        beats_elapsed = time_elapsed / 60 * float(self.bpm_at(previous_event_beat))
+        # Same caveat as `time_at`
+        prior_state_index = max(0, bisect(self._tagged_times, tagged_time) - 1)
+        prior_state: TimingState = self._state_machine[prior_state_index]
+        prior_state_beat = prior_state.timed_event.event.event.beat
 
-        return Beat(previous_event_beat + beats_elapsed).round_to_tick()
+        return Beat(prior_state_beat + prior_state.beats_until(time))
 
 
 class StaticDisplayBPM(NamedTuple):
@@ -352,9 +490,9 @@ def displaybpm(
 
     If a DISPLAYBPM property is present, its value is used as follows:
 
-    * A literal "*" maps to :class:`RandomDisplayBPM`
-    * Two ":"-separated numbers maps to :class:`RangeDisplayBPM`
     * One number maps to :class:`StaticDisplayBPM`
+    * Two ":"-separated numbers maps to :class:`RangeDisplayBPM`
+    * A literal "*" maps to :class:`RandomDisplayBPM`
 
     Otherwise, the BPMS property will be used. A single BPM maps to
     :class:`StaticDisplayBPM`; if there are multiple, the minimum and
