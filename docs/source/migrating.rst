@@ -140,7 +140,7 @@ from strings to richer representations.
 In 2.0, all properties of simfiles and charts are kept as strings. This
 prevents wasting CPU cycles for use cases that don't benefit from the richer
 representations, keeps the underlying data structures homogeneously typed, and
-simplifies the serialization logic.
+significantly reduces the number of reasons why parsing a simfile might fail.
 
 If you need rich timing data, use the :mod:`simfile.timing` module:
 
