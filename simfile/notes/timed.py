@@ -1,7 +1,8 @@
 from typing import Iterator, NamedTuple
 
 from . import Note, NoteSource, note_iterator
-from ..timing import SongTime, TimingConverter, TimingData
+from ..timing import TimingData
+from ..timing.engine import SongTime, TimingEngine
 from ..types import Simfile, Chart
 
 
@@ -22,9 +23,12 @@ def timed_note_iterator(
 ) -> Iterator[TimedNote]:
     """
     Generate a stream of timed notes from the supplied notes & timing data.
+
+    If a note is unhittable due to a warp segment, it won't be yielded.
     """
-    timing = TimingConverter(timing_data)
+    timing = TimingEngine(timing_data)
 
     for note in note_iterator(note_source):
         time = timing.time_at(note.beat)
-        yield TimedNote(time=time, note=note)
+        if time:
+            yield TimedNote(time=time, note=note)

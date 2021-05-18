@@ -8,7 +8,7 @@ import os
 import unittest
 
 import simfile
-from simfile.timing import BeatEvents
+from simfile.timing import BeatValues
 from simfile.sm import *
 
 
@@ -57,16 +57,16 @@ class TestCharts(unittest.TestCase):
 class TestBeatEvents(unittest.TestCase):
 
     def test_bpms(self):
-        bpms = BeatEvents.from_str(get_simfile('Robotix.sm')['BPMS'])
-        self.assertIsInstance(bpms, BeatEvents)
+        bpms = BeatValues.from_str(get_simfile('Robotix.sm')['BPMS'])
+        self.assertIsInstance(bpms, BeatValues)
         self.assertEqual(bpms[0][0], 0)
         self.assertEqual(bpms[0][1], 150)
         self.assertEqual(bpms[1][0], 144)
         self.assertEqual(bpms[1][1], decimal.Decimal('170.001'))
 
     def test_stops(self):
-        stops = BeatEvents.from_str(get_simfile('Robotix.sm')['STOPS'])
-        self.assertIsInstance(stops, BeatEvents)
+        stops = BeatValues.from_str(get_simfile('Robotix.sm')['STOPS'])
+        self.assertIsInstance(stops, BeatValues)
         self.assertEqual(stops[0][0], 313)
         self.assertEqual(stops[0][1], decimal.Decimal('0.400'))
         self.assertEqual(stops[1][0], 344)
@@ -119,8 +119,8 @@ class TestSimfile(unittest.TestCase):
         self.assertEqual(sm['ARTIST'], 'KaW')
         self.assertEqual(sm['SAMPLESTART'], '41.060')
         self.assertEqual(sm['SAMPLELENGTH'], '13.840')
-        self.assertIsInstance(BeatEvents.from_str(sm['BPMS']), BeatEvents)
-        self.assertIsInstance(BeatEvents.from_str(sm['STOPS']), BeatEvents)
+        self.assertIsInstance(BeatValues.from_str(sm['BPMS']), BeatValues)
+        self.assertIsInstance(BeatValues.from_str(sm['STOPS']), BeatValues)
 
     def test_repr(self):
         sm = get_simfile('Tribal Style.sm', {})
