@@ -20,6 +20,11 @@ class SongTime(float):
     A floating-point time value, denoting a temporal position in a simfile.
     """
     def __repr__(self):
+        """
+        Pretty repr() for song times.
+        
+        Includes the time to 3 decimal places.
+        """
         return f'{self:.3f}'
 
 
@@ -236,7 +241,11 @@ class TimingEngine:
 
     def bpm_at(self, beat: Beat) -> Decimal:
         """
-        Determine the song's BPM at a given beat.
+        Find the song's BPM at a given beat.
+
+        Neither warps, stops, nor delays affect the output of this
+        method: warps are not considered "infinite BPM", nor are pauses
+        considered "zero BPM".
         """
         if beat < Beat(0):
             return Decimal(self.timing_data.bpms[0].value)
@@ -246,20 +255,31 @@ class TimingEngine:
         prior_state: TimingState = self._state_machine[prior_state_index]
         return prior_state.bpm
     
-    def time_range(self, beat: Beat) -> Tuple[SongTime, SongTime]:
+    def hittable(self, beat: Beat) -> bool:
         """
-        Determine when a given beat visibly overlaps the receptors.
+        Determine if a note on the given beat would be hittable.
 
-        Most beats map to exactly one time, so both values of the range
-        will be the same (and equal to :meth:`time_at`). The one
-        exception is when stops or delays are involved: the range of
-        song times will cover the duration of the pause. The first
-        value is always less than or equal to the second value.
+        A note is considered "unhittable" if and only if:
 
-        During warps, this method returns the time at which the
-        enclosing warp occurs for both values.
+        * It takes place inside a warp segment (inclusive of the warp's
+          start, exclusive of the warp's end).
+        * It doesn't coincide with a stop or delay.
+
+        StepMania internally converts unhittable notes to fake notes so
+        that the player's score isn't affected by them.
         """
-        raise NotImplementedError
+        tagged_beat = (beat, EventTag.STOP_END)
+        prior_state_index = max(0, bisect(self._tagged_beats, tagged_beat) - 1)
+        prior_state: TimingState = self._state_machine[prior_state_index]
+
+        if not prior_state.warp:
+            return True
+        
+        if prior_state.event.tag in (EventTag.STOP_END, EventTag.DELAY_END) \
+            and beat == prior_state.event.beat:
+            return True
+        
+        return False
 
     def time_at(
         self,
@@ -267,21 +287,23 @@ class TimingEngine:
         event_tag: EventTag = EventTag.STOP
     ) -> Optional[SongTime]:
         """
-        Determine the time at which a note on the given beat must be hit.
+        Determine the song time at a given beat.
 
-        Most beats map to exactly one time, so this value will be equal
-        to both values returned by :meth:`time_range`. However, on
-        stops and delays, this value will instead fall somewhere within
-        the :meth:`time_range`:
+        On most beats, the `event_tag` parameter is inconsequential.
+        The only time it matters is when stops or delays are involved:
 
-        * On stops, this value is equal to the range's lower bound.
-        * On delays, this value is equal to the range's upper bound.
-        * On beats with both a stop and delay, this value is equal to
-          the lower bound plus the length of the delay (or,
-          equivalently, the upper bound minus the length of the stop).
-
-        If a note placed at the given beat would be un-hittable due to
-        a warp, this method will return None.
+        * On stops, providing a value of :data:`EventTag.STOP` or lower
+          will return the time at which the stop is reached, whereas
+          providing :data:`EventTag.STOP_END` will return the time when
+          the stop ends.
+        * On delays, providing a value of :data:`EventTag.DELAY` or
+          lower will return the time at which the delay is reached,
+          whereas providing :data:`EventTag.DELAY_END` or later will
+          return the time when the delay ends.
+        
+        The default value of :data:`EventTag.STOP` effectively matches
+        the time at which a note on the given beat must be hit
+        (assuming such a note is :meth:`hittable`).
         """
         tagged_beat = (beat, event_tag)
         
@@ -303,10 +325,18 @@ class TimingEngine:
         """
         Determine the beat at a given time in the song.
 
-        No special provisions are made to handle warps; a song time
-        that happens to land exactly on a warp might get mapped to the
-        beat at which the warp starts or ends, depending on floating
-        point rounding.
+        At most times, the `event_tag` parameter is inconsequential.
+        The only time it matters is when the time lands exactly on a
+        warp segment:
+        
+        * Providing :data:`EventTag.WARP` will return the beat where
+          the warp starts.
+        * Providing :data:`EventTag.WARP_END` or later will return the
+          beat where the warp ends (or is interrupted by a stop or
+          delay).
+        
+        Keep in mind that this situation is floating-point precise, so
+        it's unlikely for the `event_tag` to ever make a difference.
         """
         tagged_time = (time, event_tag)
         
