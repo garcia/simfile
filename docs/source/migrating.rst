@@ -154,10 +154,10 @@ If you need rich timing data, use the :mod:`simfile.timing` package:
 If you need rich note data, use the :mod:`simfile.notes` package:
 
     >>> import simfile # 2.0
-    >>> from simfile.notes import note_iterator
+    >>> from simfile.notes import NoteData
     >>> from simfile.timing import Beat
     >>> robotix = simfile.open('testdata/Robotix.sm')
-    >>> for note in note_iterator(robotix.charts[0]):
+    >>> for note in NoteData.from_chart(robotix.charts[0]):
     ...     if note.beat > Beat(18): break
     ...     print(note)
     ...
