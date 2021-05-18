@@ -1,13 +1,10 @@
-from collections import ChainMap, defaultdict
 from decimal import Decimal
 from fractions import Fraction
-from functools import total_ordering
-from heapq import merge
 from simfile.ssc import SSCChart
 from typing import Type, NamedTuple
 
 from ._private.sscproxy import ssc_proxy
-from simfile._private.generic import E, ListWithRepr
+from simfile._private.generic import ListWithRepr
 from simfile.types import Simfile
 
 
