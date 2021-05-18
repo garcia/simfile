@@ -9,7 +9,7 @@ A modern simfile parsing & editing library for Python 3.
   - SM ↔︎ SSC conversion
 * Timing data support
   - Beat ↔︎ song time conversion
-  - Handles BPM changes and stops _(delays & warps forthcoming)_
+  - Handles BPM changes, stops, delays and warps
   - Accepts "split timing" from SSC charts
 * Note streams from charts
   - Algorithms for grouping jumps & hold/roll head/tail notes
