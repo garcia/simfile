@@ -1,13 +1,9 @@
-from collections import UserDict
-from collections.abc import Mapping
 from typing import Type
-from simfile._private.dedent import dedent_and_trim
 
 from msdparser.msdparser import MSDParser
 
 from .base import BaseChart, BaseCharts, BaseSimfile
-from ._private.property import item_property
-from ._private.serializable import Serializable
+from ._private.dedent import dedent_and_trim
 
 
 __all__ = ['SMChart', 'SMCharts', 'SMSimfile']

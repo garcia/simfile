@@ -1,7 +1,6 @@
 import builtins
 from contextlib import contextmanager
 from io import StringIO
-from itertools import tee
 from typing import Iterator, TextIO, Union
 
 from msdparser import MSDParser

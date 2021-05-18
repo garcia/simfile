@@ -1,6 +1,6 @@
 from abc import ABCMeta, abstractclassmethod, abstractmethod
 from collections import OrderedDict
-from typing import Any, FrozenSet, Iterator, Optional, TextIO, Union
+from typing import Iterator, Optional, TextIO, Union
 
 from msdparser import MSDParser
 

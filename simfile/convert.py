@@ -1,4 +1,4 @@
-from collections import OrderedDict, defaultdict
+from collections import defaultdict
 from copy import deepcopy
 from enum import Enum
 from simfile.types import Simfile, Chart

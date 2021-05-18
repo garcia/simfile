@@ -1,12 +1,10 @@
-from collections import OrderedDict
-from simfile._private.dedent import dedent_and_trim
 from typing import Optional, Type
 
 from msdparser.msdparser import MSDParser
 
 from .base import BaseChart, BaseCharts, BaseSimfile
+from ._private.dedent import dedent_and_trim
 from ._private.property import item_property
-from ._private.serializable import Serializable
 
 
 __all__ = ['SSCChart', 'SSCCharts', 'SSCSimfile']
