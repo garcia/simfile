@@ -6,7 +6,7 @@ from typing import Optional, TextIO
 class Serializable(metaclass=ABCMeta):
 
     @abstractmethod
-    def serialize(self, file: TextIO) -> Optional[str]:
+    def serialize(self, file: TextIO) -> None:
         """
         Write the object to provided text file object as MSD.
         """
