@@ -7,6 +7,7 @@ verify_ssl = true
 sphinx-autoapi = "==1.8.1"
 sphinx-rtd-theme = ">=0.5.0"
 Sphinx = "==3.2.1"
+twine = "*"
 
 [packages]
 msdparser = ">=1.0.0-alpha.3"
