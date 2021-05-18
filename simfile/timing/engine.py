@@ -38,9 +38,8 @@ class EventTag(IntEnum):
 
     Warps, delays, and stops have a corresponding "end" type that
     :class:`TimingEngine` uses to simplify the beat/time conversion
-    logic. These types can be ignored as the results of passing them to
-    :class:`TimingEngine`'s methods are never unique (i.e. you can get
-    the same value by passing one of the other event types).
+    logic. These can be used to disambiguate the time at a given beat
+    (for stops & delays) or the beat at a given time (for warps).
     """
     WARP = 0
     WARP_END = 1
@@ -284,7 +283,7 @@ class TimingEngine:
         self,
         beat: Beat,
         event_tag: EventTag = EventTag.STOP
-    ) -> Optional[SongTime]:
+    ) -> SongTime:
         """
         Determine the song time at a given beat.
 

@@ -26,9 +26,8 @@ def timed_note_iterator(
 
     If a note is unhittable due to a warp segment, it won't be yielded.
     """
-    timing = TimingEngine(timing_data)
+    engine = TimingEngine(timing_data)
 
     for note in note_data:
-        time = timing.time_at(note.beat)
-        if time:
-            yield TimedNote(time=time, note=note)
+        if engine.hittable(note.beat):
+            yield TimedNote(time=engine.time_at(note.beat), note=note)
