@@ -1,6 +1,6 @@
 import unittest
 
-from .. import Note, NoteType, note_iterator
+from .. import Note, NoteType, NoteData
 from ..group import *
 from ...sm import SMChart
 from ...timing import Beat
@@ -8,7 +8,7 @@ from simfile.notes import group
 
 
 def testing_valid_notes():
-    return note_iterator(
+    return NoteData(
         '1200\n'
         '0010\n'
         '0001\n'
@@ -37,7 +37,7 @@ def testing_valid_notes():
 
 
 def testing_invalid_notes():
-    return note_iterator(
+    return NoteData(
         '3000\n'
         '0200\n'
         '0200\n'

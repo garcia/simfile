@@ -7,7 +7,7 @@ from ...timing import Beat
 
 class TestNoteStream(unittest.TestCase):
     def test_from_chart(self):
-        notes = list(note_iterator(testing_chart()))
+        notes = list(NoteData.from_chart(testing_chart()))
         self.assertListEqual([
             Note(beat=Beat(16,4), column=0, note_type=NoteType.TAP),
             Note(beat=Beat(18,4), column=2, note_type=NoteType.TAP),

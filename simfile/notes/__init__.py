@@ -1,11 +1,12 @@
 from enum import Enum
-from typing import Iterator, NamedTuple, Union
+from simfile._private.serializable import Serializable
+from typing import Iterator, NamedTuple, Type, Union
 
 from ..timing import Beat
 from ..types import Chart
 
 
-__all__ = ['NoteType', 'Note', 'NoteSource', 'note_iterator']
+__all__ = ['NoteType', 'Note', 'NoteData']
 
 
 class NoteType(Enum):
@@ -32,26 +33,40 @@ class Note(NamedTuple):
     note_type: NoteType
 
 
-NoteSource = Union[Chart, str]
-
-
-def note_iterator(note_source: NoteSource) -> Iterator[Note]:
+class NoteData:
     """
-    Generate a stream of notes from a chart or string of note data.
+    Wrapper for note data with iteration & serialization capabilities.
     """
-    if isinstance(note_source, str):
-        note_data = note_source
-    else:
-        note_data = note_source.notes
+    _notes: str
 
-    for m, measure in enumerate(note_data.split(',')):
-        lines = measure.strip().splitlines()
-        subdivision = len(lines)
-        for l, line in enumerate(lines):
-            for c, column in enumerate(line.rstrip()):
-                if column != '0':
-                    yield Note(
-                        beat=Beat(m*4 + l*4/subdivision),
-                        column=c,
-                        note_type=NoteType(column),
-                    )
+    def __init__(self, notes: str):
+        self._notes = notes
+    
+    @classmethod
+    def from_chart(cls: Type['NoteData'], chart: Chart) -> 'NoteData':
+        """
+        Get note data from a chart.
+        """
+        return cls(chart.notes)
+
+    def __iter__(self) -> Iterator[Note]:
+        """
+        Iterate over the notes in the note data.
+
+        Notes are yielded chronologically first, then in ascending
+        column order (same as the serialized order).
+        """
+        for m, measure in enumerate(self._notes.split(',')):
+            lines = measure.strip().splitlines()
+            subdivision = len(lines)
+            for l, line in enumerate(lines):
+                for c, column in enumerate(line.rstrip()):
+                    if column != '0':
+                        yield Note(
+                            beat=Beat(m*4 + l*4/subdivision),
+                            column=c,
+                            note_type=NoteType(column),
+                        )
+    
+    def __str__(self) -> str:
+        return self._notes

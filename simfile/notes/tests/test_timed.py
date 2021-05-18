@@ -7,9 +7,9 @@ from ...timing import Beat, TimingData
 
 
 class TestTimedNoteStream(unittest.TestCase):
-    def test_from_chart(self):
+    def test_timed_note_stream(self):
         timed_notes = list(timed_note_iterator(
-            note_source=testing_chart(),
+            note_data=NoteData.from_chart(testing_chart()),
             timing_data=TimingData.from_simfile(testing_simfile()),
         ))
 

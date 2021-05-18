@@ -1,5 +1,5 @@
-from simfile.notes import Note, note_iterator
-from typing import Iterator
+from simfile.notes import Note, NoteData
+from typing import Iterable
 from ...sm import SMSimfile, SMChart
 
 
@@ -58,5 +58,5 @@ def testing_chart():
     )
 
 
-def testing_notes() -> Iterator[Note]:
-    return note_iterator(testing_chart())
+def testing_notes() -> Iterable[Note]:
+    return NoteData.from_chart(testing_chart())
