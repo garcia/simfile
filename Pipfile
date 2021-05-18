@@ -4,9 +4,12 @@ url = "https://pypi.org/simple"
 verify_ssl = true
 
 [dev-packages]
+sphinx-autoapi = "==1.8.1"
+sphinx-rtd-theme = ">=0.5.0"
+Sphinx = "==3.2.1"
 
 [packages]
-msdparser = "*"
+msdparser = ">=1.0.0-alpha.3"
 pyfakefs = "*"
 
 [requires]
