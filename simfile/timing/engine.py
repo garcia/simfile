@@ -72,11 +72,10 @@ class TimedEvent(NamedTuple):
 class TimingState(NamedTuple):
     event: TimedEvent
     bpm: Decimal
-    warp_until: Optional[Beat]
+    warp: bool
 
     def time_until(self, beat: Beat, event_tag: EventTag) -> float:
-        if self.warp_until:
-            assert beat <= self.warp_until
+        if self.warp:
             time_until = 0.0
         else:
             beats_until = beat - self.event.beat
@@ -105,20 +104,6 @@ class TimingStateMachine(ListWithRepr[TimingState]):
         return cast(TimingState, self[-1])
     
     def advance(self, event: TaggedEvent):
-        # Insert WARP_END event if we're currently inside a warp and EITHER
-        # 1. advancing past the warp end OR
-        # 2. arriving at the warp end without immediately entering another warp
-        if (event.tag != EventTag.WARP_END
-            and self.last.warp_until
-            and (event.beat > self.last.warp_until
-                or (event.beat == self.last.warp_until
-                    and event.tag != EventTag.WARP))):
-            self.advance(TaggedEvent(
-                beat=self.last.warp_until,
-                value=Decimal(0),
-                tag=EventTag.WARP_END,
-            ))
-        
         # Update song time
         time_until = self.last.time_until(event.beat, event.tag)
         time = SongTime(self.last.event.time + time_until)
@@ -129,17 +114,11 @@ class TimingStateMachine(ListWithRepr[TimingState]):
             bpm = event.value
         
         # Update warp status
-        warp_until = self.last.warp_until
-        if event.tag == EventTag.WARP_END:
-            warp_until = None
-        elif event.tag == EventTag.WARP:
-            warp_end = Beat(event.beat + Beat(event.value))
-            if warp_until is None or warp_end > warp_until:
-                warp_until = warp_end
-        
-        # Make sure we didn't somehow go past the warp end
-        if warp_until:
-            assert event.beat < warp_until
+        warp = self.last.warp
+        if event.tag == EventTag.WARP:
+            warp = True
+        elif event.tag == EventTag.WARP_END:
+            warp = False
         
         self.append(TimingState(
             event=TimedEvent(
@@ -149,7 +128,7 @@ class TimingStateMachine(ListWithRepr[TimingState]):
                 time=time,
             ),
             bpm=bpm,
-            warp_until=warp_until,
+            warp=warp,
         ))
 
 
@@ -171,6 +150,45 @@ class TimingEngine:
         self.timing_data = timing_data
         self._retime_events()
     
+    def _coalesce_warps(self) -> Iterable[Tuple[BeatValues, EventTag]]:
+        """
+        Coalesce the timing data's warps into WARP & WARP_END events.
+
+        StepMania allows warps to intersect. This is almost certainly
+        unintended, but it means the most defensive option for this
+        library is to handle intersecting warps the same way. This
+        method keeps track of the warp state and ensures that the
+        resulting sequences of events perfectly alternate between WARP
+        and WARP_END events, combining any intersecting warps into
+        singular warp segments.
+        """
+        zero = Decimal(0)
+        warp_starts = BeatValues()
+        warp_ends = BeatValues()
+        for warp_ in self.timing_data.warps:
+            warp: BeatValue = warp_
+            warp_end = Beat(warp.beat + Beat(warp.value))
+            if warp_starts:
+                last_warp_end: Beat = warp_ends[-1].beat
+                if warp.beat <= last_warp_end:
+                    if warp_end > last_warp_end:
+                        warp_ends[-1] = BeatValue(
+                            beat=warp_end,
+                            value=Decimal(0),
+                        )
+                else:
+                    warp_starts.append(BeatValue(beat=warp.beat, value=zero))
+                    warp_ends.append(BeatValue(beat=warp_end, value=zero))
+            else:
+                warp_starts.append(BeatValue(beat=warp.beat, value=zero))
+                warp_ends.append(BeatValue(beat=warp_end, value=zero))
+        
+        return [
+            (warp_starts, EventTag.WARP),
+            (warp_ends, EventTag.WARP_END),
+        ]
+
+    
     def _retime_events(self):
         # Set the private instance variables based on the timing data
         first_bpm: BeatValue = self.timing_data.bpms[0]
@@ -185,11 +203,11 @@ class TimingEngine:
                 time=-SongTime(self.timing_data.offset),
             ),
             bpm=first_bpm.value,
-            warp_until=None,
+            warp=False,
         )])
 
         events_with_tags: Iterable[Tuple[BeatValues, EventTag]] = [
-            (self.timing_data.warps, EventTag.WARP),
+            *self._coalesce_warps(),
             (self.timing_data.bpms[1:], EventTag.BPM),
             (self.timing_data.delays, EventTag.DELAY),
             (self.timing_data.delays, EventTag.DELAY_END),
