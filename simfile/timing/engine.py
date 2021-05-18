@@ -6,8 +6,7 @@ from heapq import merge
 from typing import Iterable, List, MutableSequence, Optional, Tuple, NamedTuple, cast
 
 from . import Beat, BeatValue, BeatValues, TimingData
-from simfile._private.generic import E, ListWithRepr
-from simfile.types import Simfile
+from simfile._private.generic import ListWithRepr
 
 
 __all__ = [
