@@ -142,17 +142,16 @@ prevents wasting CPU cycles for use cases that don't benefit from the richer
 representations, keeps the underlying data structures homogeneously typed, and
 significantly reduces the number of reasons why parsing a simfile might fail.
 
-If you need rich timing data, use the :mod:`simfile.timing` module:
+If you need rich timing data, use the :mod:`simfile.timing` package:
 
     >>> import simfile # 2.0
     >>> from simfile.timing import TimingData
     >>> robotix = simfile.open('testdata/Robotix.sm')
     >>> timing_data = TimingData.from_simfile(robotix)
     >>> print(timing_data.bpms[0])
-    BeatEvent(beat=<Beat 0>, value=Decimal('150.000'))
+    BeatValue(beat=<Beat 0>, value=Decimal('150.000'))
 
-If you need rich note data, use the :mod:`simfile.notes` package and its
-submodules:
+If you need rich note data, use the :mod:`simfile.notes` package:
 
     >>> import simfile # 2.0
     >>> from simfile.notes import note_iterator
