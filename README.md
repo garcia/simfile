@@ -2,6 +2,8 @@
 
 A modern simfile parsing & editing library for Python 3.
 
+Version 2.0 is a substantial departure from the 1.0 release. Read **[Migrating from simfile 1.0 to 2.0](https://simfile.readthedocs.io/en/latest/migrating.html)** for a breakdown of the changes. While 2.0 is currently in beta, no further breaking API changes are anticipated before the official 2.0 release.
+
 ## Features
 
 * Supports both SM and SSC files
@@ -19,7 +21,7 @@ A modern simfile parsing & editing library for Python 3.
 
 ## Installation
 
-`simfile` is available on PyPI. During alpha, make sure to pass `--pre` to `pip`, otherwise you will fetch the latest 1.0 release:
+`simfile` is available on PyPI. During the current beta phase, make sure to pass `--pre` to `pip`, otherwise you will fetch the 1.0 release:
 
     pip3 install --pre simfile
 
