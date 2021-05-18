@@ -2,7 +2,7 @@ from decimal import Decimal
 from simfile.ssc import SSCSimfile
 import unittest
 
-from .helpers import testing_simfile
+from .helpers import testing_timing_data
 from .. import *
 from simfile.sm import SMSimfile
 
@@ -47,13 +47,21 @@ class TestBeatValues(unittest.TestCase):
 
 
 class TestTimingData(unittest.TestCase):
-    def test_from_simfile(self):
-        sm = testing_simfile()
-        timing_data = TimingData.from_simfile(sm)
-        self.assertEqual(BeatValues.from_str(sm.bpms), timing_data.bpms)
-        self.assertEqual(BeatValues.from_str(sm.stops), timing_data.stops)
+    def test_attributes(self):
+        timing_data = testing_timing_data()
+        self.assertEqual(BeatValues([
+            BeatValue(beat=Beat(0), value=Decimal('120.000')),
+            BeatValue(beat=Beat(1), value=Decimal('150.000')),
+            BeatValue(beat=Beat(2), value=Decimal('200.000')),
+            BeatValue(beat=Beat(3), value=Decimal('300.000')),
+        ]), timing_data.bpms)
+        self.assertEqual(BeatValues([
+            BeatValue(beat=Beat(2.5), value=Decimal('0.500')),
+            BeatValue(beat=Beat(3), value=Decimal('0.100')),
+        ]), timing_data.stops)
+        self.assertEqual(BeatValues(), timing_data.delays)
         self.assertEqual(BeatValues(), timing_data.warps)
-        self.assertEqual(Decimal(sm.offset), timing_data.offset)
+        self.assertEqual(Decimal('-0.009'), timing_data.offset)
     
     def test_from_simfile_with_ssc_chart_without_distinct_timing_data(self):
         with open('testdata/Springtime.ssc', 'r', encoding='utf-8') as infile:
