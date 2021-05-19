@@ -24,7 +24,7 @@ Version 2.0 is a substantial departure from the 1.0 release. Read **[Migrating f
 `simfile` is available on PyPI. During the current beta phase, make sure to pass `--pre` to `pip`, otherwise you will fetch the 1.0 release:
 
 ```bash
-    pip3 install --pre simfile
+pip3 install --pre simfile
 ```
 
 ## Quickstart
@@ -32,45 +32,45 @@ Version 2.0 is a substantial departure from the 1.0 release. Read **[Migrating f
 Load simfiles from disk using `simfile.open` or `simfile.load`:
 
 ```python
-    >>> import simfile
-    >>> springtime = simfile.open('testdata/Springtime.ssc')
-    >>> springtime
-    <SSCSimfile: Springtime>
-    >>> with open('testdata/Robotix.sm', 'r') as infile:
-    ...     robotix = simfile.load(infile)
-    ...
-    >>> robotix
-    <SMSimfile: Robotix>
+>>> import simfile
+>>> springtime = simfile.open('testdata/Springtime.ssc')
+>>> springtime
+<SSCSimfile: Springtime>
+>>> with open('testdata/Robotix.sm', 'r') as infile:
+...     robotix = simfile.load(infile)
+...
+>>> robotix
+<SMSimfile: Robotix>
 ```
 
 Access simfile properties through uppercase keys:
 
 ```python
-    >>> springtime['ARTIST']
-    'Kommisar'
-    >>> list(springtime.keys())[:7]
-    ['VERSION', 'TITLE', 'SUBTITLE', 'ARTIST', 'TITLETRANSLIT', 'SUBTITLETRANSLIT', 'ARTISTTRANSLIT']
+>>> springtime['ARTIST']
+'Kommisar'
+>>> list(springtime.keys())[:7]
+['VERSION', 'TITLE', 'SUBTITLE', 'ARTIST', 'TITLETRANSLIT', 'SUBTITLETRANSLIT', 'ARTISTTRANSLIT']
 ```
 
 Alternatively, you can use lowercase attributes for known properties:
 
 ```python
-    >>> robotix.displaybpm
-    '150.000'
-    >>> robotix.displaybpm is robotix['DISPLAYBPM']
-    True
+>>> robotix.displaybpm
+'150.000'
+>>> robotix.displaybpm is robotix['DISPLAYBPM']
+True
 ```
 
 Charts are stored in a list under the `.charts` attribute and function similarly to simfile objects:
 
 ```python
-    >>> len(springtime.charts)
-    9
-    >>> chart = springtime.charts[0]
-    >>> chart
-    <SSCChart: dance-single Challenge 12>
-    >>> list(chart.keys())[:7]
-    ['CHARTNAME', 'STEPSTYPE', 'DESCRIPTION', 'CHARTSTYLE', 'DIFFICULTY', 'METER', 'RADARVALUES']
+>>> len(springtime.charts)
+9
+>>> chart = springtime.charts[0]
+>>> chart
+<SSCChart: dance-single Challenge 12>
+>>> list(chart.keys())[:7]
+['CHARTNAME', 'STEPSTYPE', 'DESCRIPTION', 'CHARTSTYLE', 'DIFFICULTY', 'METER', 'RADARVALUES']
 ```
 
 ## Documentation
