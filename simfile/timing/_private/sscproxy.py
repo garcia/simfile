@@ -1,8 +1,8 @@
 from collections import ChainMap, defaultdict
-from typing import DefaultDict
+from typing import DefaultDict, Mapping, Optional
 
 from simfile.ssc import SSCSimfile, SSCChart
-from simfile.types import Simfile
+from simfile.types import Simfile, Chart
 
 
 # fun fact: SSC versions are stored as floats internally
@@ -10,11 +10,14 @@ from simfile.types import Simfile
 SSC_VERSION_SPLIT_TIMING = 0.7
 
 
-def ssc_proxy(simfile: Simfile, ssc_chart: SSCChart) -> DefaultDict[str, str]:
-    chain = ChainMap(simfile)
-    
+def ssc_proxy(simfile: Simfile, chart: Optional[Chart]) -> Mapping[str, str]:
+    source: Mapping[str, str]
+
     if (isinstance(simfile, SSCSimfile) and
+        isinstance(chart, SSCChart) and
         float(simfile.version) >= SSC_VERSION_SPLIT_TIMING):
-        chain = chain.new_child(ssc_chart)
+        source = ChainMap(chart, simfile)
+    else:
+        source = simfile
     
-    return defaultdict(lambda: '', chain)
+    return defaultdict(lambda: '', source)

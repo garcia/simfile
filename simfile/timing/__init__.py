@@ -1,11 +1,11 @@
 from decimal import Decimal
 from fractions import Fraction
 from simfile.ssc import SSCChart
-from typing import Type, NamedTuple
+from typing import Optional, Type, NamedTuple
 
 from ._private.sscproxy import ssc_proxy
 from simfile._private.generic import ListWithRepr
-from simfile.types import Simfile
+from simfile.types import Simfile, Chart
 
 
 __all__ = ['Beat', 'BeatValue', 'BeatValues', 'TimingData']
@@ -110,17 +110,17 @@ class TimingData(NamedTuple):
     def from_simfile(
         cls: Type['TimingData'],
         simfile: Simfile,
-        ssc_chart: SSCChart = SSCChart()
+        chart: Optional[Chart] = None
     ) -> 'TimingData':
         """
         Obtain timing data from a simfile and optionally an SSC chart.
 
-        If an :class:`simfile.ssc.SSCSimfile` (version 0.7 or higher) &
-        :class:`simfile.ssc.SSCChart` are provided, timing data
-        properties in the chart take precedence over the simfile's
-        timing data. This is true regardless of the property's value;
-        for example, a blank `STOPS` value in the chart overrides a
-        non-blank value from the simfile.
+        If both an :class:`simfile.ssc.SSCSimfile` (version 0.7 or
+        higher) and an :class:`simfile.ssc.SSCChart` are provided,
+        any "split timing" defined in the chart will take precedence
+        over the simfile's timing data. This is true regardless of the
+        property's value; for example, a blank `STOPS` value in the
+        chart overrides a non-blank value from the simfile.
 
         Per StepMania's behavior, the offset defaults to zero if the
         simfile (and/or SSC chart) doesn't specify one. (However,
@@ -129,7 +129,7 @@ class TimingData(NamedTuple):
         existing simfiles, whereas the default offset does get used
         intentionally from time to time.)
         """
-        properties = ssc_proxy(simfile, ssc_chart)
+        properties = ssc_proxy(simfile, chart)
         return TimingData(
             bpms=BeatValues.from_str(properties['BPMS']),
             stops=BeatValues.from_str(properties['STOPS']),
