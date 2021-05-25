@@ -73,6 +73,12 @@ class TestSMChart(unittest.TestCase):
         self.assertNotEqual(base, variants[4])
         self.assertNotEqual(base, variants[5])
         self.assertNotEqual(base, variants[6])
+    
+    def test_getitem(self):
+        unit = SMChart.from_str(testing_chart())
+
+        self.assertEqual(unit['STEPSTYPE'], unit.stepstype)
+        self.assertRaises(KeyError, unit.__getitem__, 'stepstype')
 
     def test_repr(self):
         unit = SMChart.from_str(testing_chart())

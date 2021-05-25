@@ -119,8 +119,8 @@ class SMChart(BaseChart):
         raise NotImplementedError
     
     def __getitem__(self, property):
-        if property.upper() in SM_CHART_PROPERTIES:
-            return getattr(self, property)
+        if property in SM_CHART_PROPERTIES:
+            return getattr(self, property.lower())
         else:
             raise KeyError
 
