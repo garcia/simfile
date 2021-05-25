@@ -127,5 +127,5 @@ class TimingData(NamedTuple):
             stops=BeatValues.from_str(properties['STOPS']),
             delays=BeatValues.from_str(properties['DELAYS']),
             warps=BeatValues.from_str(properties['WARPS']),
-            offset=Decimal(properties['OFFSET']),
+            offset=Decimal(properties['OFFSET'] or 0),
         )

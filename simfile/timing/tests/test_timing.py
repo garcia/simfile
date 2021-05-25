@@ -1,10 +1,9 @@
 from decimal import Decimal
-from simfile.ssc import SSCSimfile
 import unittest
 
+import simfile
 from .helpers import testing_timing_data
 from .. import *
-from simfile.sm import SMSimfile
 
 class TestBeat(unittest.TestCase):
     def test_from_str(self):
@@ -64,8 +63,7 @@ class TestTimingData(unittest.TestCase):
         self.assertEqual(Decimal('-0.009'), timing_data.offset)
     
     def test_from_simfile_with_ssc_chart_without_distinct_timing_data(self):
-        with open('testdata/Springtime.ssc', 'r', encoding='utf-8') as infile:
-            ssc = SSCSimfile(file=infile)
+        ssc = simfile.open('testdata/Springtime.ssc')
         ssc_chart = next(filter(
             lambda c: c.stepstype == 'pump-single' and c.difficulty == 'Hard',
             ssc.charts
@@ -77,8 +75,7 @@ class TestTimingData(unittest.TestCase):
         self.assertEqual(Decimal(ssc.offset), timing_data.offset)
     
     def test_from_simfile_with_ssc_chart_with_distinct_timing_data(self):
-        with open('testdata/Springtime.ssc', 'r', encoding='utf-8') as infile:
-            ssc = SSCSimfile(file=infile)
+        ssc = simfile.open('testdata/Springtime.ssc')
         ssc_chart = next(filter(
             lambda c: c.stepstype == 'pump-single'
                 and c.difficulty == 'Challenge',
@@ -90,4 +87,8 @@ class TestTimingData(unittest.TestCase):
         self.assertEqual(BeatValues(), timing_data.warps)
         self.assertEqual(Decimal(ssc_chart['OFFSET']), timing_data.offset)
 
-
+    def test_handles_omitted_offset(self):
+        sm = simfile.open('testdata/Robotix.sm')
+        del sm['OFFSET']
+        timing_data = TimingData.from_simfile(sm)
+        self.assertEqual(Decimal(0), timing_data.offset)
