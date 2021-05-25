@@ -115,11 +115,19 @@ class TimingData(NamedTuple):
         """
         Obtain timing data from a simfile and optionally an SSC chart.
 
-        If an SSC chart is provided, any timing data properties it
-        contains will take precedence over the simfile's timing data.
-        This is true regardless of the property's value; for example, a
-        blank `STOPS` value in the SSC chart overrides a non-blank
-        value from the simfile.
+        If an :class:`simfile.ssc.SSCSimfile` (version 0.7 or higher) &
+        :class:`simfile.ssc.SSCChart` are provided, timing data
+        properties in the chart take precedence over the simfile's
+        timing data. This is true regardless of the property's value;
+        for example, a blank `STOPS` value in the chart overrides a
+        non-blank value from the simfile.
+
+        Per StepMania's behavior, the offset defaults to zero if the
+        simfile (and/or SSC chart) doesn't specify one. (However,
+        unlike StepMania, the BPM does not default to 60 when omitted;
+        the default BPM doesn't appear to be used deliberately in any
+        existing simfiles, whereas the default offset does get used
+        intentionally from time to time.)
         """
         properties = ssc_proxy(simfile, ssc_chart)
         return TimingData(
