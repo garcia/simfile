@@ -58,5 +58,5 @@ def testing_chart():
     )
 
 
-def testing_notes() -> Iterable[Note]:
+def testing_notes() -> NoteData:
     return NoteData.from_chart(testing_chart())
