@@ -1,4 +1,4 @@
-from typing import Type
+from typing import Optional, Type
 
 from msdparser.msdparser import MSDParser
 
@@ -21,6 +21,13 @@ class SMChart(BaseChart):
     Unlike :class:`~simfile.ssc.SSCChart`, SM chart metadata is stored
     as a fixed list of 6 properties, so this class prohibits adding or
     deleting keys from its backing OrderedDict.
+    """
+    
+    extradata: Optional[str] = None
+    """
+    If the chart contains more than 6 properties, any extra properties
+    are stored in this attribute as a single string, including any
+    extra ":" separators.
     """
     
     @classmethod
@@ -52,14 +59,17 @@ class SMChart(BaseChart):
     
     def _from_str(self, string: str) -> None:
         values = string.split(':')
-        if len(values) != len(SM_CHART_PROPERTIES):
+        if len(values) < len(SM_CHART_PROPERTIES):
             raise ValueError(
-                f'expected {len(SM_CHART_PROPERTIES)} chart components, '
-                f'got {len(values)}'
+                f'expected at least {len(SM_CHART_PROPERTIES)} '
+                f'chart components, got {len(values)}'
             )
         
         for property, value in zip(SM_CHART_PROPERTIES, values):
             self[property] = value.strip()
+        
+        if len(values) > len(SM_CHART_PROPERTIES):
+            self.extradata = ':'.join(values[len(SM_CHART_PROPERTIES):])
     
     def _parse(self, parser: MSDParser):
         property, value = next(iter(parser))
@@ -77,6 +87,7 @@ class SMChart(BaseChart):
             f'     {self.meter}:\n'
             f'     {self.radarvalues}:\n'
             f'{self.notes}\n'
+            f'{":" + self.extradata if self.extradata else ""}'
             f';'
         )
 

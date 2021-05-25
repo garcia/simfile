@@ -78,6 +78,14 @@ class TestSMChart(unittest.TestCase):
         unit = SMChart.from_str(testing_chart())
 
         self.assertEqual('<SMChart: dance-single Edit 12>', repr(unit))
+    
+    def test_preserves_extra_data(self):
+        extra_data = 'extra:data'
+        chart_with_extra_data = testing_chart() + ':' + extra_data
+        unit = SMChart.from_str(chart_with_extra_data)
+
+        self.assertEqual(unit.extradata, extra_data)
+        self.assertTrue(str(unit).endswith(f':{unit.extradata};'))
 
 
 class TestSMCharts(unittest.TestCase):
