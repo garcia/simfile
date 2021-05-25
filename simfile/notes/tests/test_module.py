@@ -1,3 +1,4 @@
+from textwrap import indent
 import unittest
 
 from .helpers import *
@@ -40,3 +41,13 @@ class TestNoteStream(unittest.TestCase):
             Note(beat=Beat(48,4), column=2, note_type=NoteType.MINE),
             Note(beat=Beat(48,4), column=3, note_type=NoteType.TAIL),
         ], notes)
+
+    def test_handles_whitespace(self):
+        chart = testing_chart()
+        chart.notes = indent(chart.notes, '     ')
+        first_3_notes = list(NoteData.from_chart(chart))[:3]
+        self.assertListEqual([
+            Note(beat=Beat(16,4), column=0, note_type=NoteType.TAP),
+            Note(beat=Beat(18,4), column=2, note_type=NoteType.TAP),
+            Note(beat=Beat(20,4), column=1, note_type=NoteType.HOLD_HEAD),
+        ], first_3_notes)

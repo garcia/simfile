@@ -60,7 +60,7 @@ class NoteData:
             lines = measure.strip().splitlines()
             subdivision = len(lines)
             for l, line in enumerate(lines):
-                for c, column in enumerate(line.rstrip()):
+                for c, column in enumerate(line.strip()):
                     if column != '0':
                         yield Note(
                             beat=Beat(m*4 + l*4/subdivision),
