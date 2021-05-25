@@ -1,3 +1,4 @@
+from simfile.ssc import SSCChart
 from textwrap import indent
 import unittest
 
@@ -46,8 +47,21 @@ class TestNoteStream(unittest.TestCase):
         chart = testing_chart()
         chart.notes = indent(chart.notes, '     ')
         first_3_notes = list(NoteData.from_chart(chart))[:3]
+        
         self.assertListEqual([
             Note(beat=Beat(16,4), column=0, note_type=NoteType.TAP),
             Note(beat=Beat(18,4), column=2, note_type=NoteType.TAP),
             Note(beat=Beat(20,4), column=1, note_type=NoteType.HOLD_HEAD),
         ], first_3_notes)
+    
+    def test_handles_notes2(self):
+        # turn testing_chart() into an SSC chart
+        chart = SSCChart.blank()
+        chart.update(testing_chart())
+        
+        notes = list(NoteData.from_chart(chart))
+        chart['NOTES2'] = chart.notes
+        del chart.notes
+        notes2 = list(NoteData.from_chart(chart))
+
+        self.assertEqual(notes, notes2)
