@@ -2,10 +2,11 @@ simfile - Modern simfile library for Python
 ===========================================
 
 .. toctree::
-   :maxdepth: 3
+   :maxdepth: 1
 
-   migrating
    reading-writing
+   changelog
+   migrating
 
 
 Indices and tables
