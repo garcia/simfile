@@ -84,8 +84,8 @@ class TestSMChart(unittest.TestCase):
         chart_with_extra_data = testing_chart() + ':' + extra_data
         unit = SMChart.from_str(chart_with_extra_data)
 
-        self.assertEqual(unit.extradata, extra_data)
-        self.assertTrue(str(unit).endswith(f':{unit.extradata};'))
+        self.assertEqual(['extra', 'data'], unit.extradata)
+        self.assertTrue(str(unit).endswith(f':{extra_data};'))
 
 
 class TestSMCharts(unittest.TestCase):

@@ -27,9 +27,9 @@ Bugfixes
 These changes fix parsing of some real simfiles that StepMania accepts but
 :code:`simfile` previously raised an exception for:
 
-* :class:`simfile.sm.SMSimfile` now allows more than 6 chart components. Any
-  extra components are stored in a new `extradata` attribute and are returned
-  to the end of the chart upon serialization.
+* :class:`simfile.sm.SMChart` now allows more than 6 chart components. Any
+  extra components are stored in a new :data:`simfile.sm.SMChart.extradata`
+  attribute and are returned to the end of the chart upon serialization.
 * :class:`simfile.notes.NoteData` now strips whitespace from both sides of each
   row in the note data, not just from the end of the line.
 * :class:`simfile.timing.TimingData` now defaults the offset to 0 when it's not

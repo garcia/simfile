@@ -1,4 +1,4 @@
-from typing import Optional, Type
+from typing import List, Optional, Type
 
 from msdparser.msdparser import MSDParser
 
@@ -23,11 +23,10 @@ class SMChart(BaseChart):
     deleting keys from its backing OrderedDict.
     """
     
-    extradata: Optional[str] = None
+    extradata: Optional[List[str]] = None
     """
-    If the chart contains more than 6 properties, any extra properties
-    are stored in this attribute as a single string, including any
-    extra ":" separators.
+    If the chart data contains more than 6 components, the extra
+    components will be stored in this attribute.
     """
     
     @classmethod
@@ -49,9 +48,13 @@ class SMChart(BaseChart):
         """
         Parse the MSD value component of a NOTES property.
 
-        The string should contain exactly six colon-separated
-        components, corresponding to each of the base known properties
-        documented in :class:`simfile.base.BaseChart`.
+        The string should contain six colon-separated components,
+        corresponding to each of the base known properties documented
+        in :class:`simfile.base.BaseChart`. Any additional components
+        will be stored in :data:`extradata`.
+
+        Raises :code:`ValueError` if the string contains fewer than six
+        components.
         """
         instance = cls()
         instance._from_str(string)
@@ -69,7 +72,7 @@ class SMChart(BaseChart):
             self[property] = value.strip()
         
         if len(values) > len(SM_CHART_PROPERTIES):
-            self.extradata = ':'.join(values[len(SM_CHART_PROPERTIES):])
+            self.extradata = values[len(SM_CHART_PROPERTIES):]
     
     def _parse(self, parser: MSDParser):
         property, value = next(iter(parser))
@@ -87,7 +90,7 @@ class SMChart(BaseChart):
             f'     {self.meter}:\n'
             f'     {self.radarvalues}:\n'
             f'{self.notes}\n'
-            f'{":" + self.extradata if self.extradata else ""}'
+            f'{":" + ":".join(self.extradata) if self.extradata else ""}'
             f';'
         )
 
