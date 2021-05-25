@@ -2,13 +2,13 @@ import unittest
 
 from .helpers import *
 from .. import *
-from ..timed import timed_note_iterator
+from ..timed import time_notes
 from ...timing import Beat, TimingData
 
 
 class TestTimedNoteStream(unittest.TestCase):
     def test_timed_note_stream(self):
-        timed_notes = list(timed_note_iterator(
+        timed_notes = list(time_notes(
             note_data=NoteData.from_chart(testing_chart()),
             timing_data=TimingData.from_simfile(testing_simfile()),
         ))
