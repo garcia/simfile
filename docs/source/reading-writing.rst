@@ -86,7 +86,8 @@ documented under :mod:`simfile.ssc`.
 
 If a property isn't "known", it can still be accessed through the dict-like
 interface. In fact, simfile objects extend :code:`OrderedDict`, so you can
-access & manipulate their properties like a dictionary:
+access & manipulate their properties as a dictionary of uppercase string keys
+mapped to string values:
 
 .. doctest::
 
@@ -101,12 +102,15 @@ access & manipulate their properties like a dictionary:
     SUBTITLE = ''
     ARTIST = 'Kommisar'
 
-One consequence of the backing :code:`OrderedDict` is that duplicate properties
-are not preserved. This is a rare occurrence among existing simfiles, usually
-indicative of manual editing, and it doesn't appear to have any practical use
-case. However, if the loss of this information is a concern, consider using
-`msdparser <https://msdparser.readthedocs.io/en/latest/>`_ to stream the
-key-value pairs directly.
+.. note::
+
+    One consequence of the backing :code:`OrderedDict` is that **duplicate
+    properties are not preserved.** This is a rare occurrence among existing
+    simfiles, usually indicative of manual editing, and it doesn't appear to
+    have any practical use case. However, if the loss of this information is a
+    concern, consider using
+    `msdparser <https://msdparser.readthedocs.io/en/latest/>`_ to stream the
+    key-value pairs directly.
 
 Accessing charts
 ----------------
@@ -137,18 +141,19 @@ function:
     ...
     [<SSCChart: pump-single Challenge 21>]
 
-Much like simfiles, charts have their own "known properties" which can be
-fetched via attributes, as well as a backing :code:`OrderedDict` for extra
-properties. However, there are two caveats, both motivated by API simplicity:
+Much like simfiles, charts have their own "known properties" like :code:`meter`
+and :code:`stepstype` which can be fetched via attributes, as well as a backing
+:code:`OrderedDict` which maps uppercase keys like :code:`'METER'` and
+:code:`'STEPSTYPE'` to the same string values.
 
-*   All properties - both of simfiles and charts - are strings, including the
-    meter of a chart (which was converted to an integer in v1.0).
-*   While :class:`simfile.sm.SMChart` uses the same :code:`OrderedDict` backing
-    as the other classes, its keys are fixed because .sm charts are encoded
-    as a list of exactly six properties. Of course, all six of these properties
-    are "known properties" with convenience attributes, so the only reason to
-    use the dictionary interface is when it's convenient for compatibility with
-    SSC charts, or when you want to iterate over the properties.
+.. note::
+
+    While :class:`simfile.sm.SMChart` uses the same :code:`OrderedDict` backing
+    as the other classes, its keys are fixed because SM charts are encoded
+    as a list of six properties. Of course, all six of these properties are
+    "known properties" with convenience attributes, so the only reason to use
+    the dictionary interface is when it's convenient for compatibility with SSC
+    charts, or when you want to iterate over the properties.
 
 Editing simfile data
 --------------------
@@ -174,8 +179,18 @@ the scenes.
     >>> 'DISPLAYBPM' in springtime
     False
 
-The one exception, again, is that SMChart keys are fixed: you can't add new
-properties or delete the existing ones.
+If you want to change more complicated data structures like timing and note
+data, refer to :ref:`timing-note-data` for an overview of the available classes
+& functions, rather than operating on the string values directly.
+
+.. doctest::
+
+    >>> import simfile
+    >>> from simfile.notes import NoteData
+    >>> springtime = simfile.open('testdata/Springtime.ssc')
+    >>> note_data = NoteData.from_chart(springtime.charts[0])
+    >>> # (modify the note data)
+    >>> note_data.update_chart(springtime.charts[0])
 
 Writing simfiles to disk
 ------------------------

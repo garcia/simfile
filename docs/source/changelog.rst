@@ -17,12 +17,18 @@ Breaking changes
 New features
 ~~~~~~~~~~~~
 
+* Added the method :meth:`simfile.notes.NoteData.update_chart` which replaces
+  the provided chart's note data.
 * :func:`simfile.notes.timed.time_notes` now takes an `unhittable_notes`
   parameter that determines the behavior for notes inside warp segments.
 
 
 Bugfixes
 ~~~~~~~~
+
+* Indexing directly into an :class:`simfile.sm.SMChart` now works as intended;
+  previously it would always throw an :code:`AttributeError` due to a coding
+  error.
 
 These changes fix parsing of some real simfiles that StepMania accepts but
 :code:`simfile` previously raised an exception for:
@@ -32,6 +38,9 @@ These changes fix parsing of some real simfiles that StepMania accepts but
   attribute and are returned to the end of the chart upon serialization.
 * :class:`simfile.notes.NoteData` now strips whitespace from both sides of each
   row in the note data, not just from the end of the line.
+* :class:`simfile.notes.NoteData` methods that interface with charts now use
+  the :code:`NOTES2` property when present so that SSC charts with keysounds
+  can be read & updated.
 * :class:`simfile.timing.TimingData` now defaults the offset to 0 when it's not
   specified in the simfile and/or chart.
 
