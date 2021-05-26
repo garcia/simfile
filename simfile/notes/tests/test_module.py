@@ -7,8 +7,8 @@ from .. import *
 from ...timing import Beat
 
 
-class TestNoteStream(unittest.TestCase):
-    def test_from_chart(self):
+class TestNoteData(unittest.TestCase):
+    def test_iter(self):
         notes = list(NoteData.from_chart(testing_chart()))
         self.assertListEqual([
             Note(beat=Beat(16,4), column=0, note_type=NoteType.TAP),
@@ -43,7 +43,7 @@ class TestNoteStream(unittest.TestCase):
             Note(beat=Beat(48,4), column=3, note_type=NoteType.TAIL),
         ], notes)
 
-    def test_handles_whitespace(self):
+    def test_iter_handles_whitespace(self):
         chart = testing_chart()
         chart.notes = indent(chart.notes, '     ')
         first_3_notes = list(NoteData.from_chart(chart))[:3]
@@ -54,7 +54,7 @@ class TestNoteStream(unittest.TestCase):
             Note(beat=Beat(20,4), column=1, note_type=NoteType.HOLD_HEAD),
         ], first_3_notes)
     
-    def test_handles_notes2(self):
+    def test_from_chart_and_iter_handle_notes2(self):
         # turn testing_chart() into an SSC chart
         chart = SSCChart.blank()
         chart.update(testing_chart())
@@ -65,3 +65,9 @@ class TestNoteStream(unittest.TestCase):
         notes2 = list(NoteData.from_chart(chart))
 
         self.assertEqual(notes, notes2)
+    
+    def test_from_notes(self):
+        note_data = NoteData.from_chart(testing_chart())
+        note_data_from_notes = NoteData.from_notes(note_data, 4)
+        self.assertEqual(str(note_data).strip(), str(note_data_from_notes).strip())
+        self.assertListEqual(list(note_data), list(note_data_from_notes))

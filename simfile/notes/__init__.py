@@ -1,6 +1,9 @@
 from enum import Enum
-from simfile._private.serializable import Serializable
-from typing import Iterator, NamedTuple, Type, Union
+from functools import reduce
+from itertools import groupby
+from io import StringIO
+from math import gcd
+from typing import Iterable, Iterator, List, NamedTuple, Type
 
 from ..timing import Beat
 from ..types import Chart
@@ -37,10 +40,99 @@ class NoteData:
     """
     Wrapper for note data with iteration & serialization capabilities.
     """
-    _notes: str
+    _notedata: str
+    _columns: int
 
-    def __init__(self, notes: str):
-        self._notes = notes
+    @property
+    def columns(self):
+        """How many note columns this chart has."""
+        return self._columns
+
+    def __init__(self, notedata: str):
+        self._notedata = notedata
+        self._columns = NoteData._get_columns(notedata)
+    
+    @staticmethod
+    def _get_columns(notes: str):
+        first_comma = notes.find(',')
+        first_measure = notes[:first_comma] if first_comma > 0 else notes
+        first_line = first_measure.strip().splitlines()[0].strip()
+        return len(first_line)
+    
+    @classmethod
+    def from_notes(
+        cls: Type['NoteData'],
+        notes: Iterator[Note],
+        columns: int
+    ) -> 'NoteData':
+        """
+        Convert a stream of notes into note data.
+
+        This method assumes the following preconditions:
+
+        * The input notes are sorted chronologically (ascending beats).
+        * Every note's beat is nonnegative.
+        * Every note's column is nonnegative and less than `columns`.
+
+        Note that this method doesn't quantize beats to 192nd ticks,
+        and off-grid notes may result in measures with more rows than
+        the StepMania editor would produce. StepMania will quantize
+        these notes gracefully during gameplay, but you can apply
+        :meth:`simfile.timing.Beat.round_to_tick` to each note's beat
+        if you'd prefer to keep the note data tidy.
+        """
+        notedata = StringIO()
+
+        # write a row and trailing newline to the notedata
+        def push_row(row: List[Note] = []):
+            chars = ['0'] * columns
+            for note in row:
+                chars[note.column] = note.note_type.value
+            notedata.write(''.join(chars))
+            notedata.write('\n')
+
+        # write a measure to the notedata (no commas or newlines of its own)
+        def push_measure(measure: List[Note] = []):
+            # get all beat quantizations from this measure
+            quantizations = map(lambda note: note.beat.denominator, measure)
+            # find the least common multiple of these quantizations
+            q = reduce(lambda a, b: a * b // gcd(a, b), quantizations, 1)
+            
+            # group notes by row
+            # the expression `note.beat % 4 * q` should always resolve to an
+            # integer because `q` is a multiple of every beat's denominator
+            last_row = -1
+            for r, row in groupby(measure, lambda note: int(note.beat % 4 * q)):
+                # account for any skipped beats
+                for _ in range(last_row+1, r):
+                    push_row()
+                push_row(list(row))
+                last_row = r
+            # account for any trailing empty rows
+            for _ in range(last_row+1, q*4):
+                push_row()
+        
+        # group notes by measure
+        last_measure = -1
+        for m, measure in groupby(notes, lambda n: n.beat // 4):
+            # handling the comma at the start of the loop instead of the end
+            # avoids needing to know when we've reached the last measure
+            if last_measure > -1:
+                notedata.write(',\n')
+            # account for any skipped measures
+            for _ in range(last_measure+1, m):
+                push_measure()
+                notedata.write(',\n')
+            push_measure(list(measure))
+            last_measure = m
+        
+        # if there were no notes at all, write a blank measure
+        if last_measure == -1:
+            push_measure()
+        
+        return cls(notedata.getvalue())
+
+            
     
     @classmethod
     def from_chart(cls: Type['NoteData'], chart: Chart) -> 'NoteData':
@@ -64,10 +156,10 @@ class NoteData:
         """
         Iterate over the notes in the note data.
 
-        Notes are yielded chronologically first, then in ascending
-        column order (same as the serialized order).
+        Notes are yielded chronologically (ascending beats) first, then
+        in ascending column order (same as the serialized order).
         """
-        for m, measure in enumerate(self._notes.split(',')):
+        for m, measure in enumerate(self._notedata.split(',')):
             lines = measure.strip().splitlines()
             subdivision = len(lines)
             for l, line in enumerate(lines):
@@ -80,4 +172,5 @@ class NoteData:
                         )
     
     def __str__(self) -> str:
-        return self._notes
+        """Returns the note data string."""
+        return self._notedata
