@@ -148,7 +148,7 @@ class BaseSimfile(OrderedDict, Serializable, metaclass=ABCMeta):
         List of charts associated with this simfile.
         """
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         """
         Pretty repr() for simfiles.
 

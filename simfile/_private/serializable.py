@@ -12,7 +12,7 @@ class Serializable(metaclass=ABCMeta):
         """
         pass
     
-    def __str__(self):
+    def __str__(self) -> str:
         """
         Convert the object to an MSD string.
         """

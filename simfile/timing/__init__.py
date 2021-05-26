@@ -40,13 +40,13 @@ class Beat(Fraction):
         """
         return Beat(int(round(self * BEAT_SUBDIVISION)), BEAT_SUBDIVISION)
     
-    def __str__(self):
+    def __str__(self) -> str:
         """
         Convert the beat to a string with 3 decimal digits.
         """
         return f'{float(self):.3f}'
     
-    def __repr__(self):
+    def __repr__(self) -> str:
         """
         Pretty repr() for beats.
 
@@ -92,7 +92,7 @@ class BeatValues(ListWithRepr[BeatValue]):
         
         return instance
 
-    def serialize(self) -> str:
+    def __str__(self) -> str:
         return ',\n'.join(f'{event.beat}={event.value}' for event in self)
 
 

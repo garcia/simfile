@@ -42,7 +42,7 @@ class TestBeatValues(unittest.TestCase):
 
     def test_serialize(self):
         events = BeatValues.from_str('0.000=128.000,\n132.000=64.000,\n147.500=128.000')
-        self.assertEqual('0.000=128.000,\n132.000=64.000,\n147.500=128.000', events.serialize())
+        self.assertEqual('0.000=128.000,\n132.000=64.000,\n147.500=128.000', str(events))
 
 
 class TestTimingData(unittest.TestCase):

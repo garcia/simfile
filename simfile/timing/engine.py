@@ -18,7 +18,7 @@ class SongTime(float):
     """
     A floating-point time value, denoting a temporal position in a simfile.
     """
-    def __repr__(self):
+    def __repr__(self) -> str:
         """
         Pretty repr() for song times.
         
@@ -56,7 +56,7 @@ class TaggedEvent(NamedTuple):
     value: Decimal
     tag: EventTag
 
-    def __lt__(self, other):
+    def __lt__(self, other) -> bool:
         if self.beat < other.beat:
             return True
         if self.beat == other.beat:
@@ -106,7 +106,7 @@ class TimingStateMachine(ListWithRepr[TimingState]):
     def last(self) -> TimingState:
         return cast(TimingState, self[-1])
     
-    def advance(self, event: TaggedEvent):
+    def advance(self, event: TaggedEvent) -> None:
         # Update song time
         time_until = self.last.time_until(event.beat, event.tag)
         time = SongTime(self.last.event.time + time_until)
@@ -192,7 +192,7 @@ class TimingEngine:
         ]
 
     
-    def _retime_events(self):
+    def _retime_events(self) -> None:
         # Set the private instance variables based on the timing data
         first_bpm: BeatValue = self.timing_data.bpms[0]
         if first_bpm.beat != Beat(0):
