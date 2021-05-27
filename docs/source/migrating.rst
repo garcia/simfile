@@ -4,11 +4,11 @@ Migrating from simfile 1.0 to 2.0
 =================================
 
 Version 1.0 of the :code:`simfile` library was released in 2013. It only
-supported :code:`.sm` files and was primarily developed for Python 2, with
-support for Python 3 on a separate branch.
+supported SM files and was primarily developed for Python 2, with support for
+Python 3 on a separate branch.
 
 Version 2.0 is a near-complete rewrite of the library exclusively for Python 3,
-with :code:`.ssc` support as the flagship feature. Aside from new features, the
+with SSC support as the flagship feature. Aside from new features, the
 design of the library has changed significantly to bring it in line with
 similar modern Python libraries.
 
@@ -20,14 +20,14 @@ In 1.0, the simfile & chart classes were :code:`simfile.Simfile` and
 
 In 2.0, the simfile & chart classes are split by simfile type:
 
-*   For SM files, the classes are :class:`simfile.sm.SMSimfile` and
-    :class:`simfile.sm.SMChart`.
-*   For SSC files, the classes are :class:`simfile.ssc.SSCSimfile` and
-    :class:`simfile.ssc.SSCChart`.
+* For SM files, the :mod:`simfile.sm` module provides :class:`.SMSimfile` and
+  :class:`.SMChart`.
+* For SSC files, the :mod:`simfile.ssc` module provides :class:`.SSCSimfile`
+  and :class:`.SSCChart`.
 
-Additionally, the union types :data:`simfile.types.Simfile` and
-:data:`simfile.types.Chart` are used to annotate parameters & return types
-where either implementation is acceptable.
+Additionally, :mod:`simfile.types` provides the union types :data:`.Simfile`
+and :data:`.Chart`, which are used to annotate parameters & return types where
+either implementation is acceptable.
 
 Reading simfiles
 ----------------
@@ -87,8 +87,8 @@ filename parameter:
     ...     from_string.save('testdata/Robotix.sm')           # much better 🙄
 
 In 2.0, simfile objects no longer know their own filenames. Either pass a file
-object to :meth:`simfile.base.BaseSimfile.serialize` or use
-:func:`simfile.mutate` for a more guided workflow.
+object to the simfile's :meth:`~simfile.base.BaseSimfile.serialize` method or
+use :func:`simfile.mutate` for a more guided workflow.
 
 Finding charts
 --------------

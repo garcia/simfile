@@ -67,8 +67,8 @@ is different from how version 1.0 of this package worked; refer to
 Accessing simfile properties
 ----------------------------
 
-Earlier we used the :code:`.title` attribute to get a simfile's title, but we
-could have used a key lookup as well:
+Earlier we used the :attr:`~.BaseSimfile.title` attribute to get a simfile's
+title, but we could have used a key lookup as well:
 
 .. doctest::
 
@@ -116,7 +116,7 @@ Accessing charts
 ----------------
 
 Stepcharts don't fit the key-value pattern used to store simfile properties, so
-they are stored in a list under the :code:`.charts` attribute:
+they are stored in a list under the :attr:`~.BaseSimfile.charts` attribute:
 
 .. doctest::
 
@@ -207,11 +207,11 @@ read simfiles from the disk, modify them, and then save them, you can use the
 
 :func:`simfile.mutate` writes the simfile back to the disk only if it exits
 without an exception. Any exception that reaches the context manager will
-propagate up, *except* for :data:`simfile.CancelMutation`, which cancels the
+propagate up, *except* for :class:`.CancelMutation`, which cancels the
 operation without re-throwing.
 
 If this workflow doesn't suit your use case, you can serialize to a file object
-using the :meth:`simfile.base.BaseSimfile.serialize` method:
+using the simfile's :meth:`~simfile.base.BaseSimfile.serialize` method:
 
     >>> import simfile
     >>> springtime = simfile.open('testdata/Springtime.ssc')

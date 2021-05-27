@@ -5,6 +5,7 @@ simfile - Modern simfile library for Python
    :maxdepth: 1
 
    reading-writing
+   timing-note-data
    changelog
    migrating
 
