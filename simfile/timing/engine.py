@@ -203,7 +203,7 @@ class TimingEngine:
                 beat=Beat(0),
                 value=first_bpm.value,
                 tag=EventTag.BPM,
-                time=-SongTime(self.timing_data.offset),
+                time=SongTime(-self.timing_data.offset),
             ),
             bpm=first_bpm.value,
             warp=False,
@@ -211,7 +211,7 @@ class TimingEngine:
 
         events_with_tags: Iterable[Tuple[BeatValues, EventTag]] = [
             *self._coalesce_warps(),
-            (self.timing_data.bpms[1:], EventTag.BPM),
+            (cast(BeatValues, self.timing_data.bpms[1:]), EventTag.BPM),
             (self.timing_data.delays, EventTag.DELAY),
             (self.timing_data.delays, EventTag.DELAY_END),
             (self.timing_data.stops, EventTag.STOP),
