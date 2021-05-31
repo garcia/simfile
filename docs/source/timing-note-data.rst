@@ -56,8 +56,8 @@ types and different ways to handle notes on the same beat. StepMania offers six
 different "counts" on the music selection screen by default, each offering a
 unique aggregation of the gameplay events in the chart.
 
-You can use the :mod:`simfile.notes.count` module to reproduce all of these
-counts:
+To reproduce StepMania's built-in note counts, use the functions provided by
+the :mod:`simfile.notes.count` module:
 
 .. doctest::
 
@@ -153,6 +153,82 @@ Out of all the possible combinations of :func:`.group_notes` parameters, this
 example yields fairly simple items (singleton lists of :class:`.NoteWithTail`
 instances). Other combinations of parameters may yield variable-length lists
 where you need to explicitly check the type of the elements.
+
+Changing & writing notes
+------------------------
+
+As mentioned before, the :mod:`simfile.notes` API operates on *iterators* of
+notes to keep the memory footprint light. Iterating over :class:`.NoteData` is
+one way to obtain a note iterator, but you can also generate :class:`.Note`
+objects yourself.
+
+To serialize a stream of notes into note data, use the class method
+:meth:`.NoteData.from_notes`:
+
+.. doctest::
+
+    >>> import simfile
+    >>> from simfile.notes import Note, NoteType, NoteData
+    >>> from simfile.timing import Beat
+    >>> cols = 4
+    >>> notes = [
+    ...     Note(beat=Beat(i, 2), column=i%cols, note_type=NoteType.TAP)
+    ...     for i in range(8)
+    ... ]
+    >>> note_data = NoteData.from_notes(notes, cols)
+    >>> print(str(note_data))
+    1000
+    0100
+    0010
+    0001
+    1000
+    0100
+    0010
+    0001
+    
+
+The :code:`notes` variable above *could* use parentheses to define a generator
+instead of square brackets to define a list, but you don't have to stick to
+pure generators to interact with the :mod:`simfile.notes` API. **Use whatever
+data structure suits your use case,** as long as you're cognizant of potential
+out-of-memory conditions.
+
+.. warning ::
+
+    Note iterators passed to the :mod:`simfile.notes` API should always be
+    sorted chronologically (ascending beats). :class:`.Note` objects are
+    intrinsically ordered by beat (followed by column), so you can use Python's
+    built-in sorting mechanisms like :code:`sorted()`, :code:`list.sort()`, and
+    the :code:`bisect` module to ensure your notes are in the right order.
+
+To insert note data back into a chart, use the instance method
+:meth:`.NoteData.update_chart`. In this example, we mirror the notes' columns
+in Springtime's first chart and update the simfile object in memory:
+
+.. doctest::
+
+    >>> import simfile
+    >>> from simfile.notes import NoteData
+    >>> from simfile.notes.count import *
+    >>> springtime = simfile.open('testdata/Springtime.ssc')
+    >>> chart = springtime.charts[0]
+    >>> note_data = NoteData.from_chart(chart)
+    >>> cols = note_data.columns
+    >>> def mirror(note, cols):
+    ...     return Note(
+    ...         beat=note.beat,
+    ...         column=cols - note.column - 1,
+    ...         note_type=note.note_type,
+    ...     )
+    ...  
+    >>> mirrored_notes = (mirror(note, cols) for note in note_data)
+    >>> mirrored_note_data = NoteData.from_notes(mirrored_notes, cols)
+    >>> mirrored_note_data.update_chart(chart)
+    >>> chart.notes == str(mirrored_note_data)
+    True
+
+From there, we could write the modified simfile back to disk as described in
+:ref:`reading-writing`.
 
 Reading timing data
 -------------------

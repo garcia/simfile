@@ -1,3 +1,5 @@
+.. _reading-writing:
+
 Reading & writing simfiles
 ==========================
 
