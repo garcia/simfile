@@ -3,6 +3,14 @@
 Changelog
 =========
 
+2.0.0-beta.3
+------------
+
+**Bugfix:** Iterating over :class:`.NoteData` with subdivisions other than
+powers of two now returns the expected beats; previously the beats had
+unexpectedly large numerators & denominators due to floating-point rounding
+errors.
+
 2.0.0-beta.2
 ------------
 
