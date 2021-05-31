@@ -260,3 +260,71 @@ class TestGroupNotes(unittest.TestCase):
             [Note(beat=Beat(5), column=0, note_type=NoteType.TAP)],
             [Note(beat=Beat(7), column=2, note_type=NoteType.HOLD_HEAD)],
         ], grouped_notes)
+
+
+class TestUngroupNotes(unittest.TestCase):
+    def test_with_valid_grouped_notes(self):
+        notes = list(testing_valid_notes())
+        grouped_notes = group_notes(
+            notes,
+            same_beat_notes=SameBeatNotes.JOIN_ALL,
+            join_heads_to_tails=True,
+        )
+        ungrouped_notes = list(ungroup_notes(grouped_notes))
+
+        self.assertListEqual(notes, ungrouped_notes)
+    
+    def test_with_invalid_grouped_notes(self):
+        grouped_notes = [
+            [NoteWithTail(
+                beat=Beat(0),
+                column=0,
+                note_type=NoteType.TAP,
+                tail_beat=Beat(2),
+            )],
+            [Note(beat=Beat(1), column=0, note_type=NoteType.TAP)],
+        ]
+        note_ungrouper = ungroup_notes(grouped_notes)
+
+        self.assertRaises(OrphanedNoteException, list, note_ungrouper)
+    
+    def test_keep_orphaned_notes(self):
+        grouped_notes = [
+            [NoteWithTail(
+                beat=Beat(0),
+                column=0,
+                note_type=NoteType.HOLD_HEAD,
+                tail_beat=Beat(2),
+            )],
+            [Note(beat=Beat(1), column=0, note_type=NoteType.TAP)],
+        ]
+        ungrouped_notes = list(ungroup_notes(
+            grouped_notes,
+            orphaned_notes=OrphanedNotes.KEEP_ORPHAN,
+        ))
+
+        self.assertListEqual([
+            Note(beat=Beat(0), column=0, note_type=NoteType.HOLD_HEAD),
+            Note(beat=Beat(1), column=0, note_type=NoteType.TAP),
+            Note(beat=Beat(2), column=0, note_type=NoteType.TAIL),
+        ], ungrouped_notes)
+    
+    def test_drop_orphaned_notes(self):
+        grouped_notes = [
+            [NoteWithTail(
+                beat=Beat(0),
+                column=0,
+                note_type=NoteType.HOLD_HEAD,
+                tail_beat=Beat(2),
+            )],
+            [Note(beat=Beat(1), column=0, note_type=NoteType.TAP)],
+        ]
+        ungrouped_notes = list(ungroup_notes(
+            grouped_notes,
+            orphaned_notes=OrphanedNotes.DROP_ORPHAN,
+        ))
+
+        self.assertListEqual([
+            Note(beat=Beat(0), column=0, note_type=NoteType.HOLD_HEAD),
+            Note(beat=Beat(2), column=0, note_type=NoteType.TAIL),
+        ], ungrouped_notes)

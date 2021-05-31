@@ -1,23 +1,23 @@
 from collections import deque
 from enum import Enum
+from heapq import heappush, heappop
 from itertools import groupby
 from typing import Deque, Dict, Iterator, List, NamedTuple, FrozenSet, \
-    Optional, Sequence, Union
+    Optional, Sequence, Tuple, Union
 
 from . import Note, NoteType
 from ..timing import Beat
-from ..types import Chart
 
 
 __all__ = [
     'NoteWithTail', 'GroupedNotes', 'SameBeatNotes', 'OrphanedNoteException',
-    'OrphanedNotes', 'group_notes',
+    'OrphanedNotes', 'group_notes', 'ungroup_notes',
 ]
 
 
 class NoteWithTail(NamedTuple):
     """
-    A hold/roll head note with its corresponding tail note, if present.
+    A hold/roll head note with its corresponding tail note.
     """
     beat: Beat
     column: int
@@ -92,6 +92,9 @@ def group_notes(
     When `join_heads_to_tails` is set to True, tail notes are attached
     to their corresponding hold/roll heads as :class:`NoteWithTail`
     objects. The tail itself will not be emitted as a separate note.
+    If a head or tail note is missing its counterpart, `orphaned_head`
+    and `orphaned_tail` determine the behavior. (These parameters are
+    ignored if `join_heads_to_tails` is omitted.)
 
     Refer to each enum's documentation for the other configuration
     options.
@@ -206,3 +209,64 @@ def group_notes(
     
     for _, row in groupby(notes_maybe_with_tails, lambda note: note.beat):
         yield from add_row(list(row))
+
+
+def ungroup_notes(
+    grouped_notes: Iterator[GroupedNotes],
+    *,
+    orphaned_notes: OrphanedNotes = OrphanedNotes.RAISE_EXCEPTION
+) -> Iterator[Note]:
+    """
+    Convert grouped notes back into a plain note stream.
+
+    If a note falls within a :class:`NoteWithTail`'s head and tail (on
+    the same column), it would cause the head and tail to be orphaned.
+    `orphaned_notes` determines how to handle the splitting note:
+    `KEEP_ORPHAN` will yield the note (allowing the head and tail notes
+    to become orphans) and `DROP_ORPHAN` will drop the note (preserving
+    the link between the head and tail notes).
+    
+    Note that this check only applies to heads and tails joined as a
+    :class:`NoteAndTail`. If :func:`group_notes` was called without
+    specifying `join_heads_to_tails`, specifying `orphaned_notes` here
+    will have no effect. This mirrors how :func:`group_notes`'
+    `orphaned_head` and `orphaned_tail` parameters behave.
+    """
+    pending_tails: List[Note] = [] # heap
+
+    def check_orphan(note: Note) -> Iterator[Note]:
+        if note.column in (t.column for t in pending_tails):
+            if orphaned_notes == OrphanedNotes.RAISE_EXCEPTION:
+                raise OrphanedNoteException(note)
+            elif orphaned_notes == OrphanedNotes.KEEP_ORPHAN:
+                pass # Let the splitting note be yielded below
+            elif orphaned_notes == OrphanedNotes.DROP_ORPHAN:
+                return # Don't yield the splitting note
+        yield note
+
+    for row in grouped_notes:
+        for note in row:
+            # Yield any pending tails that we've reached
+            while pending_tails and pending_tails[0] < note:
+                yield heappop(pending_tails)
+            
+            # Yield plain notes directly
+            if isinstance(note, Note):
+                yield from check_orphan(note)
+            
+            # Yield notes with tails as a head (now) and a tail (later)
+            elif isinstance(note, NoteWithTail):
+                yield from check_orphan(Note(
+                    beat=note.beat,
+                    column=note.column,
+                    note_type=note.note_type,
+                ))
+                heappush(pending_tails, Note(
+                    beat=note.tail_beat,
+                    column=note.column,
+                    note_type=NoteType.TAIL,
+                ))
+    
+    # Yield any remaining pending tails
+    while pending_tails:
+        yield heappop(pending_tails)
