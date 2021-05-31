@@ -166,7 +166,7 @@ class NoteData:
                 for c, column in enumerate(line.strip()):
                     if column != '0':
                         yield Note(
-                            beat=Beat(m*4 + l*4/subdivision),
+                            beat=Beat(m*4*subdivision + l*4, subdivision),
                             column=c,
                             note_type=NoteType(column),
                         )

@@ -71,3 +71,14 @@ class TestNoteData(unittest.TestCase):
         note_data_from_notes = NoteData.from_notes(note_data, 4)
         self.assertEqual(str(note_data).strip(), str(note_data_from_notes).strip())
         self.assertListEqual(list(note_data), list(note_data_from_notes))
+
+    def test_from_notes_and_iter_handle_triplets(self):
+        notes = [
+            Note(beat=Beat(n,3), column=n%4, note_type=NoteType.TAP)
+            for n in range(12)
+        ]
+        note_data = NoteData.from_notes(notes, 4)
+        notes_from_note_data = list(note_data)
+        
+        self.assertEqual('1000\n0100\n0010\n0001\n' * 3, str(note_data))
+        self.assertEqual(notes, notes_from_note_data)
