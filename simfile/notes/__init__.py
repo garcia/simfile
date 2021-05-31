@@ -1,9 +1,9 @@
 from enum import Enum
-from functools import reduce
+from functools import reduce, total_ordering
 from itertools import groupby
 from io import StringIO
 from math import gcd
-from typing import Iterable, Iterator, List, NamedTuple, Type
+from typing import Iterator, List, NamedTuple, Type
 
 from ..timing import Beat
 from ..types import Chart
@@ -27,6 +27,7 @@ class NoteType(Enum):
     MINE = 'M'
     
 
+@total_ordering
 class Note(NamedTuple):
     """
     A note, corresponding to a nonzero character in a chart's note data.
@@ -34,6 +35,17 @@ class Note(NamedTuple):
     beat: Beat
     column: int
     note_type: NoteType
+
+    def __lt__(self, other) -> bool:
+        """
+        Compare to another note first by beat, then by column.
+        """
+        if self.beat < other.beat:
+            return True
+        if self.beat == other.beat:
+            if self.column < other.column:
+                return True
+        return False
 
 
 class NoteData:
@@ -132,8 +144,6 @@ class NoteData:
         
         return cls(notedata.getvalue())
 
-            
-    
     @classmethod
     def from_chart(cls: Type['NoteData'], chart: Chart) -> 'NoteData':
         """
