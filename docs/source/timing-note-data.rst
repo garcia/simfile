@@ -33,13 +33,13 @@ use the :class:`.NoteData` class:
     ...     if note.beat > Beat(18): break
     ...     print(note)
     ...
-    Note(beat=<Beat 16>, column=2, note_type=<NoteType.TAP: '1'>)
-    Note(beat=<Beat 16.5>, column=2, note_type=<NoteType.TAP: '1'>)
-    Note(beat=<Beat 16.75>, column=0, note_type=<NoteType.TAP: '1'>)
-    Note(beat=<Beat 17>, column=1, note_type=<NoteType.TAP: '1'>)
-    Note(beat=<Beat 17.5>, column=0, note_type=<NoteType.TAP: '1'>)
-    Note(beat=<Beat 17.75>, column=2, note_type=<NoteType.TAP: '1'>)
-    Note(beat=<Beat 18>, column=1, note_type=<NoteType.TAP: '1'>)
+    Note(beat=Beat(16), column=2, note_type=NoteType.TAP)
+    Note(beat=Beat(16.5), column=2, note_type=NoteType.TAP)
+    Note(beat=Beat(16.75), column=0, note_type=NoteType.TAP)
+    Note(beat=Beat(17), column=1, note_type=NoteType.TAP)
+    Note(beat=Beat(17.5), column=0, note_type=NoteType.TAP)
+    Note(beat=Beat(17.75), column=2, note_type=NoteType.TAP)
+    Note(beat=Beat(18), column=1, note_type=NoteType.TAP)
 
 There's no limit to how many notes a chart can contain – some have tens or even
 hundreds of thousands! For this reason, :class:`.NoteData` only generates
@@ -243,7 +243,7 @@ the simfile, use the :class:`.TimingData` class:
     >>> springtime = simfile.open('testdata/Springtime.ssc')
     >>> timing_data = TimingData.from_simfile(springtime)
     >>> timing_data.bpms
-    BeatValues([BeatValue(beat=<Beat 0>, value=Decimal('181.685'))])
+    BeatValues([BeatValue(beat=Beat(0), value=Decimal('181.685'))])
 
 The SSC format introduces "split timing" – per-chart timing data – which
 :class:`.TimingData` empowers you to handle as effortlessly as providing the
@@ -257,7 +257,7 @@ chart:
     >>> chart = springtime.charts[0]
     >>> split_timing = TimingData.from_simfile(springtime, chart)
     >>> split_timing.bpms
-    BeatValues([BeatValue(beat=<Beat 0>, value=Decimal('181.685')), BeatValue(beat=<Beat 304>, value=Decimal('90.843')), BeatValue(beat=<Beat 311>, value=Decimal('181.685'))])
+    BeatValues([BeatValue(beat=Beat(0), value=Decimal('181.685')), BeatValue(beat=Beat(304), value=Decimal('90.843')), BeatValue(beat=Beat(311), value=Decimal('181.685'))])
 
 This works regardless of whether the chart has split timing, or even whether
 the simfile is an SSC file; if the chart has no timing data of its own, it will
@@ -310,7 +310,7 @@ Consider using the :class:`.TimingEngine` for this use case:
     >>> engine.time_at(Beat(32))
     10.658
     >>> engine.beat_at(10.658)
-    <Beat 32>
+    Beat(32)
 
 This engine handles all of the timing events described above, including edge
 cases involving overlapping stops, delays, and warps. You can even check
@@ -336,10 +336,10 @@ which converts a :class:`.Note` stream into a :class:`.TimedNote` stream:
     ...     if 60 < timed_note.time < 61:
     ...         print(timed_note)
     ...
-    TimedNote(time=60.029, note=Note(beat=<Beat 181.5>, column=3, note_type=<NoteType.TAP: '1'>))
-    TimedNote(time=60.194, note=Note(beat=<Beat 182>, column=0, note_type=<NoteType.HOLD_HEAD: '2'>))
-    TimedNote(time=60.524, note=Note(beat=<Beat 183>, column=3, note_type=<NoteType.TAP: '1'>))
-    TimedNote(time=60.855, note=Note(beat=<Beat 184>, column=2, note_type=<NoteType.TAP: '1'>))
+    TimedNote(time=60.029, note=Note(beat=Beat(181.5), column=3, note_type=NoteType.TAP))
+    TimedNote(time=60.194, note=Note(beat=Beat(182), column=0, note_type=NoteType.HOLD_HEAD))
+    TimedNote(time=60.524, note=Note(beat=Beat(183), column=3, note_type=NoteType.TAP))
+    TimedNote(time=60.855, note=Note(beat=Beat(184), column=2, note_type=NoteType.TAP))
 
 You could use this to determine the notes per second (NPS) over the entire
 chart, or at a specific time like the example above. Get creative!

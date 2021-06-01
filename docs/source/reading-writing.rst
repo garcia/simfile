@@ -62,8 +62,8 @@ instantiate them with either a `file` or `string` argument:
     ...     springtime = SSCSimfile(file=infile)
 
 Note that the underlying simfile types don't know about the filesystem: you
-can't pass them a filename directly, nor do they offer a `.save()` method. This
-is different from how version 1.0 of this package worked; refer to
+can't pass them a filename directly, nor do they offer a :code:`.save()`
+method. This is different from how version 1.0 of this package worked; refer to
 :ref:`migrating` for more details on the differences.
 
 Accessing simfile properties

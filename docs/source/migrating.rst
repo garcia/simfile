@@ -149,7 +149,7 @@ If you need rich timing data, use the :mod:`simfile.timing` package:
     >>> robotix = simfile.open('testdata/Robotix.sm')
     >>> timing_data = TimingData.from_simfile(robotix)
     >>> print(timing_data.bpms[0])
-    BeatValue(beat=<Beat 0>, value=Decimal('150.000'))
+    BeatValue(beat=Beat(0), value=Decimal('150.000'))
 
 If you need rich note data, use the :mod:`simfile.notes` package:
 
@@ -161,10 +161,10 @@ If you need rich note data, use the :mod:`simfile.notes` package:
     ...     if note.beat > Beat(18): break
     ...     print(note)
     ...
-    Note(beat=<Beat 16.250>, column=3, note_type=<NoteType.TAP: '1'>)
-    Note(beat=<Beat 16.500>, column=2, note_type=<NoteType.TAP: '1'>)
-    Note(beat=<Beat 17.250>, column=2, note_type=<NoteType.TAP: '1'>)
-    Note(beat=<Beat 17.500>, column=3, note_type=<NoteType.TAP: '1'>)
+    Note(beat=Beat(16.25), column=3, note_type=NoteType.TAP)
+    Note(beat=Beat(16.5), column=2, note_type=NoteType.TAP)
+    Note(beat=Beat(17.25), column=2, note_type=NoteType.TAP)
+    Note(beat=Beat(17.5), column=3, note_type=NoteType.TAP)
 
 Keeping these modules separate from the core simfile & chart classes enables
 them to be much more fully-featured than their 1.0 counterparts.
