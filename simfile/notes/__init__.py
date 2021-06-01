@@ -26,6 +26,9 @@ class NoteType(Enum):
     LIFT = 'L'
     MINE = 'M'
     
+    def __repr__(self):
+        return f'{self.__class__.__name__}.{self.name}'
+    
 
 @total_ordering
 class Note(NamedTuple):
