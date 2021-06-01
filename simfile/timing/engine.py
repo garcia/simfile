@@ -82,7 +82,7 @@ class TimingState(NamedTuple):
             time_until = 0.0
         else:
             beats_until = beat - self.event.beat
-            time_until = beats_until * 60 / float(self.bpm)
+            time_until = float(beats_until) * 60 / float(self.bpm)
         
         if self.event.tag in (EventTag.STOP, EventTag.DELAY) \
             and event_tag in (EventTag.STOP_END, EventTag.DELAY_END):

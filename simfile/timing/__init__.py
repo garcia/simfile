@@ -1,5 +1,6 @@
 from decimal import Decimal
 from fractions import Fraction
+from numbers import Rational
 from simfile.ssc import SSCChart
 from typing import Optional, Type, NamedTuple
 
@@ -18,7 +19,18 @@ BEAT_SUBDIVISION = MEASURE_SUBDIVISION // 4
 class Beat(Fraction):
     """
     A fractional beat value, denoting vertical position in a simfile.
+
+    The constructor the same arguments as Python's :code:`Fraction`. If
+    the input doesn't have an explicit denominator (either as a
+    `denominator` argument or a lone rational argument), the resulting
+    fraction will be rounded to the nearest :meth:`tick`.
     """
+    def __new__(cls, numerator=0, denominator=None):
+        self = super().__new__(cls, numerator, denominator)
+        if denominator or isinstance(numerator, Rational):
+            return self
+        else:
+            return self.round_to_tick()
 
     @classmethod
     def tick(cls) -> 'Beat':
@@ -53,7 +65,33 @@ class Beat(Fraction):
         Includes the string representation with at most 3 decimal
         digits, with trailing zeros removed.
         """
-        return f"<Beat {str(self).rstrip('0').rstrip('.')}>"
+        return f"Beat({str(self).rstrip('0').rstrip('.')})"
+
+    # Preserve type for methods inherited from Fraction
+
+    def __abs__(self): return Beat(super().__abs__())
+    def __add__(self, other): return Beat(super().__add__(other))
+    def __divmod__(self, other):
+        quotient, remainder = super().__divmod__(other)
+        return (quotient, Beat(remainder))
+    def __mod__(self, other): return Beat(super().__mod__(other))
+    def __mul__(self, other): return Beat(super().__mul__(other))
+    def __neg__(self): return Beat(super().__neg__())
+    def __pos__(self): return Beat(super().__pos__())
+    def __pow__(self, other): return Beat(super().__pow__(other))
+    def __radd__(self, other): return Beat(super().__radd__(other))
+    def __rdivmod__(self, other):
+        quotient, remainder = super().__rdivmod__(other)
+        return (quotient, Beat(remainder))
+    def __rmod__(self, other): return Beat(super().__rmod__(other))
+    def __rmul__(self, other): return Beat(super().__rmul__(other))
+    def __rpow__(self, other): return Beat(super().__rpow__(other))
+    def __rsub__(self, other): return Beat(super().__rsub__(other))
+    def __rtruediv__(self, other): return Beat(super().__rtruediv__(other))
+    def __sub__(self, other): return Beat(super().__sub__(other))
+    def __truediv__(self, other): return Beat(super().__truediv__(other))
+    def limit_denominator(self, max_denominator=1000000):
+        return Beat(super().limit_denominator(max_denominator))
 
 
 class BeatValue(NamedTuple):
@@ -93,6 +131,9 @@ class BeatValues(ListWithRepr[BeatValue]):
         return instance
 
     def __str__(self) -> str:
+        """
+        Convert the beat-value pairs to their MSD value representation.
+        """
         return ',\n'.join(f'{event.beat}={event.value}' for event in self)
 
 

@@ -29,6 +29,46 @@ class TestBeat(unittest.TestCase):
         self.assertEqual('0.250', str(Beat(4, 16)))
         self.assertEqual('0.333', str(Beat(4, 12)))
         self.assertEqual('0.500', str(Beat(4, 8)))
+    
+    def test_repr(self):
+        self.assertEqual('Beat(0)', repr(Beat(0, 1)))
+        self.assertEqual('Beat(12.333)', repr(Beat(37, 3)))
+        self.assertEqual('Beat(0.25)', repr(Beat(4, 16)))
+        self.assertEqual('Beat(0.333)', repr(Beat(4, 12)))
+        self.assertEqual('Beat(0.5)', repr(Beat(4, 8)))
+    
+    def test_fraction_overrides(self):
+        a = Beat(5, 3)
+        b = 2
+
+        self.assertEqual((0, Beat(5, 3)), divmod(a, b))
+        self.assertIsInstance(divmod(a, b)[1], Beat)
+        self.assertEqual((1, Beat(1, 3)), divmod(b, a))
+        self.assertIsInstance(divmod(b, a)[1], Beat)
+
+        pairs = [
+            (Beat(5, 3), abs(a)),       # __abs__
+            (Beat(11, 3), a + b),       # __add__
+            (Beat(5, 3), a % b),        # __mod__
+            (Beat(10, 3), a * b),       # __mul__
+            (Beat(-5, 3), -a),          # __neg__
+            (Beat(5, 3), +a),           # __pos__
+            (Beat(25, 9), a ** b),      # __pow__
+            (Beat(11, 3), b + a),       # __radd__
+            (Beat(1, 3), b % a),        # __rmod__
+            (Beat(10, 3), b * a),       # __rmul__
+            (Beat(4, 1), b ** Beat(2)), # __rpow__
+            (Beat(1, 3), b - a),        # __rsub__
+            (Beat(6, 5), b / a),        # __rtruediv__
+            (Beat(-1, 3), a - b),       # __sub__
+            (Beat(5, 6), a / b),        # __truediv__
+            (Beat(5, 3), a.limit_denominator())
+        ]
+
+        for i, (expected, actual) in enumerate(pairs):
+            with self.subTest(i=i):
+                self.assertEqual(expected, actual)
+                self.assertIsInstance(actual, Beat)
 
 
 class TestBeatValues(unittest.TestCase):
