@@ -17,8 +17,8 @@ Use :py:func:`simfile.open` to load a simfile by filename:
     >>> springtime = simfile.open('testdata/Springtime.ssc')
     >>> print(springtime)
     <SSCSimfile: Springtime>
-    >>> print(springtime.artist)
-    Kommisar
+    >>> print(springtime.title)
+    Springtime
 
 Alternatively, if you have your own file object or string containing simfile
 data, use :func:`simfile.load` or :func:`simfile.loads`:
