@@ -94,7 +94,7 @@ def group_notes(
     objects. The tail itself will not be emitted as a separate note.
     If a head or tail note is missing its counterpart, `orphaned_head`
     and `orphaned_tail` determine the behavior. (These parameters are
-    ignored if `join_heads_to_tails` is omitted.)
+    ignored if `join_heads_to_tails` is omitted or False.)
 
     Refer to each enum's documentation for the other configuration
     options.
