@@ -50,8 +50,8 @@ class SMChart(BaseChart):
 
         The string should contain six colon-separated components,
         corresponding to each of the base known properties documented
-        in :class:`simfile.base.BaseChart`. Any additional components
-        will be stored in :data:`extradata`.
+        in :class:`.BaseChart`. Any additional components will be
+        stored in :data:`extradata`.
 
         Raises :code:`ValueError` if the string contains fewer than six
         components.

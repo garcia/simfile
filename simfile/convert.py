@@ -28,8 +28,7 @@ class KnownProperty(Enum):
     Types of known properties.
 
     These mirror the lists of known properties documented in
-    :class:`simfile.base.BaseSimfile` and
-    :class:`simfile.ssc.SSCSimfile`.
+    :class:`.BaseSimfile` and :class:`.SSCSimfile`.
     """
     SSC_VERSION = 1
     METADATA = 2
@@ -208,8 +207,8 @@ def sm_to_ssc(
     `simfile_template` and `chart_template` can optionally be provided
     to define the initial simfile and chart prior to copying properties
     from the source object. If they are not provided,
-    :meth:`simfile.sm.SMSimfile.blank` and
-    :meth:`simfile.sm.SMChart.blank` will supply the template objects.
+    :meth:`.SMSimfile.blank` and :meth:`.SMChart.blank` will supply the
+    template objects.
     """
     return _convert(
         simfile=sm_simfile,
@@ -234,8 +233,8 @@ def ssc_to_sm(
     `simfile_template` and `chart_template` can optionally be provided
     to define the initial simfile and chart prior to copying properties
     from the source object. If they are not provided,
-    :meth:`simfile.ssc.SSCSimfile.blank` and
-    :meth:`simfile.ssc.SSCChart.blank` will supply the template objects.
+    :meth:`.SSCSimfile.blank` and :meth:`.SSCChart.blank` will supply
+    the template objects.
 
     Not all SSC properties are valid for SM simfiles, and some of these
     properties may be crucial for the simfile to behave as intended

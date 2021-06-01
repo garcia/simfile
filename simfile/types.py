@@ -6,18 +6,12 @@ from .ssc import *
 __all__ = ['Simfile', 'Charts', 'Chart']
 
 Simfile = Union[SSCSimfile, SMSimfile]
-"""
-Union of :class:`simfile.ssc.SSCSimfile` and :class:`simfile.sm.SMSimfile`.
-"""
+"""Union of :class:`.SSCSimfile` and :class:`.SMSimfile`."""
 
 
 Charts = Union[SSCCharts, SMCharts]
-"""
-Union of :class:`simfile.ssc.SSCCharts` and :class:`simfile.sm.SMCharts`.
-"""
+"""Union of :class:`.SSCCharts` and :class:`.SMCharts`."""
 
 
 Chart = Union[SSCChart, SMChart]
-"""
-Union of :class:`simfile.ssc.SSCChart` and :class:`simfile.sm.SMChart`.
-"""
+"""Union of :class:`.SSCChart` and :class:`.SMChart`."""

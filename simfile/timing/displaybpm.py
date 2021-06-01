@@ -61,8 +61,9 @@ def displaybpm(
     :class:`StaticDisplayBPM`; if there are multiple, the minimum and
     maximum will be identified and passed to :class:`RangeDisplayBPM`.
 
-    When an SSC chart is provided, its properties override those in the
-    simfile.
+    If both an :class:`.SSCSimfile` (version 0.7 or higher) and an
+    :class:`.SSCChart` are provided, any "split timing" defined in the
+    chart will take precedence over the simfile's timing data.
     """
     properties = ssc_proxy(simfile, ssc_chart)
     if 'DISPLAYBPM' in properties:

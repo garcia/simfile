@@ -115,12 +115,12 @@ class TimingData(NamedTuple):
         """
         Obtain timing data from a simfile and optionally an SSC chart.
 
-        If both an :class:`simfile.ssc.SSCSimfile` (version 0.7 or
-        higher) and an :class:`simfile.ssc.SSCChart` are provided,
-        any "split timing" defined in the chart will take precedence
-        over the simfile's timing data. This is true regardless of the
-        property's value; for example, a blank `STOPS` value in the
-        chart overrides a non-blank value from the simfile.
+        If both an :class:`.SSCSimfile` (version 0.7 or higher) and an
+        :class:`.SSCChart` are provided, any "split timing" defined in
+        the chart will take precedence over the simfile's timing data.
+        This is true regardless of the property's value; for example, a
+        blank `STOPS` value in the chart overrides a non-blank value
+        from the simfile.
 
         Per StepMania's behavior, the offset defaults to zero if the
         simfile (and/or SSC chart) doesn't specify one. (However,

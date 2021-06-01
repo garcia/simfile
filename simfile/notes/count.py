@@ -16,9 +16,9 @@ def count_grouped_notes(
     same_beat_minimum: int = 1,
 ) -> int:
     """
-    Count :class:`simfile.notes.group.GroupedNotes` in a stream.
+    Count a stream of :class:`.GroupedNotes`.
 
-    To count only groups N or more notes, use `same_beat_minimum`.
+    To count only groups of N or more notes, use `same_beat_minimum`.
     """
     return sum(len(gn) >= same_beat_minimum for gn in grouped_notes_iterator)
 
@@ -49,8 +49,8 @@ def count_steps(
     * Multiple inputs on the same beat are only counted once.
 
     These defaults can be changed using the keyword parameters. Refer
-    to :class:`simfile.notes.group.SameBeatNotes` for alternative ways
-    to count same-beat notes.
+    to :class:`.SameBeatNotes` for alternative ways to count same-beat
+    notes.
     """
     return count_grouped_notes(
         group_notes(
@@ -142,8 +142,7 @@ def count_holds(
     By default, this method validates that hold heads connect to their
     corresponding tails. This validation can be turned off by setting
     the `orphaned_head` and `orphaned_tail` arguments to `KEEP_ORPHAN`
-    or `DROP_ORPHAN`; see :class:`simfile.notes.group.OrphanedNotes`
-    for more details.
+    or `DROP_ORPHAN`; see :class:`.OrphanedNotes` for more details.
     """
     return _count_holds_or_rolls(
         notes,
@@ -165,8 +164,7 @@ def count_rolls(
     By default, this method validates that roll heads connect to their
     corresponding tails. This validation can be turned off by setting
     the `orphaned_head` and `orphaned_tail` arguments to `KEEP_ORPHAN`
-    or `DROP_ORPHAN`; see :class:`simfile.notes.group.OrphanedNotes`
-    for more details.
+    or `DROP_ORPHAN`; see :class:`.OrphanedNotes` for more details.
     """
     return _count_holds_or_rolls(
         notes,

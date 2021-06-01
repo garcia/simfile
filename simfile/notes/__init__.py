@@ -90,7 +90,7 @@ class NoteData:
         and off-grid notes may result in measures with more rows than
         the StepMania editor would produce. StepMania will quantize
         these notes gracefully during gameplay, but you can apply
-        :meth:`simfile.timing.Beat.round_to_tick` to each note's beat
+        :meth:`.Beat.round_to_tick` to each note's beat
         if you'd prefer to keep the note data tidy.
         """
         notedata = StringIO()
