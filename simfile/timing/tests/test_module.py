@@ -63,7 +63,6 @@ class TestBeat(unittest.TestCase):
             (Beat(6, 5), b / a),        # __rtruediv__
             (Beat(-1, 3), a - b),       # __sub__
             (Beat(5, 6), a / b),        # __truediv__
-            (Beat(5, 3), a.limit_denominator())
         ]
 
         for i, (expected, actual) in enumerate(pairs):

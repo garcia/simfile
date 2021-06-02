@@ -95,8 +95,6 @@ class Beat(Fraction):
     def __rtruediv__(self, other): return Beat(super().__rtruediv__(other))
     def __sub__(self, other): return Beat(super().__sub__(other))
     def __truediv__(self, other): return Beat(super().__truediv__(other))
-    def limit_denominator(self, max_denominator=1000000):
-        return Beat(super().limit_denominator(max_denominator))
 
 
 class BeatValue(NamedTuple):
