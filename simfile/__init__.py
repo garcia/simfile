@@ -90,7 +90,15 @@ def open_with_detected_encoding(
 
     Tries decoding the simfile as UTF-8, CP1252 (English), CP932
     (Japanese), and CP949 (Korean), mirroring the encodings supported
-    by StepMania. This list can be overridden by supplying `try_encodings`.
+    by StepMania. This list can be overridden by supplying
+    `try_encodings`.
+
+    Keep in mind that no heuristics are performed to "guess" the
+    correct encoding - this method simply tries each encoding in order
+    until one succeeds. As such, non-UTF-8 files may successfully parse
+    as the wrong encoding, resulting in garbled text. If you intend to
+    write the simfile back to disk, make sure to use the same encoding
+    that was detected to preserve the true byte sequence.
     """
     if 'encoding' in kwargs:
         raise TypeError(
@@ -129,36 +137,71 @@ class CancelMutation(BaseException):
 
 @contextmanager
 def mutate(
-    filename: str,
+    input_filename: str,
+    output_filename: Optional[str] = None,
+    backup_filename: Optional[str] = None,
     try_encodings: List[str] = ENCODINGS,
     **kwargs
 ) -> Iterator[Simfile]:
     """
     Context manager that loads & saves a simfile by filename.
 
-    The simfile is saved upon exit unless the context manager catches
-    an exception. To prevent saving without causing the context manager
-    to re-throw an exception, raise CancelMutation.
+    If an `output_filename` is provided, the modified simfile will be
+    written to that filename upon exit from the context manager.
+    Otherwise, it will be written back to the `input_filename`.
 
-    Keyword arguments are passed to the builtin `open` function.
+    If a `backup_filename` is provided, the *original* simfile will be
+    written to that filename upon exit from the context manager.
+    Otherwise, no backup copy will be written. `backup_filename` must
+    be distinct from `input_filename` and `output_filename` if present.
+
+    If the context manager catches an exception, nothing will be
+    written to disk, and the exception will be re-thrown. To prevent
+    saving without causing the context manager to re-throw an
+    exception, raise :class:`CancelMutation`.
+
+    Keyword arguments are passed to the builtin :code:`open` function.
     Uses :func:`open_with_detected_encoding` to detect & preserve the
     encoding. The list of encodings can be overridden by supplying
     `try_encodings`.
     """
+    if backup_filename:
+        if backup_filename in (input_filename, output_filename):
+            raise ValueError(
+                'backup_filename must be distinct from input/output filenames'
+            )
+    
     simfile, encoding = open_with_detected_encoding(
-        filename,
+        input_filename,
         try_encodings,
         **kwargs
     )
+
+    # Preserve the original simfile contents if a backup file was requested
+    backup_data = str(simfile) if backup_filename else ''
+
     try:
         yield simfile
     except CancelMutation:
-        return
+        return # Don't re-raise
     except:
         raise
     else:
+        # No exception was caught, so write the output file(s)
+        
+        # Write backup file if requested
+        if backup_filename:
+            with builtins.open(
+                backup_filename,
+                'w',
+                encoding=encoding,
+                **kwargs
+            ) as writer:
+                writer.write(backup_data)
+        
+        # Write output file
         with builtins.open(
-            filename,
+            output_filename or input_filename,
             'w',
             encoding=encoding,
             **kwargs

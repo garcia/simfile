@@ -124,3 +124,69 @@ class TestSimfileModule(TestCase):
         ssc = simfile.open('testing_simfile.ssc')
 
         self.assertEqual('Cool Song 2', ssc['TITLE'])
+    
+    def test_mutate_with_output_file(self):
+        original_title = None
+        modified_title = 'Cool Song 2'
+        with simfile.mutate(
+            'testing_simfile.ssc',
+            output_filename='modified.ssc',
+        ) as ssc:
+            original_title = ssc.title
+            ssc.title = modified_title
+        
+        ssc = simfile.open('testing_simfile.ssc')
+        self.assertEqual(original_title, ssc.title)
+
+        output_ssc = simfile.open('modified.ssc')
+        self.assertEqual(modified_title, output_ssc.title)
+    
+    def test_mutate_with_backup_file(self):
+        original_title = None
+        modified_title = 'Cool Song 2'
+        with simfile.mutate(
+            'testing_simfile.ssc',
+            backup_filename='backup.ssc',
+        ) as ssc:
+            original_title = ssc.title
+            ssc.title = modified_title
+        
+        ssc = simfile.open('testing_simfile.ssc')
+        self.assertEqual(modified_title, ssc.title)
+
+        backup_ssc = simfile.open('backup.ssc')
+        self.assertEqual(original_title, backup_ssc.title)
+    
+    def test_mutate_with_output_and_backup_files(self):
+        original_title = None
+        modified_title = 'Cool Song 2'
+        with simfile.mutate(
+            'testing_simfile.ssc',
+            output_filename='modified.ssc',
+            backup_filename='backup.ssc',
+        ) as ssc:
+            original_title = ssc.title
+            ssc.title = modified_title
+        
+        ssc = simfile.open('testing_simfile.ssc')
+        self.assertEqual(original_title, ssc.title)
+
+        output_ssc = simfile.open('modified.ssc')
+        self.assertEqual(modified_title, output_ssc.title)
+
+        backup_ssc = simfile.open('backup.ssc')
+        self.assertEqual(original_title, backup_ssc.title)
+    
+    def test_mutate_with_invalid_backup_filename(self):
+        backup_matches_input = simfile.mutate(
+            'testing_simfile.ssc',
+            backup_filename='testing_simfile.ssc',
+        )
+        self.assertRaises(ValueError, backup_matches_input.__enter__)
+
+        backup_matches_output = simfile.mutate(
+            'testing_simfile.ssc',
+            output_filename='modified.ssc',
+            backup_filename='modified.ssc',
+        )
+        self.assertRaises(ValueError, backup_matches_output.__enter__)
