@@ -202,10 +202,18 @@ read simfiles from the disk, modify them, and then save them, you can use the
 :func:`simfile.mutate` context manager:
 
     >>> import simfile
-    >>> with simfile.mutate('testdata/Springtime.ssc') as springtime:
+    >>> with simfile.mutate(
+    ...     'testdata/Springtime.ssc',
+    ...     backup_filename='testdata/Springtime.ssc~',
+    ... ) as springtime:
     ...     if springtime.subtitle.endswith('(edited)'):
     ...         raise simfile.CancelMutation
     ...     springtime.subtitle += '(edited)'
+
+In this example, we specify the optional `backup_filename` parameter to
+preserve the simfile's original contents. Alternatively, we could have
+specified an `output_filename` to write the modified simfile somewhere other
+than the input filename.
 
 :func:`simfile.mutate` writes the simfile back to the disk only if it exits
 without an exception. Any exception that reaches the context manager will
