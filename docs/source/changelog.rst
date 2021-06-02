@@ -11,6 +11,8 @@ New features
 
 * :func:`simfile.open` and :func:`simfile.mutate` now try four different
   encodings that StepMania supports when no encoding is explicitly supplied.
+* :func:`simfile.mutate` now accepts the optional parameters `output_filename`
+  and `backup_filename` for writing to files other than the input file.
 * Added the function :func:`simfile.open_with_detected_encoding` which performs
   the same logic described above and returns the detected encoding alongside
   the simfile as a tuple.
