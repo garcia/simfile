@@ -36,6 +36,7 @@ class TestBeat(unittest.TestCase):
         self.assertEqual('Beat(0.25)', repr(Beat(4, 16)))
         self.assertEqual('Beat(0.333)', repr(Beat(4, 12)))
         self.assertEqual('Beat(0.5)', repr(Beat(4, 8)))
+        self.assertEqual('Beat(1, 1000)', repr(Beat(1, 1000)))
     
     def test_fraction_overrides(self):
         a = Beat(5, 3)

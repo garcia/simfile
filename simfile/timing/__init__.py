@@ -54,7 +54,7 @@ class Beat(Fraction):
     
     def __str__(self) -> str:
         """
-        Convert the beat to a string with 3 decimal digits.
+        Convert the beat to its usual MSD representation (3 decimal digits).
         """
         return f'{float(self):.3f}'
     
@@ -62,10 +62,15 @@ class Beat(Fraction):
         """
         Pretty repr() for beats.
 
-        Includes the string representation with at most 3 decimal
-        digits, with trailing zeros removed.
+        If the beat falls on a tick, the printed value is a decimal
+        representation with at most 3 decimal digits and no trailing
+        zeros. Otherwise, the printed value is the numerator and
+        denominator.
         """
-        return f"Beat({str(self).rstrip('0').rstrip('.')})"
+        if BEAT_SUBDIVISION % self.denominator == 0:
+            return f"Beat({str(self).rstrip('0').rstrip('.')})"
+        else:
+            return super().__repr__()
 
     # Preserve type for methods inherited from Fraction
 
