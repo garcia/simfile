@@ -3,6 +3,34 @@
 Changelog
 =========
 
+2.0.0-beta.4
+------------
+
+New features
+~~~~~~~~~~~~
+
+* :func:`simfile.open` and :func:`simfile.mutate` now try four different
+  encodings that StepMania supports when no encoding is explicitly supplied.
+* Added the function :func:`simfile.open_with_detected_encoding` which performs
+  the same logic described above and returns the detected encoding alongside
+  the simfile as a tuple.
+* Added the function :func:`.ungroup_notes` which serves as an inverse for
+  :func:`.group_notes`.
+
+Miscellaneous
+~~~~~~~~~~~~~
+
+* :class:`.Note` instances are now comparable, sorted first by beat, then by
+  column.
+* Constructing a :class:`.Beat` without an explicit denominator now rounds the
+  beat to the nearest :meth:`.tick`. For example, both :code:`Beat(1/3)` and
+  :code:`Beat(0.333)` now return the same value as :code:`Beat(1, 3)`, rather
+  than inheriting :code:`Fraction`'s exact floating point representation
+  behavior. (Explicit denominators are preserved for flexibility's sake.)
+* :class:`.Beat` and :class:`.NoteType` now have better :code:`repr()` outputs.
+* Mathematical operations on a :class:`.Beat` now return a new :class:`.Beat`,
+  rather than its base class :class:`.Fraction`.
+
 2.0.0-beta.3
 ------------
 
