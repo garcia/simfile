@@ -277,8 +277,11 @@ To get the displayed BPM, use the :func:`.displaybpm` function:
     >>> import simfile
     >>> from simfile.timing.displaybpm import displaybpm
     >>> springtime = simfile.open('testdata/Springtime.ssc')
-    >>> displaybpm(springtime)
+    >>> displayed_bpm = displaybpm(springtime)
+    >>> displayed_bpm
     StaticDisplayBPM(value=Decimal('182'))
+    >>> str(displayed_bpm)
+    '182'
 
 The return value will be one of :class:`.StaticDisplayBPM`,
 :class:`.RangeDisplayBPM`, or :class:`.RandomDisplayBPM`. These classes offer
