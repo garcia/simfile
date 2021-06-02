@@ -11,7 +11,7 @@ from .types import Simfile
 from ._private.tee_file import tee_file
 
 
-__version__ = '2.0.0-beta.3'
+__version__ = '2.0.0-beta.4'
 __all__ = [
     'load', 'loads', 'open', 'open_with_detected_encoding', 'CancelMutation',
     'mutate',
