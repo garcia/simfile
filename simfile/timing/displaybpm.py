@@ -26,6 +26,10 @@ class StaticDisplayBPM(NamedTuple):
     def max(self) -> Decimal:
         """Returns the single BPM value."""
         return self.value
+    
+    def __str__(self):
+        """Returns the rounded BPM value as a string."""
+        return str(round(self.value))
 
 
 class RangeDisplayBPM(NamedTuple):
@@ -33,11 +37,18 @@ class RangeDisplayBPM(NamedTuple):
     min: Decimal
     max: Decimal
 
+    def __str__(self):
+        """Returns the rounded min and max values joined by a ":"."""
+        return f"{round(self.min)}:{round(self.max)}"
 
-class RandomDisplayBPM:
+
+class RandomDisplayBPM(NamedTuple):
     """
     Used by StepMania to obfuscate the displayed BPM with random numbers.
     """
+    def __str__(self):
+        """Returns an asterisk "*"."""
+        return '*'
 
 
 DisplayBPM = Union[StaticDisplayBPM, RangeDisplayBPM, RandomDisplayBPM]
