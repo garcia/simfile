@@ -97,7 +97,7 @@ class TimingState(NamedTuple):
         time_elapsed = time - self.event.time
         beats_elapsed = time_elapsed / 60 * float(self.bpm)
 
-        return Beat(beats_elapsed).round_to_tick()
+        return Beat(beats_elapsed)
 
 
 class TimingStateMachine(ListWithRepr[TimingState]):
@@ -170,7 +170,7 @@ class TimingEngine:
         warp_ends = BeatValues()
         for warp_ in self.timing_data.warps:
             warp: BeatValue = warp_
-            warp_end = Beat(warp.beat + Beat(warp.value))
+            warp_end = warp.beat + Beat(warp.value)
             if warp_starts:
                 last_warp_end: Beat = warp_ends[-1].beat
                 if warp.beat <= last_warp_end:
@@ -195,7 +195,7 @@ class TimingEngine:
     def _retime_events(self) -> None:
         # Set the private instance variables based on the timing data
         first_bpm: BeatValue = self.timing_data.bpms[0]
-        if first_bpm.beat != Beat(0):
+        if first_bpm.beat != 0:
             raise ValueError('first BPM change should be on beat 0')
 
         self._state_machine = TimingStateMachine([TimingState(
@@ -245,7 +245,7 @@ class TimingEngine:
         method: warps are not considered "infinite BPM", nor are pauses
         considered "zero BPM".
         """
-        if beat < Beat(0):
+        if beat < 0:
             return Decimal(self.timing_data.bpms[0].value)
         
         tagged_beat = (beat, EventTag.BPM)
@@ -343,4 +343,4 @@ class TimingEngine:
         prior_state: TimingState = self._state_machine[prior_state_index]
         prior_state_beat = prior_state.event.beat
 
-        return Beat(prior_state_beat + prior_state.beats_until(time))
+        return cast(Beat, prior_state_beat + prior_state.beats_until(time))
