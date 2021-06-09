@@ -1,4 +1,6 @@
 # coding=utf-8
+from os import read
+from msdparser import MSDParserError
 from pyfakefs.fake_filesystem_unittest import TestCase # type: ignore
 
 import simfile
@@ -27,6 +29,8 @@ class TestSimfileModule(TestCase):
                 writer.write(f'#TITLE:Song;\n#ARTIST:{artist};')
         with open('invalid.sm', 'wb') as writer:
             writer.write(b'#TITLE:Song;\n#ARTIST:\xc0\x00\x81;')
+        with open('straytext.sm', 'wb') as writer:
+            writer.write(b'#TITLE:Song;\nSUBTITLE:;\n#ARTIST:Artist;')
 
     def test_load_with_sm_extension(self):
         with open('testing_simfile.sm', 'r') as reader:
@@ -41,6 +45,14 @@ class TestSimfileModule(TestCase):
         
         self.assertIsInstance(ssc, SSCSimfile)
         self.assertEqual(SSCSimfile(string=test_ssc.testing_simfile()), ssc)
+    
+    def test_load_with_stray_text(self):
+        with open('straytext.sm', 'r') as reader:
+            self.assertRaises(MSDParserError, simfile.load, reader)
+    
+    def test_load_with_stray_text_and_strict_false(self):
+        with open('straytext.sm', 'r') as reader:
+            self.assertEqual('Song', simfile.load(reader, strict=False).title)
 
     def test_loads_with_sm_contents(self):
         sm = simfile.loads(test_sm.testing_simfile())
@@ -53,6 +65,18 @@ class TestSimfileModule(TestCase):
 
         self.assertIsInstance(ssc, SSCSimfile)
         self.assertEqual(SSCSimfile(string=test_ssc.testing_simfile()), ssc)
+    
+    def test_loads_with_stray_text(self):
+        with open('straytext.sm', 'r') as reader:
+            straytext = reader.read()
+        
+        self.assertRaises(MSDParserError, simfile.loads, straytext)
+    
+    def test_loads_with_stray_text_and_strict_false(self):
+        with open('straytext.sm', 'r') as reader:
+            straytext = reader.read()
+
+        self.assertEqual('Song', simfile.loads(straytext, strict=False).title)
 
     def test_open_with_sm_file(self):
         sm = simfile.open('testing_simfile.sm')
@@ -74,6 +98,12 @@ class TestSimfileModule(TestCase):
     
     def test_open_with_invalid_file(self):
         self.assertRaises(UnicodeDecodeError, simfile.open, 'invalid.sm')
+    
+    def test_open_with_stray_text(self):
+        self.assertRaises(MSDParserError, simfile.open, 'straytext.sm')
+    
+    def test_open_with_stray_text_and_strict_false(self):
+        self.assertEqual('Song', simfile.open('straytext.sm', strict=False).title)
     
     def test_open_with_detected_encoding_with_non_ascii_encodings(self):
         for encoding, artist in test_encoding_strings.items():
@@ -108,6 +138,20 @@ class TestSimfileModule(TestCase):
             'utf-8.sm',
             encoding='cp949',
         )
+    
+    def test_open_with_detected_encoding_with_stray_text(self):
+        self.assertRaises(
+            MSDParserError,
+            simfile.open_with_detected_encoding,
+            'straytext.sm',
+        )
+    
+    def test_open_with_detected_encoding_with_stray_text_and_strict_false(self):
+        sim, _ = simfile.open_with_detected_encoding(
+            'straytext.sm',
+            strict=False,
+        )
+        self.assertEqual('Song', sim.title)
 
     def test_mutate_with_sm_file(self):
         with simfile.mutate('testing_simfile.sm') as sm:
@@ -190,3 +234,17 @@ class TestSimfileModule(TestCase):
             backup_filename='modified.ssc',
         )
         self.assertRaises(ValueError, backup_matches_output.__enter__)
+    
+    def test_mutate_with_stray_text(self):
+        self.assertRaises(
+            MSDParserError,
+            simfile.mutate('straytext.sm').__enter__,
+        )
+    
+    def test_mutate_with_stray_text_and_strict_false(self):
+        with simfile.mutate('straytext.sm', strict=False) as straytext:
+            straytext.subtitle = '(Fixed)'
+        
+        sm = simfile.open('straytext.sm')
+
+        self.assertEqual('(Fixed)', sm.subtitle)
