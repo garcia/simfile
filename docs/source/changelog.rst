@@ -3,6 +3,26 @@
 Changelog
 =========
 
+2.0.0-beta.5
+------------
+
+New features
+~~~~~~~~~~~~
+
+* All functions in the top-level :mod:`simfile` module, as well as
+  :class:`.BaseSimfile` and :meth:`.SSCChart.from_str`, now accept a `strict`
+  parameter that defaults to True. Setting it to False allows the underlying
+  MSD parser to ignore stray text between parameters.
+
+Miscellaneous
+~~~~~~~~~~~~~
+
+* :class:`.BaseChart`'s constructor no longer accepts an MSD string; this
+  was an undocumented feature only used by test cases, and the semantics were
+  unclear due to significant differences between :class:`.SMChart` and
+  :class:`.SSCChart`. If you need this (relatively niche) functionality, use
+  the classmethods :meth:`.SMChart.from_str` and :meth:`.SSCChart.from_str`.
+
 2.0.0-beta.4
 ------------
 
@@ -76,7 +96,7 @@ Bugfixes
   :code:`AttributeError` due to a coding error.
 
 These changes fix parsing of some real simfiles that StepMania accepts but
-:code:`simfile` previously raised an exception for:
+**simfile** previously raised an exception for:
 
 * :class:`.SMChart` now allows more than 6 chart components. Any extra
   components are stored in a new :attr:`.SMChart.extradata` attribute and are
