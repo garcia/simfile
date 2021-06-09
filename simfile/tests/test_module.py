@@ -1,5 +1,4 @@
 # coding=utf-8
-from os import read
 from msdparser import MSDParserError
 from pyfakefs.fake_filesystem_unittest import TestCase # type: ignore
 

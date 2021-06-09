@@ -5,7 +5,7 @@ from collections import defaultdict
 from copy import deepcopy
 from enum import Enum
 from simfile.types import Simfile, Chart
-from typing import DefaultDict, Dict, List, Optional, Type, TypeVar, Union
+from typing import DefaultDict, Dict, List, Optional, Type, TypeVar
 from .sm import SMChart, SMSimfile
 from .ssc import SSCChart, SSCSimfile
 
