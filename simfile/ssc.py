@@ -1,8 +1,8 @@
 from typing import Optional, Type
 
-from msdparser.msdparser import MSDParser
+from msdparser import parse_msd
 
-from .base import BaseChart, BaseCharts, BaseSimfile
+from .base import BaseChart, BaseCharts, BaseSimfile, MSD_ITERATOR
 from ._private.dedent import dedent_and_trim
 from ._private.property import item_property
 
@@ -27,8 +27,20 @@ class SSCChart(BaseChart):
     displaybpm = item_property('DISPLAYBPM')
 
     @classmethod
+    def from_str(cls: Type['SSCChart'], string: str) -> 'SSCChart':
+        """
+        Parse a string containing MSD data into an SSC chart.
+
+        The first property's key must be `NOTEDATA`. Parsing ends at
+        the `NOTES` (or `NOTES2`) property.
+        """
+        chart = SSCChart()
+        chart._parse(parse_msd(string=string))
+        return chart
+
+    @classmethod
     def blank(cls: Type['SSCChart']) -> 'SSCChart':
-        with MSDParser(string="""
+        return cls.from_str("""
             #NOTEDATA:;
             #CHARTNAME:;
             #STEPSTYPE:dance-single;
@@ -44,12 +56,9 @@ class SSCChart(BaseChart):
             0000
             0000
             ;
-        """) as parser:
-            blank = SSCChart()
-            blank._parse(parser)
-            return blank
+        """)
     
-    def _parse(self, parser: MSDParser) -> None:
+    def _parse(self, parser: MSD_ITERATOR) -> None:
         iterator = iter(parser)
         
         first_key, _ = next(iterator)
@@ -58,7 +67,7 @@ class SSCChart(BaseChart):
         
         for key, value in iterator:
             self[key] = value
-            if key.upper() == 'NOTES':
+            if key.upper() in ('NOTES', 'NOTES2'):
                 break
 
     def serialize(self, file):

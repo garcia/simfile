@@ -1,8 +1,8 @@
 from abc import ABCMeta, abstractclassmethod, abstractmethod
 from collections import OrderedDict
-from typing import Iterator, Optional, TextIO, Union
+from typing import Iterator, Optional, TextIO, Tuple, Union
 
-from msdparser import MSDParser
+from msdparser import parse_msd
 
 from ._private.generic import E, ListWithRepr
 from ._private.property import item_property
@@ -10,6 +10,9 @@ from ._private.serializable import Serializable
 
 
 __all__ = ['BaseChart', 'BaseCharts', 'BaseSimfile']
+
+
+MSD_ITERATOR = Iterator[Tuple[str, str]]
 
 
 class BaseChart(OrderedDict, Serializable, metaclass=ABCMeta):
@@ -26,13 +29,8 @@ class BaseChart(OrderedDict, Serializable, metaclass=ABCMeta):
     radarvalues = item_property('RADARVALUES')
     notes = item_property('NOTES')
     
-    def __init__(self, string: Optional[str] = None):
-        if string is not None:
-            with MSDParser(string=string) as parser:
-                self._parse(parser)
-    
     @abstractmethod
-    def _parse(self, parser: MSDParser):
+    def _parse(self, parser: MSD_ITERATOR):
         pass
 
     @abstractclassmethod
@@ -119,11 +117,10 @@ class BaseSimfile(OrderedDict, Serializable, metaclass=ABCMeta):
                  file: Optional[Union[TextIO, Iterator[str]]] = None,
                  string: Optional[str] = None):
         if file is not None or string is not None:
-            with MSDParser(file=file, string=string) as parser:
-                self._parse(parser)
+            self._parse(parse_msd(file=file, string=string))
     
     @abstractmethod
-    def _parse(self, parser: MSDParser):
+    def _parse(self, parser: MSD_ITERATOR):
         pass
     
     @abstractclassmethod

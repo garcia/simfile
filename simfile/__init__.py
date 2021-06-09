@@ -3,7 +3,7 @@ from contextlib import contextmanager
 from io import StringIO
 from typing import Iterator, List, Optional, TextIO, Tuple, Union
 
-from msdparser import MSDParser
+from msdparser import parse_msd
 
 from .ssc import SSCSimfile
 from .sm import SMSimfile
@@ -29,13 +29,12 @@ def _detect_ssc(peek_file: Union[TextIO, Iterator[str]]) -> bool:
         elif suffix == '.sm':
             return False
 
-    # Peek at the first property next
-    parser = MSDParser(file=peek_file)
+    # Check if the first property is an SSC version
+    parser = parse_msd(file=peek_file)
     first_key = ''
     for first_key, _ in parser:
         break
 
-    # Check for .SSC version header next
     return first_key.upper() == 'VERSION'
 
 

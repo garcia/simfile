@@ -26,7 +26,7 @@ def testing_chart():
 
 
 def testing_charts():
-    variants = tuple(SSCChart(testing_chart()) for _ in range(10))
+    variants = tuple(SSCChart.from_str(testing_chart()) for _ in range(10))
     variants[1].chartname = 'My Cool Chart'
     variants[2].stepstype = 'dance-double'
     variants[3].description = 'Footswitches'
@@ -51,7 +51,7 @@ def testing_simfile():
 class TestSSCChart(unittest.TestCase):
     
     def test_init_and_properties(self):
-        unit = SSCChart(testing_chart())
+        unit = SSCChart.from_str(testing_chart())
 
         self.assertEqual('dance-single', unit.stepstype)
         self.assertEqual('Brackets', unit.description)
@@ -61,7 +61,7 @@ class TestSSCChart(unittest.TestCase):
         self.assertEqual('\n\n0000\n0000\n0000\n0000\n', unit.notes)
     
     def test_serialize(self):
-        unit = SSCChart(testing_chart())
+        unit = SSCChart.from_str(testing_chart())
         expected = (
             '#NOTEDATA:;\n'
             '#CHARTNAME:Brackets;\n'
@@ -105,7 +105,7 @@ class TestSSCChart(unittest.TestCase):
         self.assertNotEqual(base, variants[6])
 
     def test_repr(self):
-        unit = SSCChart(testing_chart())
+        unit = SSCChart.from_str(testing_chart())
 
         self.assertEqual('<SSCChart: dance-single Edit 12>', repr(unit))
 
@@ -125,7 +125,7 @@ class TestSSCCharts(unittest.TestCase):
         value = str(unit)
     
     def test_repr(self):
-        chart = SSCChart(testing_chart())
+        chart = SSCChart.from_str(testing_chart())
         repr_chart = repr(chart)
         unit = SSCCharts([chart])
 

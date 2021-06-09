@@ -1,8 +1,6 @@
-from typing import List, Optional, Type
+from typing import Iterator, List, Optional, Tuple, Type
 
-from msdparser.msdparser import MSDParser
-
-from .base import BaseChart, BaseCharts, BaseSimfile
+from .base import BaseChart, BaseCharts, BaseSimfile, MSD_ITERATOR
 from ._private.dedent import dedent_and_trim
 
 
@@ -74,8 +72,8 @@ class SMChart(BaseChart):
         if len(values) > len(SM_CHART_PROPERTIES):
             self.extradata = values[len(SM_CHART_PROPERTIES):]
     
-    def _parse(self, parser: MSDParser):
-        property, value = next(iter(parser))
+    def _parse(self, parser: Iterator[Tuple[str, str]]):
+        property, value = next(parser)
         if property.upper() != 'NOTES':
             raise ValueError(f'expected a NOTES property, got {property}')
         
@@ -149,7 +147,7 @@ class SMSimfile(BaseSimfile):
     """
     _charts: SMCharts
 
-    def _parse(self, parser: MSDParser):
+    def _parse(self, parser: MSD_ITERATOR):
         self._charts = SMCharts()
         for (key, value) in parser:
             key = key.upper()
