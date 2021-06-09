@@ -3,7 +3,7 @@
 Migrating from simfile 1.0 to 2.0
 =================================
 
-Version 1.0 of the :code:`simfile` library was released in 2013. It only
+Version 1.0 of the **simfile** library was released in 2013. It only
 supported SM files and was primarily developed for Python 2, with support for
 Python 3 on a separate branch.
 

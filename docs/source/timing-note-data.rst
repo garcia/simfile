@@ -4,7 +4,7 @@ Timing & note data
 ==================
 
 For advanced use cases that require parsing specific fields from simfiles and
-charts, :code:`simfile` provides subpackages that interface with the core
+charts, **simfile** provides subpackages that interface with the core
 simfile & chart classes. As of version 2.0, the available subpackages are
 :mod:`simfile.notes` and :mod:`simfile.timing`.
 

@@ -19,7 +19,7 @@ A modern simfile parsing & editing library for Python 3.
 
 ## Installation
 
-`simfile` is available on PyPI. During the current beta phase, make sure to pass `--pre` to `pip`, otherwise you will fetch the 1.0 release:
+**simfile** is available on PyPI. During the current beta phase, make sure to pass `--pre` to `pip`, otherwise you will fetch the 1.0 release:
 
 ```bash
 pip3 install --pre simfile
