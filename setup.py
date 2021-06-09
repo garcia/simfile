@@ -31,7 +31,7 @@ setup(
     keywords='stepmania simfile sm ssc',
     zip_safe=False,
     install_requires=[
-        'msdparser>=1.0.0-alpha.3',
+        'msdparser>=1.0.0-beta.1',
     ],
     python_requires='>=3.6',
     tests_require=[
