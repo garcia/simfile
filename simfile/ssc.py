@@ -27,7 +27,11 @@ class SSCChart(BaseChart):
     displaybpm = item_property('DISPLAYBPM')
 
     @classmethod
-    def from_str(cls: Type['SSCChart'], string: str) -> 'SSCChart':
+    def from_str(
+        cls: Type['SSCChart'],
+        string: str,
+        strict: bool = True
+    ) -> 'SSCChart':
         """
         Parse a string containing MSD data into an SSC chart.
 
@@ -35,7 +39,7 @@ class SSCChart(BaseChart):
         the `NOTES` (or `NOTES2`) property.
         """
         chart = SSCChart()
-        chart._parse(parse_msd(string=string))
+        chart._parse(parse_msd(string=string, ignore_stray_text=not strict))
         return chart
 
     @classmethod

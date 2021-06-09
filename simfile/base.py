@@ -115,9 +115,14 @@ class BaseSimfile(OrderedDict, Serializable, metaclass=ABCMeta):
 
     def __init__(self, *,
                  file: Optional[Union[TextIO, Iterator[str]]] = None,
-                 string: Optional[str] = None):
+                 string: Optional[str] = None,
+                 strict: bool = True):
         if file is not None or string is not None:
-            self._parse(parse_msd(file=file, string=string))
+            self._parse(parse_msd(
+                file=file,
+                string=string,
+                ignore_stray_text=not strict,
+            ))
     
     @abstractmethod
     def _parse(self, parser: MSD_ITERATOR):

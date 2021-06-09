@@ -1,3 +1,11 @@
+"""
+Convenience functions for loading & modifying simfiles.
+
+All functions take a `strict` parameter that defaults to True. By
+default, the underlying parser will throw an exception if it finds any
+stray text between parameters. This behavior can be overridden by
+setting `strict` to False.
+"""
 import builtins
 from contextlib import contextmanager
 from io import StringIO
@@ -21,7 +29,10 @@ __all__ = [
 ENCODINGS = ['utf-8', 'cp1252', 'cp932', 'cp949']
 
 
-def _detect_ssc(peek_file: Union[TextIO, Iterator[str]]) -> bool:
+def _detect_ssc(
+    peek_file: Union[TextIO, Iterator[str]],
+    strict: bool = True
+) -> bool:
     if isinstance(peek_file, TextIO) and type(peek_file.name) is str:
         _, _, suffix = peek_file.name.rpartition('.')
         if suffix == '.ssc':
@@ -30,7 +41,7 @@ def _detect_ssc(peek_file: Union[TextIO, Iterator[str]]) -> bool:
             return False
 
     # Check if the first property is an SSC version
-    parser = parse_msd(file=peek_file)
+    parser = parse_msd(file=peek_file, ignore_stray_text=not strict)
     first_key = ''
     for first_key, _ in parser:
         break
@@ -38,7 +49,7 @@ def _detect_ssc(peek_file: Union[TextIO, Iterator[str]]) -> bool:
     return first_key.upper() == 'VERSION'
 
 
-def load(file: Union[TextIO, Iterator[str]]) -> Simfile:
+def load(file: Union[TextIO, Iterator[str]], strict: bool = True) -> Simfile:
     """
     Load a text file object as a simfile using the correct implementation.
 
@@ -50,17 +61,20 @@ def load(file: Union[TextIO, Iterator[str]]) -> Simfile:
     """
     peek_file, file = tee_file(file)
     is_ssc = _detect_ssc(peek_file)
-    return SSCSimfile(file=file) if is_ssc else SMSimfile(file=file)
+    if is_ssc:
+        return SSCSimfile(file=file, strict=strict)
+    else:
+        return SMSimfile(file=file, strict=strict)
 
 
-def loads(string: str = None) -> Simfile:
+def loads(string: str = None, strict: bool = True) -> Simfile:
     """
     Load a string as a simfile using the correct implementation.
     """
-    return load(StringIO(string))
+    return load(StringIO(string), strict=strict)
 
 
-def open(filename: str, **kwargs) -> Simfile:
+def open(filename: str, strict: bool = True, **kwargs) -> Simfile:
     """
     Load a simfile by filename using the correct implementation.
 
@@ -74,7 +88,8 @@ def open(filename: str, **kwargs) -> Simfile:
     
     return open_with_detected_encoding(
         filename,
-        try_encodings,
+        try_encodings=try_encodings,
+        strict=strict,
         **kwargs
     )[0]
 
@@ -82,6 +97,7 @@ def open(filename: str, **kwargs) -> Simfile:
 def open_with_detected_encoding(
     filename: str,
     try_encodings: List[str] = ENCODINGS,
+    strict: bool = True,
     **kwargs
 ) -> Tuple[Simfile, str]:
     """
@@ -114,7 +130,7 @@ def open_with_detected_encoding(
                 encoding=encoding,
                 **kwargs
             ) as file:
-                return (load(file), encoding)
+                return (load(file, strict=strict), encoding)
         except UnicodeDecodeError as e:
             # Keep track of each encoding's exception
             if exception:
@@ -140,6 +156,7 @@ def mutate(
     output_filename: Optional[str] = None,
     backup_filename: Optional[str] = None,
     try_encodings: List[str] = ENCODINGS,
+    strict: bool = True,
     **kwargs
 ) -> Iterator[Simfile]:
     """
@@ -172,7 +189,8 @@ def mutate(
     
     simfile, encoding = open_with_detected_encoding(
         input_filename,
-        try_encodings,
+        try_encodings=try_encodings,
+        strict=strict,
         **kwargs
     )
 
