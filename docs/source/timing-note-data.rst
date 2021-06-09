@@ -75,6 +75,8 @@ the :mod:`simfile.notes.count` module:
 If the functions in this module aren't sufficient for your needs, move on to
 the next section for more options.
 
+.. _handling-holds-rolls-jumps:
+
 Handling holds, rolls, and jumps
 --------------------------------
 

@@ -231,3 +231,39 @@ using the simfile's :meth:`~simfile.base.BaseSimfile.serialize` method:
 
 Finally, if your destination isn't a file object, you can serialize the simfile
 to a string using :code:`str(simfile)` and proceed from there.
+
+Robust parsing of arbitrary simfiles
+------------------------------------
+
+The real world is messy, and many simfiles on the Internet are technically
+malformed despite appearing to function correctly in StepMania. This library
+aims to be **strict by default**, both for input and output, but allow more
+permissive input handling on an opt-in basis.
+
+The functions exposed by the top-level :mod:`simfile` module accept a `strict`
+parameter that can be set to False to suppress MSD parser errors:
+
+    >>> import simfile
+    >>> springtime = simfile.open('testdata/Springtime.ssc', strict=False)
+
+.. warning::
+
+    Due to the simplicity of the MSD format, there's only one error condition -
+    stray text between parameters - which setting `strict` to False suppresses.
+    Almost any file will successfully parse as a "simfile" with this check
+    disabled, so exercise caution when applying this feature to arbitrary
+    files.
+
+While most modern simfiles are encoded in UTF-8, many older simfiles use dated
+encodings (perhaps resembling Latin-1 or Shift-JIS). This was a pain to handle
+correctly in older versions, but in version 2.0, all :mod:`simfile` functions
+that interact with the filesystem detect an appropriate encoding automatically,
+so there's typically no need to specify an encoding or handle
+:code:`UnicodeDecodeError` exceptions. Read through the documentation of
+:func:`.open_with_detected_encoding` for more details.
+
+When grouping notes using the :func:`.group_notes` function,
+orphaned head or tail notes will raise an exception by default. Refer to
+:ref:`handling-holds-rolls-jumps` for more information on handling orphaned
+notes gracefully. (This is more common than you might imagine - "Springtime",
+which comes bunded with StepMania, has orphaned tail notes in its first chart!)
