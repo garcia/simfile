@@ -1,3 +1,6 @@
+"""
+Functions for converting SM to SSC simfiles and vice-versa.
+"""
 from collections import defaultdict
 from copy import deepcopy
 from enum import Enum

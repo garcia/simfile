@@ -1,3 +1,10 @@
+"""
+Base classes for simfile & chart implementations.
+
+This module should ideally never need to be used directly, but its
+documentation may be useful for understanding the similarities between
+the SM and SSC formats.
+"""
 from abc import ABCMeta, abstractclassmethod, abstractmethod
 from collections import OrderedDict
 from typing import Iterator, Optional, TextIO, Tuple, Union
@@ -88,6 +95,10 @@ class BaseSimfile(OrderedDict, Serializable, metaclass=ABCMeta):
 
     If a desired simfile property isn't in this list, it can still be
     accessed as a dict item.
+
+    By default, the underlying parser will throw an exception if it
+    finds any stray text between parameters. This behavior can be
+    overridden by setting `strict` to False in the constructor.
     """
     title = item_property('TITLE')
     subtitle = item_property('SUBTITLE')

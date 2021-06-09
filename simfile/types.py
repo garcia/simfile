@@ -1,3 +1,6 @@
+"""
+Union types for simfile & chart classes.
+"""
 from typing import Union
 
 from .sm import *

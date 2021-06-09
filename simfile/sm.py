@@ -1,3 +1,6 @@
+"""
+Simfile & chart classes for SM files.
+"""
 from typing import Iterator, List, Optional, Tuple, Type
 
 from .base import BaseChart, BaseCharts, BaseSimfile, MSD_ITERATOR

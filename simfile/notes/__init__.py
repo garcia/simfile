@@ -1,3 +1,6 @@
+"""
+Note data classes, plus submodules that operate on note data.
+"""
 from enum import Enum
 from functools import reduce, total_ordering
 from itertools import groupby

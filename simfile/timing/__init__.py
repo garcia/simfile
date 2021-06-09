@@ -1,7 +1,9 @@
+"""
+Timing data classes, plus submodules that operate on timing data.
+"""
 from decimal import Decimal
 from fractions import Fraction
 from numbers import Rational
-from simfile.ssc import SSCChart
 from typing import Optional, Type, NamedTuple
 
 from ._private.sscproxy import ssc_proxy

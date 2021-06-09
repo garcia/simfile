@@ -1,3 +1,6 @@
+"""
+Simfile & chart classes for SSC files.
+"""
 from typing import Optional, Type
 
 from msdparser import parse_msd
@@ -37,6 +40,10 @@ class SSCChart(BaseChart):
 
         The first property's key must be `NOTEDATA`. Parsing ends at
         the `NOTES` (or `NOTES2`) property.
+
+        By default, the underlying parser will throw an exception if it
+        finds any stray text between parameters. This behavior can be
+        overridden by setting `strict` to False.
         """
         chart = SSCChart()
         chart._parse(parse_msd(string=string, ignore_stray_text=not strict))
