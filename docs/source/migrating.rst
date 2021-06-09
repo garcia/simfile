@@ -121,9 +121,9 @@ from strings to richer representations.
 
     >>> from simfile import Simfile # 1.0
     >>> sm = Simfile('testdata/Robotix.sm')
-    >>> print(type(sm.bpms))
+    >>> print(type(sm['BPMS']))
     <class 'simfile.simfile.Timing'>
-    >>> print(type(sm.stops))
+    >>> print(type(sm['STOPS']))
     <class 'simfile.simfile.Timing'>
 
 *   The "meter" and "notes" chart attributes were converted to an integer and a
