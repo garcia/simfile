@@ -1,8 +1,0 @@
-{
-    "python.linting.enabled": true,
-    "python.linting.mypyEnabled": true,
-    "python.linting.pylintEnabled": false,
-    "python.linting.mypyArgs": [
-        "--config-file=${workspaceFolder}/mypy.ini"
-    ]
-}
