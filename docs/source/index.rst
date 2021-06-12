@@ -59,12 +59,13 @@ Charts are stored in a list under the :attr:`.charts` attribute and function sim
    >>> list(chart.keys())[:7]
    ['CHARTNAME', 'STEPSTYPE', 'DESCRIPTION', 'CHARTSTYLE', 'DIFFICULTY', 'METER', 'RADARVALUES']
 
-Contents
---------
+Further reading
+---------------
 
 .. toctree::
    :maxdepth: 1
 
+   about-simfiles
    reading-writing
    timing-note-data
    changelog

@@ -248,11 +248,11 @@ parameter that can be set to False to suppress MSD parser errors:
 
 .. warning::
 
-    Due to the simplicity of the MSD format, there's only one error condition -
-    stray text between parameters - which setting `strict` to False suppresses.
-    Almost any file will successfully parse as a "simfile" with this check
-    disabled, so exercise caution when applying this feature to arbitrary
-    files.
+    Due to the simplicity of the MSD format, there's only one error condition
+    at the data layer - stray text between parameters - which setting `strict`
+    to False suppresses. Almost any text file will successfully parse as a
+    "simfile" with this check disabled, so exercise caution when applying this
+    feature to arbitrary files.
 
 While most modern simfiles are encoded in UTF-8, many older simfiles use dated
 encodings (perhaps resembling Latin-1 or Shift-JIS). This was a pain to handle
