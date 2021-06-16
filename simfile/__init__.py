@@ -51,7 +51,7 @@ def _detect_ssc(
 
 def load(file: Union[TextIO, Iterator[str]], strict: bool = True) -> Simfile:
     """
-    Load a text file object as a simfile using the correct implementation.
+    Load a text file object as a simfile.
 
     If the file object has a filename with a matching extension, it
     will be used to infer the correct implementation. Otherwise, the
@@ -69,14 +69,14 @@ def load(file: Union[TextIO, Iterator[str]], strict: bool = True) -> Simfile:
 
 def loads(string: str = None, strict: bool = True) -> Simfile:
     """
-    Load a string as a simfile using the correct implementation.
+    Load a string containing simfile data as a simfile.
     """
     return load(StringIO(string), strict=strict)
 
 
 def open(filename: str, strict: bool = True, **kwargs) -> Simfile:
     """
-    Load a simfile by filename using the correct implementation.
+    Load a simfile by filename.
 
     Keyword arguments are passed to the builtin `open` function.
     If no encoding is specified, this function will defer to
@@ -101,7 +101,7 @@ def open_with_detected_encoding(
     **kwargs
 ) -> Tuple[Simfile, str]:
     """
-    Load a simfile by filename using the correct implementation & encoding.
+    Load a simfile by filename; returns the simfile and detected encoding.
 
     Tries decoding the simfile as UTF-8, CP1252 (English), CP932
     (Japanese), and CP949 (Korean), mirroring the encodings supported
@@ -114,6 +114,10 @@ def open_with_detected_encoding(
     as the wrong encoding, resulting in garbled text. If you intend to
     write the simfile back to disk, make sure to use the same encoding
     that was detected to preserve the true byte sequence.
+
+    In general, you only need to use this function directly if you need
+    to know the file's encoding. :func:`.open` and :func:`.mutate` both
+    defer to this function to detect the encoding behind the scenes.
     """
     if 'encoding' in kwargs:
         raise TypeError(
