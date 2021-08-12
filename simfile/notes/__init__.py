@@ -6,7 +6,7 @@ from functools import reduce, total_ordering
 from itertools import groupby
 from io import StringIO
 from math import gcd
-from typing import Iterator, List, NamedTuple, Type
+from typing import Iterator, List, NamedTuple, Tuple, Type
 
 from ..timing import Beat
 from ..types import Chart
@@ -37,21 +37,27 @@ class NoteType(Enum):
 class Note(NamedTuple):
     """
     A note, corresponding to a nonzero character in a chart's note data.
+
+    Note objects are intrinsically ordered according to their position in
+    the underlying note data: that is, if `note1` would appear earlier in
+    the note data string than `note2`, then `note1 < note2` is true.
     """
     beat: Beat
     column: int
     note_type: NoteType
+    
+    player: int = 0
+    """
+    Only used in routine charts. The second player's note data will have
+    this value set to 1.
+    """
+
+    def _comparable(self) -> Tuple[int, Beat, int]:
+        return (self.player, self.beat, self.column)
 
     def __lt__(self, other) -> bool:
-        """
-        Compare to another note first by beat, then by column.
-        """
-        if self.beat < other.beat:
-            return True
-        if self.beat == other.beat:
-            if self.column < other.column:
-                return True
-        return False
+        # bool(...) wrapper to satisfy mypy
+        return bool(self._comparable() < other._comparable())
 
 
 class NoteData:
@@ -175,17 +181,22 @@ class NoteData:
         Notes are yielded chronologically (ascending beats) first, then
         in ascending column order (same as the serialized order).
         """
-        for m, measure in enumerate(self._notedata.split(',')):
-            lines = measure.strip().splitlines()
-            subdivision = len(lines)
-            for l, line in enumerate(lines):
-                for c, column in enumerate(line.strip()):
-                    if column != '0':
-                        yield Note(
-                            beat=Beat(m*4*subdivision + l*4, subdivision),
-                            column=c,
-                            note_type=NoteType(column),
-                        )
+        # "Routine" steps types (currently dance-routine and pump-routine) use
+        # an & marker to separate the two players' steps. All other steps types
+        # do not use an &, so `p` will only be 0 the vast majority of the time
+        for p, notedata in enumerate(self._notedata.split('&')):
+            for m, measure in enumerate(notedata.split(',')):
+                lines = measure.strip().splitlines()
+                subdivision = len(lines)
+                for l, line in enumerate(lines):
+                    for c, column in enumerate(line.strip()):
+                        if column != '0':
+                            yield Note(
+                                beat=Beat(m*4*subdivision + l*4, subdivision),
+                                column=c,
+                                note_type=NoteType(column),
+                                player=p,
+                            )
     
     def __str__(self) -> str:
         """Returns the note data string."""

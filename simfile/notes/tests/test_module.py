@@ -46,13 +46,31 @@ class TestNoteData(unittest.TestCase):
     def test_iter_handles_whitespace(self):
         chart = testing_chart()
         chart.notes = indent(chart.notes, '     ')
-        first_3_notes = list(NoteData.from_chart(chart))[:3]
+        notedata = NoteData.from_chart(chart)
+        first_3_notes = list(notedata)[:3]
         
         self.assertListEqual([
             Note(beat=Beat(16,4), column=0, note_type=NoteType.TAP),
             Note(beat=Beat(18,4), column=2, note_type=NoteType.TAP),
             Note(beat=Beat(20,4), column=1, note_type=NoteType.HOLD_HEAD),
         ], first_3_notes)
+    
+    def test_iter_handles_routine_chart(self):
+        chart = testing_chart()
+        chart.notes = f'{chart.notes}\n&\n{chart.notes}'
+        notedata = NoteData.from_chart(chart)
+        notes = list(notedata)
+        first_half = notes[:len(notes)]
+        second_half = notes[len(notes):]
+
+        # since we copied the chart for both players, check that every field
+        # matches except for the player
+        for note1, note2 in zip(first_half, second_half):
+            self.assertEqual(note1.beat, note2.beat)
+            self.assertEqual(note1.column, note2.column)
+            self.assertEqual(note1.note_type, note2.note_type)
+            self.assertEqual(note1.player, 0)
+            self.assertEqual(note2.player, 1)
     
     def test_from_chart_and_iter_handle_notes2(self):
         # turn testing_chart() into an SSC chart

@@ -23,6 +23,12 @@ class NoteWithTail(NamedTuple):
     column: int
     note_type: NoteType
     tail_beat: Beat
+    player: int = 0
+
+    # Much like the fields above, this method is lifted from `Note` because
+    # NamedTuple doesn't play nice with inheritance
+    def _comparable(self) -> Tuple[int, Beat, int]:
+        return (self.player, self.beat, self.column)
 
 
 _NoteMaybeWithTail = Union[Note, NoteWithTail]
@@ -129,6 +135,7 @@ def group_notes(
             column=head.column,
             note_type=head.note_type,
             tail_beat=tail.beat,
+            player=head.player,
         )
     
     def join_head_to_tail(
