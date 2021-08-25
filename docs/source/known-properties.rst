@@ -1,0 +1,52 @@
+.. _known-properties:
+
+Known properties
+================
+
+*Known properties* refer to properties of simfiles and their charts that the
+current stable version of StepMania actively uses. These are the properties
+that StepMania's built-in editor will preserve when it saves a simfile that was
+loaded from disk; any unknown properties will be lost if overwritten by the
+editor.
+
+**simfile** enables you to access properties of simfiles & charts in a few
+different ways:
+
+* **Indexing** (e.g. :code:`sim['TITLE']`, :code:`chart['STEPSTYPE']`) provides
+  access to all properties via uppercase names. (They're converted to uppercase
+  so you don't need to!)
+
+  - Both indexing and **.get()** (e.g. :code:`sim.get('TITLE')`,
+    :code:`chart.get('STEPSTYPE')`) are features of the underlying
+    :code:`OrderedDict`. You may prefer to use .get() to handle missing
+    properties without having to catch a :code:`KeyError`.
+
+* **Attributes** (e.g. :code:`sim.title`, :code:`chart.stepstype`) provide
+  access to *known properties* via lowercase names. Like .get(), missing
+  properties return None.
+
+All of these options have their benefits and drawbacks. Indexing is a quick &
+intuitive way to access any property; .get() can handle any property, even if
+it's missing; attributes, though limited to known properties, are implicitly
+spell-checked and arguably look the nicest in code. Both indexing and
+attributes can handle reads, writes, and deletes, and all methods are backed by
+the same data structure.
+
+What are the known properties?
+------------------------------
+
+First, all simfiles & charts have a shared subset of known properties,
+documented in :class:`.BaseSimfile` and :class:`.BaseChart`. These are exactly
+the known properties for :class:`.SMSimfile` and :class:`.SMChart`. The SSC
+format then adds additional known properties on top of the base set.
+
+Here is all of the relevant documentation:
+
+.. autoclass:: simfile.base.BaseSimfile
+    :noindex:
+.. autoclass:: simfile.base.BaseChart
+    :noindex:
+.. autoclass:: simfile.ssc.SSCSimfile
+    :noindex:
+.. autoclass:: simfile.ssc.SSCChart
+    :noindex:

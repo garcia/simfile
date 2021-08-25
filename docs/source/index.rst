@@ -49,7 +49,7 @@ Alternatively, you can use lowercase attributes for known properties:
    >>> robotix.displaybpm is robotix['DISPLAYBPM']
    True
 
-Charts are stored in a list under the :attr:`.charts` attribute and function similarly to simfile objects:
+Charts are stored in a list under the :code:`.charts` attribute and function similarly to simfile objects:
 
    >>> len(springtime.charts)
    9
@@ -67,6 +67,7 @@ Further reading
 
    about-simfiles
    reading-writing
+   known-properties
    timing-note-data
    changelog
    migrating
