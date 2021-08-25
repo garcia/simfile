@@ -4,6 +4,7 @@ import unittest
 
 from .helpers import *
 from .. import *
+from ... import open as open_simfile
 from ...timing import Beat
 
 
@@ -73,16 +74,22 @@ class TestNoteData(unittest.TestCase):
             self.assertEqual(note2.player, 1)
     
     def test_from_chart_and_iter_handle_notes2(self):
-        # turn testing_chart() into an SSC chart
-        chart = SSCChart.blank()
-        chart.update(testing_chart())
+        l9 = open_simfile('testdata/L9.ssc')
+        chart = l9.charts[0]
         
         notes = list(NoteData.from_chart(chart))
-        chart['NOTES2'] = chart.notes
-        del chart.notes
-        notes2 = list(NoteData.from_chart(chart))
-
-        self.assertEqual(notes, notes2)
+        self.assertListEqual([
+            Note(beat=Beat(191, 48), column=0, note_type=NoteType.KEYSOUND, keysound_index=6),
+            Note(beat=Beat(191, 48), column=1, note_type=NoteType.KEYSOUND, keysound_index=7),
+            Note(beat=Beat(191, 48), column=2, note_type=NoteType.KEYSOUND, keysound_index=8),
+            Note(beat=Beat(191, 48), column=3, note_type=NoteType.KEYSOUND, keysound_index=4),
+            Note(beat=Beat(192, 48), column=0, note_type=NoteType.KEYSOUND, keysound_index=1),
+            Note(beat=Beat(192, 48), column=1, note_type=NoteType.KEYSOUND, keysound_index=2),
+            Note(beat=Beat(192, 48), column=2, note_type=NoteType.KEYSOUND, keysound_index=3),
+            Note(beat=Beat(192, 48), column=3, note_type=NoteType.TAP, keysound_index=0),
+            Note(beat=Beat(193, 48), column=0, note_type=NoteType.KEYSOUND, keysound_index=5),
+            Note(beat=Beat(204, 48), column=1, note_type=NoteType.TAP, keysound_index=9),
+        ], notes[:10])
     
     def test_from_notes(self):
         note_data = NoteData.from_chart(testing_chart())

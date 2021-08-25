@@ -6,7 +6,7 @@ from functools import reduce, total_ordering
 from itertools import groupby
 from io import StringIO
 from math import gcd
-from typing import Iterator, List, NamedTuple, Tuple, Type
+from typing import Iterator, List, NamedTuple, Optional, Tuple, Type
 
 from ..timing import Beat
 from ..types import Chart
@@ -50,6 +50,12 @@ class Note(NamedTuple):
     """
     Only used in routine charts. The second player's note data will have
     this value set to 1.
+    """
+
+    keysound_index: Optional[int] = None
+    """
+    Only used in keysounded SSC charts. Notes followed by a number in square
+    brackets will have this value set to the bracketed number.
     """
 
     def _comparable(self) -> Tuple[int, Beat, int]:
@@ -173,6 +179,40 @@ class NoteData:
             chart['NOTES2'] = str(self)
         else:
             chart.notes = str(self)
+    
+    def _iter_measure(
+        self,
+        p: int,         # player index
+        m: int,         # measure index
+        measure: str,   # the measure, stripped of whitespace
+    ) -> Iterator[Note]:
+        lines = measure.splitlines()
+        subdivision = len(lines)
+        
+        for l, line in enumerate(lines):
+            line = line.strip()
+            # Check for keysound indexes (only relevant for keysounded charts)
+            keysound_indexes: List[Optional[int]] = [None] * self._columns
+            while '[' in line:
+                opening_bracket = line.index('[')
+                closing_bracket = line.index(']')
+                keysound_index = int(line[opening_bracket+1:closing_bracket])
+                # As long as there are no earlier brackets, the string index of
+                # the opening bracket is always 1 greater than its note column
+                keysound_indexes[opening_bracket-1] = keysound_index
+                # To maintain the invariant described above (and to enable the
+                # loop below), remove the bracket pair & number from the line
+                line = line[:opening_bracket] + line[closing_bracket+1:]
+
+            for c, column in enumerate(line):
+                if column != '0':
+                    yield Note(
+                        beat=Beat(m*4*subdivision + l*4, subdivision),
+                        column=c,
+                        note_type=NoteType(column),
+                        player=p,
+                        keysound_index=keysound_indexes[c],
+                    )
 
     def __iter__(self) -> Iterator[Note]:
         """
@@ -184,19 +224,10 @@ class NoteData:
         # "Routine" steps types (currently dance-routine and pump-routine) use
         # an & marker to separate the two players' steps. All other steps types
         # do not use an &, so `p` will only be 0 the vast majority of the time
+        # TODO: str.split is space-inefficient - consider alternatives
         for p, notedata in enumerate(self._notedata.split('&')):
             for m, measure in enumerate(notedata.split(',')):
-                lines = measure.strip().splitlines()
-                subdivision = len(lines)
-                for l, line in enumerate(lines):
-                    for c, column in enumerate(line.strip()):
-                        if column != '0':
-                            yield Note(
-                                beat=Beat(m*4*subdivision + l*4, subdivision),
-                                column=c,
-                                note_type=NoteType(column),
-                                player=p,
-                            )
+                yield from self._iter_measure(p, m, measure.strip())
     
     def __str__(self) -> str:
         """Returns the note data string."""
