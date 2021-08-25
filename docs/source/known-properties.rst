@@ -35,6 +35,68 @@ the same data structure.
 What are the known properties?
 ------------------------------
 
+These are the known properties for simfiles:
+
+================ ===================== ========= ==========
+Uppercase (key)  Lowercase (attribute) SMSimfile SSCSimfile 
+================ ===================== ========= ==========
+TITLE            title                 ✓         ✓
+SUBTITLE         subtitle              ✓         ✓
+ARTIST           artist                ✓         ✓
+TITLETRANSLIT    titletranslit         ✓         ✓
+SUBTITLETRANSLIT subtitletranslit      ✓         ✓
+ARTISTTRANSLIT   artisttranslit        ✓         ✓
+GENRE            genre                 ✓         ✓
+CREDIT           credit                ✓         ✓
+BANNER           banner                ✓         ✓
+BACKGROUND       background            ✓         ✓
+LYRICSPATH       lyricspath            ✓         ✓
+CDTITLE          cdtitle               ✓         ✓
+MUSIC            music                 ✓         ✓
+OFFSET           offset                ✓         ✓
+SAMPLESTART      samplestart           ✓         ✓
+SAMPLELENGTH     samplelength          ✓         ✓
+SELECTABLE       selectable            ✓         ✓
+DISPLAYBPM       displaybpm            ✓         ✓
+BPMS             bpms                  ✓         ✓
+STOPS            stops                 ✓         ✓
+BGCHANGES        bgchanges             ✓         ✓
+KEYSOUNDS        keysounds             ✓         ✓
+ATTACKS          attacks               ✓         ✓
+VERSION          version                         ✓
+ORIGIN           origin                          ✓
+PREVIEWVID       previewvid                      ✓
+JACKET           jacket                          ✓
+CDIMAGE          cdimage                         ✓
+DISCIMAGE        discimage                       ✓
+DELAYS           delays                          ✓
+WARPS            warps                           ✓
+TIMESIGNATURES   timesignatures                  ✓
+TICKCOUNTS       tickcounts                      ✓
+COMBOS           combos                          ✓
+SPEEDS           speeds                          ✓
+SCROLLS          scrolls                         ✓
+FAKES            fakes                           ✓
+LABELS           labels                          ✓
+================ ===================== ========= ==========
+
+And these are the known properties for charts:
+
+================ ===================== ======= ========
+Uppercase (key)  Lowercase (attribute) SMChart SSCChart
+================ ===================== ======= ========
+STEPSTYPE        stepstype             ✓       ✓
+DESCRIPTION      description           ✓       ✓
+DIFFICULTY       difficulty            ✓       ✓
+METER            meter                 ✓       ✓
+RADARVALUES      radarvalues           ✓       ✓
+NOTES            notes                 ✓       ✓
+CHARTNAME        chartname                     ✓
+CHARTSTYLE       chartstyle                    ✓
+CREDIT           credit                        ✓
+DISPLAYBPM       displaybpm                    ✓
+================ ===================== ======= ========
+
 First, all simfiles & charts have a shared subset of known properties,
 documented in :class:`.BaseSimfile` and :class:`.BaseChart`. These are exactly
 the known properties for :class:`.SMSimfile` and :class:`.SMChart`. The SSC
