@@ -83,8 +83,14 @@ class SSCChart(BaseChart):
 
     def serialize(self, file):
         file.write('#NOTEDATA:;\n')
+        notes_key = 'NOTES'
         for (key, value) in self.items():
+            # NOTES / NOTES2 must always be the last property in a chart
+            if key in ('NOTES', 'NOTES2'):
+                notes_key = key
+                continue
             file.write(f'#{key}:{value};\n')
+        file.write(f'#{notes_key}:{self[notes_key]};\n')
         file.write('\n')
 
 

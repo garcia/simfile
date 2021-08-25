@@ -84,6 +84,34 @@ class TestSSCChart(unittest.TestCase):
 
 
         self.assertEqual(expected, str(unit))
+    
+    def test_serialize_handles_added_properties(self):
+        unit = SSCChart.from_str(testing_chart())
+        # Move 'CREDIT' out of order in the note data
+        unit.move_to_end('CREDIT')
+        expected = (
+            '#NOTEDATA:;\n'
+            '#CHARTNAME:Brackets;\n'
+            '#STEPSTYPE:dance-single;\n'
+            '#DESCRIPTION:Brackets;\n'
+            '#CHARTSTYLE:;\n'
+            '#DIFFICULTY:Edit;\n'
+            '#METER:12;\n'
+            '#RADARVALUES:0.793,1.205,0.500,0.298,0.961;\n'
+            '#CREDIT:shala*;\n'
+            # NOTES should still come last
+            '#NOTES:\n'
+            '\n'
+            '0000\n'
+            '0000\n'
+            '0000\n'
+            '0000\n'
+            ';\n'
+            '\n'
+        )
+
+        self.assertEqual(expected, str(unit))
+
 
     def test_eq(self):
         variants = testing_charts()
