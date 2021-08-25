@@ -31,11 +31,11 @@ def testing_charts():
 
 
 def testing_simfile():
-    return (
-        '#TITLE:My Cool Song;\n'
-        '#ARTIST:My Cool Alias;\n'
-    ) + str(SMCharts(testing_charts()))
-    
+    sm = SMSimfile.blank()
+    sm.title = 'My Cool Song'
+    sm.artist = 'My Cool Alias'
+    sm.charts.extend(testing_charts())
+    return str(sm)
 
 
 class TestSMChart(unittest.TestCase):
@@ -131,8 +131,20 @@ class TestSMSimfile(unittest.TestCase):
         self.assertEqual('My Cool Song', unit.title)
         self.assertEqual('My Cool Alias', unit['ARTIST'])
         self.assertEqual('My Cool Alias', unit.artist)
-        self.assertNotIn('SUBTITLE', unit)
+        self.assertNotIn('NONEXISTENT', unit)
         self.assertEqual(7, len(unit.charts))
+    
+    def test_init_handles_freezes_property(self):
+        with_stops = SMSimfile(string=testing_simfile())
+        with_freezes_data = testing_simfile().replace(
+            '#STOPS:',
+            '#FREEZES:',
+        )
+        with_freezes = SMSimfile(string=with_freezes_data)
+        self.assertEqual(with_stops, with_freezes)
+        self.assertIn('STOPS', with_freezes)
+        self.assertNotIn('FREEZES', with_freezes)
+        
 
     def test_repr(self):
         unit = SMSimfile(string=testing_simfile())
