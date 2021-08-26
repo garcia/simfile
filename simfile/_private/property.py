@@ -1,4 +1,4 @@
-from typing import Any, MutableMapping, Optional, cast
+from typing import MutableMapping, Optional
 
 
 def item_property(name):
