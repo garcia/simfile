@@ -199,6 +199,11 @@ class SSCSimfile(BaseSimfile):
         partial_chart: Optional[SSCChart] = None
         for key, value in parser:
             key = key.upper()
+            
+            # Legacy alias (cf. NotesLoaderSSC.cpp)
+            if key == 'ANIMATIONS':
+                key = 'BGCHANGES'
+            
             if key == 'NOTEDATA':
                 if partial_chart is not None:
                     self._charts.append(partial_chart)

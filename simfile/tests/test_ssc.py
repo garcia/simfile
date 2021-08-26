@@ -40,13 +40,13 @@ def testing_charts():
 
 
 def testing_simfile():
-    return (
-        '#VERSION:0.83;\n'
-        '#TITLE:My Cool Song;\n'
-        '#ARTIST:My Cool Alias;\n'
-    ) + str(SSCCharts(testing_charts()))
+    ssc = SSCSimfile.blank()
+    ssc.version = '0.83'
+    ssc.title = 'My Cool Song'
+    ssc.artist = 'My Cool Alias'
+    ssc.charts.extend(testing_charts())
+    return str(ssc)
     
-
 
 class TestSSCChart(unittest.TestCase):
     
@@ -173,8 +173,19 @@ class TestSSCSimfile(unittest.TestCase):
         self.assertEqual('My Cool Song', unit.title)
         self.assertEqual('My Cool Alias', unit['ARTIST'])
         self.assertEqual('My Cool Alias', unit.artist)
-        self.assertNotIn('SUBTITLE', unit)
+        self.assertNotIn('NONEXISTENT', unit)
         self.assertEqual(10, len(unit.charts))
+    
+    def test_init_handles_animations_property(self):
+        with_bgchanges = SSCSimfile(string=testing_simfile())
+        with_animations_data = testing_simfile().replace(
+            '#BGCHANGES:',
+            '#ANIMATIONS:',
+        )
+        with_animations = SSCSimfile(string=with_animations_data)
+        self.assertEqual(with_bgchanges, with_animations)
+        self.assertIn('BGCHANGES', with_animations)
+        self.assertNotIn('ANIMATIONS', with_animations)
 
     def test_repr(self):
         unit = SSCSimfile(string=testing_simfile())

@@ -157,9 +157,12 @@ class SMSimfile(BaseSimfile):
             if key == 'NOTES':
                 self._charts.append(SMChart.from_str(value))
             else:
-                # Legacy alias for STOPS (cf. NotesLoaderSM.cpp)
+                # Legacy aliases (cf. NotesLoaderSM.cpp)
                 if key == 'FREEZES':
                     key = 'STOPS'
+                elif key == 'ANIMATIONS':
+                    key = 'BGCHANGES'
+                
                 self[key] = value
     
     @classmethod

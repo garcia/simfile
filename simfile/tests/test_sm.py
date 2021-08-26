@@ -144,6 +144,17 @@ class TestSMSimfile(unittest.TestCase):
         self.assertEqual(with_stops, with_freezes)
         self.assertIn('STOPS', with_freezes)
         self.assertNotIn('FREEZES', with_freezes)
+    
+    def test_init_handles_animations_property(self):
+        with_bgchanges = SMSimfile(string=testing_simfile())
+        with_animations_data = testing_simfile().replace(
+            '#BGCHANGES:',
+            '#ANIMATIONS:',
+        )
+        with_animations = SMSimfile(string=with_animations_data)
+        self.assertEqual(with_bgchanges, with_animations)
+        self.assertIn('BGCHANGES', with_animations)
+        self.assertNotIn('ANIMATIONS', with_animations)
         
 
     def test_repr(self):

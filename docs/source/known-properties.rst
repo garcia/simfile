@@ -64,7 +64,7 @@ SAMPLESTART      samplestart           ✓         ✓
 SAMPLELENGTH     samplelength          ✓         ✓
 DISPLAYBPM       displaybpm            ✓         ✓
 SELECTABLE       selectable            ✓         ✓
-BGCHANGES        bgchanges             ✓         ✓
+BGCHANGES        bgchanges             ✓ [2]_    ✓ [2]_
 FGCHANGES        fgchanges             ✓         ✓
 KEYSOUNDS        keysounds             ✓         ✓
 ATTACKS          attacks               ✓         ✓
@@ -82,8 +82,10 @@ FAKES            fakes                           ✓
 LABELS           labels                          ✓
 ================ ===================== ========= ==========
 
-.. [1] "FREEZES" is supported an alias for "STOPS". The property name is
+.. [1] SM files support "FREEZES" as an alias for "STOPS". The property name is
        converted during parsing, so no extra logic is required to handle this.
+.. [2] SM and SSC files support "ANIMATIONS" as an alias for "BGCHANGES". As
+       above, the property name is converted during parsing.
 
 And these are the known properties for charts:
 
