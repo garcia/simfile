@@ -87,11 +87,12 @@ class BaseSimfile(OrderedDict, Serializable, metaclass=ABCMeta):
 
     * Metadata: `title`, `subtitle`, `artist`, `titletranslit`,
       `subtitletranslit`, `artisttranslit`, `genre`, `credit`,
-      `samplestart`, `samplelength`, `selectable`, 
+      `samplestart`, `samplelength`, `selectable`, `instrumenttrack`
     * File paths: `banner`, `background`, `lyricspath`, `cdtitle`,
       `music`
-    * Gameplay events: `bgchanges`, `keysounds`, `attacks`
-    * Timing data: `offset`, `bpms`, `stops`
+    * Gameplay events: `bgchanges`, `fgchanges`, `keysounds`, `attacks`
+    * Timing data: `offset`, `bpms`, `stops`, `delays`,
+      `timesignatures`, `tickcounts`
 
     If a desired simfile property isn't in this list, it can still be
     accessed as a dict item.
@@ -114,13 +115,18 @@ class BaseSimfile(OrderedDict, Serializable, metaclass=ABCMeta):
     cdtitle = item_property('CDTITLE')
     music = item_property('MUSIC')
     offset = item_property('OFFSET')
-    samplestart = item_property('SAMPLESTART')
-    samplelength = item_property('SAMPLELENGTH')
-    selectable = item_property('SELECTABLE')
-    displaybpm = item_property('DISPLAYBPM')
     bpms = item_property('BPMS')
     stops = item_property('STOPS')
+    delays = item_property('DELAYS')
+    timesignatures = item_property('TIMESIGNATURES')
+    tickcounts = item_property('TICKCOUNTS')
+    instrumenttrack = item_property('INSTRUMENTTRACK')
+    samplestart = item_property('SAMPLESTART')
+    samplelength = item_property('SAMPLELENGTH')
+    displaybpm = item_property('DISPLAYBPM')
+    selectable = item_property('SELECTABLE')
     bgchanges = item_property('BGCHANGES')
+    fgchanges = item_property('FGCHANGES')
     keysounds = item_property('KEYSOUNDS')
     attacks = item_property('ATTACKS')
 

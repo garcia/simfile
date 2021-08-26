@@ -54,13 +54,18 @@ LYRICSPATH       lyricspath            ✓         ✓
 CDTITLE          cdtitle               ✓         ✓
 MUSIC            music                 ✓         ✓
 OFFSET           offset                ✓         ✓
+BPMS             bpms                  ✓         ✓
+STOPS            stops                 ✓ [1]_    ✓
+DELAYS           delays                ✓         ✓
+TIMESIGNATURES   timesignatures        ✓         ✓
+TICKCOUNTS       tickcounts            ✓         ✓
+INSTRUMENTTRACK  instrumenttrack       ✓         ✓
 SAMPLESTART      samplestart           ✓         ✓
 SAMPLELENGTH     samplelength          ✓         ✓
-SELECTABLE       selectable            ✓         ✓
 DISPLAYBPM       displaybpm            ✓         ✓
-BPMS             bpms                  ✓         ✓
-STOPS            stops                 ✓         ✓
+SELECTABLE       selectable            ✓         ✓
 BGCHANGES        bgchanges             ✓         ✓
+FGCHANGES        fgchanges             ✓         ✓
 KEYSOUNDS        keysounds             ✓         ✓
 ATTACKS          attacks               ✓         ✓
 VERSION          version                         ✓
@@ -69,16 +74,16 @@ PREVIEWVID       previewvid                      ✓
 JACKET           jacket                          ✓
 CDIMAGE          cdimage                         ✓
 DISCIMAGE        discimage                       ✓
-DELAYS           delays                          ✓
 WARPS            warps                           ✓
-TIMESIGNATURES   timesignatures                  ✓
-TICKCOUNTS       tickcounts                      ✓
 COMBOS           combos                          ✓
 SPEEDS           speeds                          ✓
 SCROLLS          scrolls                         ✓
 FAKES            fakes                           ✓
 LABELS           labels                          ✓
 ================ ===================== ========= ==========
+
+.. [1] "FREEZES" is supported an alias for "STOPS". The property name is
+       converted during parsing, so no extra logic is required to handle this.
 
 And these are the known properties for charts:
 
@@ -94,6 +99,20 @@ NOTES            notes                 ✓       ✓
 CHARTNAME        chartname                     ✓
 CHARTSTYLE       chartstyle                    ✓
 CREDIT           credit                        ✓
+MUSIC            music                         ✓
+BPMS             bpms                          ✓
+STOPS            stops                         ✓
+DELAYS           delays                        ✓
+TIMESIGNATURES   timesignatures                ✓
+TICKCOUNTS       tickcounts                    ✓
+COMBOS           combos                        ✓
+WARPS            warps                         ✓
+SPEEDS           speeds                        ✓
+SCROLLS          scrolls                       ✓
+FAKES            fakes                         ✓
+LABELS           labels                        ✓
+ATTACKS          attacks                       ✓
+OFFSET           offset                        ✓
 DISPLAYBPM       displaybpm                    ✓
 ================ ===================== ======= ========
 

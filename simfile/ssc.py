@@ -21,12 +21,32 @@ class SSCChart(BaseChart):
     as key-value pairs, so this class allows full modification of its
     backing OrderedDict.
 
-    Adds the following known properties, all categorized as metadata:
-    `chartname`, `chartstyle`, `credit`, and `displaybpm`.
+    Adds the following known properties:
+
+    * Metadata:  `chartname`, `chartstyle`, `credit`
+    * File paths: `music`
+    * Timing data: `bpms`, `stops`, `delays`, `timesignatures`,
+      `tickcounts`, `combos`, `warps`, `speeds`, `scrolls`, `fakes`,
+      `labels`, `offset`, `displaybpm`
+    * Gameplay events: `attacks`
     """
     chartname = item_property('CHARTNAME')
     chartstyle = item_property('CHARTSTYLE')
     credit = item_property('CREDIT')
+    music = item_property('MUSIC')
+    bpms = item_property('BPMS')
+    stops = item_property('STOPS')
+    delays = item_property('DELAYS')
+    timesignatures = item_property('TIMESIGNATURES')
+    tickcounts = item_property('TICKCOUNTS')
+    combos = item_property('COMBOS')
+    warps = item_property('WARPS')
+    speeds = item_property('SPEEDS')
+    scrolls = item_property('SCROLLS')
+    fakes = item_property('FAKES')
+    labels = item_property('LABELS')
+    attacks = item_property('ATTACKS')
+    offset = item_property('OFFSET')
     displaybpm = item_property('DISPLAYBPM')
 
     @classmethod
@@ -90,8 +110,7 @@ class SSCChart(BaseChart):
                 notes_key = key
                 continue
             file.write(f'#{key}:{value};\n')
-        file.write(f'#{notes_key}:{self[notes_key]};\n')
-        file.write('\n')
+        file.write(f'#{notes_key}:{self[notes_key]};\n\n')
 
 
 class SSCCharts(BaseCharts[SSCChart]):
@@ -109,11 +128,11 @@ class SSCSimfile(BaseSimfile):
     Adds the following known properties:
     
     * SSC version: `version`
-    * Metadata: `origin`, `timesignatures`, `labels`
-    * File paths: `previewvid`, `jacket`, `cdimage`, `discimage`
-    * Gameplay events: `tickcounts`, `combos`, `speeds`, `scrolls`,
-      `fakes` 
-    * Timing data: `delays`, `warps`
+    * Metadata: `origin`, `labels`, `musiclength`, `lastsecondhint`
+    * File paths: `previewvid`, `jacket`, `cdimage`, `discimage`,
+      `preview`
+    * Gameplay events: `combos`, `speeds`, `scrolls`, `fakes`
+    * Timing data: `warps`
     """
     _charts: SSCCharts
     
@@ -123,15 +142,15 @@ class SSCSimfile(BaseSimfile):
     jacket = item_property('JACKET')
     cdimage = item_property('CDIMAGE')
     discimage = item_property('DISCIMAGE')
-    delays = item_property('DELAYS')
+    preview = item_property('PREVIEW')
+    musiclength = item_property('MUSICLENGTH')
+    lastsecondhint = item_property('LASTSECONDHINT')
     warps = item_property('WARPS')
-    timesignatures = item_property('TIMESIGNATURES')
-    tickcounts = item_property('TICKCOUNTS')
+    labels = item_property('LABELS')
     combos = item_property('COMBOS')
     speeds = item_property('SPEEDS')
     scrolls = item_property('SCROLLS')
     fakes = item_property('FAKES')
-    labels = item_property('LABELS')
 
     @classmethod
     def blank(cls: Type['SSCSimfile']) -> 'SSCSimfile':
