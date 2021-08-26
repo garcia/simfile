@@ -3,6 +3,43 @@
 Changelog
 =========
 
+2.0.0-beta.6
+------------
+
+New features
+~~~~~~~~~~~~
+
+* :class:`.Note` now has a :attr:`.keysound_index` attribute that stores any
+  keysound index attached to the note. This only affects keysounded SSC charts;
+  in all other cases, this attribute should be None.
+* :ref:`known-properties` for simfiles and charts now exactly mirror those
+  supported by StepMania as intended:
+  
+  - Some SSC properties were converted to base properties, because they are
+    supported (though not exported by default) in SM files.
+  - Some new, non-default properties were added to both SM and SSC simfiles.
+  - Music & timing data properties were added to SSC charts.
+
+Bugfixes
+~~~~~~~~
+
+* Keysounded SSC charts now parse correctly.
+* Adding or reordering the properties of an SSC chart was previously liable to
+  break the chart in StepMania because the :code:`NOTES` / :code:`NOTES2`
+  property is expected to be the last property of the chart. This invariant is
+  now enforced during serialization, so SSC properties can be freely modified.
+
+These changes fix parsing of some real simfiles that StepMania accepts but
+**simfile** previously handled poorly:
+
+* SM simfiles may now use the :code:`FREEZES` property as an alias for
+  :code:`STOPS`. The property key will simply be changed to :code:`STOPS`
+  internally, mirroring how StepMania implements this alias in
+  `NotesLoaderSM.cpp <https://github.com/stepmania/stepmania/blob/3f64564dd7c62a2f3d9557c1bdb8475fd953abea/src/NotesLoaderSM.cpp#L215>`_.
+* SM and SSC simfiles may now use the :code:`ANIMATIONS` property as an alias
+  for :code:`BGCHANGES`. As above, the property key will simply be replaced
+  internally.
+
 2.0.0-beta.5
 ------------
 

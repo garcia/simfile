@@ -19,7 +19,7 @@ from .types import Simfile
 from ._private.tee_file import tee_file
 
 
-__version__ = '2.0.0-beta.5'
+__version__ = '2.0.0-beta.6'
 __all__ = [
     'load', 'loads', 'open', 'open_with_detected_encoding', 'CancelMutation',
     'mutate',
