@@ -9,6 +9,11 @@ Changelog
 New features
 ~~~~~~~~~~~~
 
+* :class:`.Note` now has a :attr:`.player` attribute to support routine charts,
+  which store the notes for each of the two players separately. This attribute
+  will always be 0 for non-routine charts, but will be incremented to 1 for the
+  second player's notes in routine charts. Notes are now ordered first by
+  player, then by beat and column.
 * :class:`.Note` now has a :attr:`.keysound_index` attribute that stores any
   keysound index attached to the note. This only affects keysounded SSC charts;
   in all other cases, this attribute should be None.
@@ -23,6 +28,7 @@ New features
 Bugfixes
 ~~~~~~~~
 
+* Routine charts now parse correctly.
 * Keysounded SSC charts now parse correctly.
 * Adding or reordering the properties of an SSC chart was previously liable to
   break the chart in StepMania because the :code:`NOTES` / :code:`NOTES2`
