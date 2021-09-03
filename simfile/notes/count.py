@@ -2,7 +2,6 @@ from typing import FrozenSet, Iterator
 
 from . import Note, NoteType
 from .group import GroupedNotes, SameBeatNotes, OrphanedNotes, group_notes
-from ..types import Chart
 
 
 __all__ = [
