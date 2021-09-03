@@ -6,7 +6,7 @@ from fractions import Fraction
 from numbers import Rational
 from typing import Optional, Type, NamedTuple
 
-from ._private.sscproxy import ssc_proxy
+from ._private.timingsource import timing_source
 from simfile._private.generic import ListWithRepr
 from simfile.types import Simfile, Chart
 
@@ -118,7 +118,7 @@ class BeatValues(ListWithRepr[BeatValue]):
     A list of :class:`BeatValue` instances.
     """
     @classmethod
-    def from_str(cls: Type['BeatValues'], string: str) -> 'BeatValues':
+    def from_str(cls: Type['BeatValues'], string: Optional[str]) -> 'BeatValues':
         """
         Parse the MSD value component of a timing data list.
 
@@ -128,7 +128,7 @@ class BeatValues(ListWithRepr[BeatValue]):
         """
         instance = cls()
         
-        if string.strip():
+        if string and string.strip():
             for row in string.split(','):
                 beat, value = row.strip().split('=')
                 instance.append(BeatValue(Beat.from_str(beat), Decimal(value)))
@@ -162,11 +162,8 @@ class TimingData(NamedTuple):
         Obtain timing data from a simfile and optionally an SSC chart.
 
         If both an :class:`.SSCSimfile` (version 0.7 or higher) and an
-        :class:`.SSCChart` are provided, any "split timing" defined in
-        the chart will take precedence over the simfile's timing data.
-        This is true regardless of the property's value; for example, a
-        blank `STOPS` value in the chart overrides a non-blank value
-        from the simfile.
+        :class:`.SSCChart` are provided, and if the chart contains any
+        timing fields, the chart will be used as the source of timing.
 
         Per StepMania's behavior, the offset defaults to zero if the
         simfile (and/or SSC chart) doesn't specify one. (However,
@@ -175,11 +172,12 @@ class TimingData(NamedTuple):
         existing simfiles, whereas the default offset does get used
         intentionally from time to time.)
         """
-        properties = ssc_proxy(simfile, chart)
+        simfile_or_chart = timing_source(simfile, chart)
         return TimingData(
-            bpms=BeatValues.from_str(properties['BPMS']),
-            stops=BeatValues.from_str(properties['STOPS']),
-            delays=BeatValues.from_str(properties['DELAYS']),
-            warps=BeatValues.from_str(properties['WARPS']),
-            offset=Decimal(properties['OFFSET'] or 0),
+            bpms=BeatValues.from_str(simfile_or_chart.bpms),
+            stops=BeatValues.from_str(simfile_or_chart.stops),
+            delays=BeatValues.from_str(simfile_or_chart.delays),
+            # SMSimfile has no warps property, so fall back to key access
+            warps=BeatValues.from_str(simfile_or_chart.get('WARPS')),
+            offset=Decimal(simfile_or_chart.offset or 0),
         )

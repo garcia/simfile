@@ -1,8 +1,8 @@
 from decimal import Decimal
-from simfile.timing import BeatValues
-from simfile.timing._private.sscproxy import ssc_proxy
 from typing import NamedTuple, Union
 
+from . import BeatValues
+from ._private.timingsource import timing_source
 from ..ssc import SSCChart
 from ..types import Simfile
 
@@ -73,10 +73,10 @@ def displaybpm(
     maximum will be identified and passed to :class:`RangeDisplayBPM`.
 
     If both an :class:`.SSCSimfile` (version 0.7 or higher) and an
-    :class:`.SSCChart` are provided, any "split timing" defined in the
-    chart will take precedence over the simfile's timing data.
+    :class:`.SSCChart` are provided, and if the chart contains any
+    timing fields, the chart will be used as the source of timing.
     """
-    properties = ssc_proxy(simfile, ssc_chart)
+    properties = timing_source(simfile, ssc_chart)
     if 'DISPLAYBPM' in properties:
         displaybpm_value = properties['DISPLAYBPM']
         if displaybpm_value == '*':
