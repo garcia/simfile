@@ -97,7 +97,7 @@ class SSCChart(BaseChart):
         
         first_key, _ = next(iterator)
         if first_key.upper() != 'NOTEDATA':
-            raise ValueError()
+            raise ValueError('expected NOTEDATA property first')
         
         for key, value in iterator:
             self[key] = value
