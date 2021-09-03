@@ -174,10 +174,10 @@ class BaseSimfile(OrderedDict, Serializable, metaclass=ABCMeta):
         Includes the class name, title, and subtitle.
         """
         rtn = '<' + self.__class__.__name__
-        if self.get('TITLE'):
-            rtn += ': ' + self['TITLE']
-            if self.get('SUBTITLE'):
-                rtn += ' ' + self['SUBTITLE']
+        if self.title:
+            rtn += ': ' + self.title
+            if self.subtitle:
+                rtn += ' ' + self.subtitle
         return rtn + '>'
 
     def __eq__(self, other):
