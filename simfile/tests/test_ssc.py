@@ -85,6 +85,16 @@ class TestSSCChart(unittest.TestCase):
 
         self.assertEqual(expected, str(unit))
     
+    def test_handles_notes2(self):
+        with_notes = SSCChart.from_str(testing_chart())
+        with_notes2 = SSCChart.from_str(
+            testing_chart().replace('#NOTES:', '#NOTES2:')
+        )
+        self.assertEqual(with_notes.notes, with_notes2.notes)
+        self.assertIn('NOTES2', with_notes2)
+        self.assertNotIn('NOTES', with_notes2)
+
+    
     def test_serialize_handles_added_properties(self):
         unit = SSCChart.from_str(testing_chart())
         # Move 'CREDIT' out of order in the note data
@@ -183,9 +193,9 @@ class TestSSCSimfile(unittest.TestCase):
             '#ANIMATIONS:',
         )
         with_animations = SSCSimfile(string=with_animations_data)
-        self.assertEqual(with_bgchanges, with_animations)
-        self.assertIn('BGCHANGES', with_animations)
-        self.assertNotIn('ANIMATIONS', with_animations)
+        self.assertEqual(with_bgchanges.bgchanges, with_animations.bgchanges)
+        self.assertNotIn('BGCHANGES', with_animations)
+        self.assertIn('ANIMATIONS', with_animations)
 
     def test_repr(self):
         unit = SSCSimfile(string=testing_simfile())

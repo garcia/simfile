@@ -167,18 +167,10 @@ class NoteData:
         """
         Get note data from a chart.
         """
-        if 'NOTES2' in chart:
-            return cls(chart['NOTES2'])
-        else:
-            return cls(chart.notes)
+        return cls(chart.notes)
 
     def update_chart(self, chart: Chart) -> None:
-        # SSC charts with keysounds use a separate "NOTES2" property
-        # which should be mutually exclusive with "NOTES"
-        if 'NOTES2' in chart:
-            chart['NOTES2'] = str(self)
-        else:
-            chart.notes = str(self)
+        chart.notes = str(self)
     
     def _iter_measure(
         self,

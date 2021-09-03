@@ -125,7 +125,7 @@ class BaseSimfile(OrderedDict, Serializable, metaclass=ABCMeta):
     samplelength = item_property('SAMPLELENGTH')
     displaybpm = item_property('DISPLAYBPM')
     selectable = item_property('SELECTABLE')
-    bgchanges = item_property('BGCHANGES')
+    bgchanges = item_property('BGCHANGES', alias='ANIMATIONS')
     fgchanges = item_property('FGCHANGES')
     keysounds = item_property('KEYSOUNDS')
     attacks = item_property('ATTACKS')

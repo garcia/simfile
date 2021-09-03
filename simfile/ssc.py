@@ -49,6 +49,9 @@ class SSCChart(BaseChart):
     offset = item_property('OFFSET')
     displaybpm = item_property('DISPLAYBPM')
 
+    # "NOTES2" alias only supported by SSC files
+    notes = item_property('NOTES', alias='NOTES2')
+
     @classmethod
     def from_str(
         cls: Type['SSCChart'],
@@ -98,15 +101,15 @@ class SSCChart(BaseChart):
         
         for key, value in iterator:
             self[key] = value
-            if key.upper() in ('NOTES', 'NOTES2'):
+            if value is self.notes:
                 break
 
     def serialize(self, file):
         file.write('#NOTEDATA:;\n')
         notes_key = 'NOTES'
         for (key, value) in self.items():
-            # NOTES / NOTES2 must always be the last property in a chart
-            if key in ('NOTES', 'NOTES2'):
+            # notes must always be the last property in a chart
+            if value is self.notes:
                 notes_key = key
                 continue
             file.write(f'#{key}:{value};\n')
@@ -198,12 +201,7 @@ class SSCSimfile(BaseSimfile):
         self._charts = SSCCharts()
         partial_chart: Optional[SSCChart] = None
         for key, value in parser:
-            key = key.upper()
-            
-            # Legacy alias (cf. NotesLoaderSSC.cpp)
-            if key == 'ANIMATIONS':
-                key = 'BGCHANGES'
-            
+            key = key.upper()            
             if key == 'NOTEDATA':
                 if partial_chart is not None:
                     self._charts.append(partial_chart)

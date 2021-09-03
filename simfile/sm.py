@@ -1,6 +1,7 @@
 """
 Simfile & chart classes for SM files.
 """
+from simfile._private.property import item_property
 from typing import Iterator, List, Optional, Tuple, Type
 
 from .base import BaseChart, BaseCharts, BaseSimfile, MSD_ITERATOR
@@ -150,19 +151,16 @@ class SMSimfile(BaseSimfile):
     """
     _charts: SMCharts
 
+    # "FREEZES" alias only supported by SM files
+    stops = item_property('STOPS', alias='FREEZES')
+
     def _parse(self, parser: MSD_ITERATOR):
         self._charts = SMCharts()
         for (key, value) in parser:
             key = key.upper()
             if key == 'NOTES':
                 self._charts.append(SMChart.from_str(value))
-            else:
-                # Legacy aliases (cf. NotesLoaderSM.cpp)
-                if key == 'FREEZES':
-                    key = 'STOPS'
-                elif key == 'ANIMATIONS':
-                    key = 'BGCHANGES'
-                
+            else:                
                 self[key] = value
     
     @classmethod

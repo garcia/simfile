@@ -1,4 +1,3 @@
-from simfile.ssc import SSCChart
 from textwrap import indent
 import unittest
 
@@ -90,6 +89,23 @@ class TestNoteData(unittest.TestCase):
             Note(beat=Beat(193, 48), column=0, note_type=NoteType.KEYSOUND, keysound_index=5),
             Note(beat=Beat(204, 48), column=1, note_type=NoteType.TAP, keysound_index=9),
         ], notes[:10])
+    
+    def test_update_chart_handles_notes2(self):
+        l9 = open_simfile('testdata/L9.ssc')
+        chart = l9.charts[0]
+        notedata = NoteData.from_chart(chart)
+        modified_notedata: NoteData = NoteData.from_notes(
+            (
+                Note(beat=n.beat, column=3-n.column, note_type=n.note_type)
+                for n in notedata
+            ),
+            notedata.columns,
+        )
+        modified_notedata.update_chart(chart)
+
+        self.assertEqual(chart.notes, str(modified_notedata))
+        self.assertIn('NOTES2', chart)
+        self.assertNotIn('NOTES', chart)
     
     def test_from_notes(self):
         note_data = NoteData.from_chart(testing_chart())
