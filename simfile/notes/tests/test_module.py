@@ -123,3 +123,32 @@ class TestNoteData(unittest.TestCase):
         
         self.assertEqual('1000\n0100\n0010\n0001\n' * 3, str(note_data))
         self.assertEqual(notes, notes_from_note_data)
+    
+    def test_from_notes_handles_multiple_players(self):
+        notes = [
+            Note(beat=Beat(n,3), column=n%4, note_type=NoteType.TAP, player=p)
+            for p in range(2) for n in range(12)
+        ]
+        note_data = NoteData.from_notes(notes, 4)
+        notes_from_note_data = list(note_data)
+        expected_player_note_data = '1000\n0100\n0010\n0001\n' * 3
+        expected_note_data = f'{expected_player_note_data}&\n{expected_player_note_data}'
+
+        self.assertEqual(expected_note_data, str(note_data))
+        self.assertEqual(notes, notes_from_note_data)
+    
+    def test_from_notes_handles_second_player_only(self):
+        notes = [
+            Note(beat=Beat(n,3), column=n%4, note_type=NoteType.TAP, player=1)
+            for n in range(12)
+        ]
+        note_data = NoteData.from_notes(notes, 4)
+        notes_from_note_data = list(note_data)
+        expected_note_data = (
+            '0000\n0000\n0000\n0000\n' +
+            '&\n' +
+            '1000\n0100\n0010\n0001\n' * 3
+        )
+        
+        self.assertEqual(expected_note_data, str(note_data))
+        self.assertEqual(notes, notes_from_note_data)

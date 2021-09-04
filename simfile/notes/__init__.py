@@ -104,7 +104,7 @@ class NoteData:
 
         This method assumes the following preconditions:
 
-        * The input notes are sorted chronologically (ascending beats).
+        * The input notes are naturally sorted.
         * Every note's beat is nonnegative.
         * Every note's column is nonnegative and less than `columns`.
 
@@ -146,23 +146,35 @@ class NoteData:
             for _ in range(last_row+1, q*4):
                 push_row()
         
-        # group notes by measure
-        last_measure = -1
-        for m, measure in groupby(notes, lambda n: n.beat // 4):
-            # handling the comma at the start of the loop instead of the end
-            # avoids needing to know when we've reached the last measure
-            if last_measure > -1:
-                notedata.write(',\n')
-            # account for any skipped measures
-            for _ in range(last_measure+1, m):
+        # group notes by player (for routine charts)
+        last_player = -1
+        for p, player_notes in groupby(notes, lambda n: n.player):
+            if p > last_player:
+                if last_player > -1:
+                    notedata.write('&\n')
+                # account for any skipped players
+                for _ in range(last_player+1, p):
+                    push_measure()
+                    notedata.write('&\n')
+                last_player = p
+            
+            # group notes by measure
+            last_measure = -1
+            for m, measure in groupby(player_notes, lambda n: n.beat // 4):
+                # handling the comma at the start of the loop instead of the end
+                # avoids needing to know when we've reached the last measure
+                if last_measure > -1:
+                    notedata.write(',\n')
+                # account for any skipped measures
+                for _ in range(last_measure+1, m):
+                    push_measure()
+                    notedata.write(',\n')
+                push_measure(list(measure))
+                last_measure = m
+            
+            # if there were no notes at all, write a blank measure
+            if last_measure == -1:
                 push_measure()
-                notedata.write(',\n')
-            push_measure(list(measure))
-            last_measure = m
-        
-        # if there were no notes at all, write a blank measure
-        if last_measure == -1:
-            push_measure()
         
         return cls(notedata.getvalue())
 
