@@ -119,10 +119,12 @@ class NoteData:
 
         # write a row and trailing newline to the notedata
         def push_row(row: List[Note] = []):
-            chars = ['0'] * columns
+            note_strings = ['0'] * columns
             for note in row:
-                chars[note.column] = str(note.note_type)
-            notedata.write(''.join(chars))
+                note_strings[note.column] = str(note.note_type)
+                if note.keysound_index is not None:
+                    note_strings[note.column] += f'[{note.keysound_index}]'
+            notedata.write(''.join(note_strings))
             notedata.write('\n')
 
         # write a measure to the notedata (no commas or newlines of its own)

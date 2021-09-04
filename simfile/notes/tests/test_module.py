@@ -152,3 +152,21 @@ class TestNoteData(unittest.TestCase):
         
         self.assertEqual(expected_note_data, str(note_data))
         self.assertEqual(notes, notes_from_note_data)
+    
+    def test_from_notes_handles_keysound_indices(self):
+        notes = [
+            Note(beat=Beat(1), column=1, note_type=NoteType.KEYSOUND, keysound_index=0)
+        ] + [
+            Note(beat=Beat(4), column=n, note_type=NoteType.TAP, keysound_index=n*5)
+            for n in range(4)
+        ]
+        note_data = NoteData.from_notes(notes, 4)
+        notes_from_note_data = list(note_data)
+        expected_note_data = (
+            '0000\n0K[0]00\n0000\n0000\n'
+            ',\n'
+            '1[0]1[5]1[10]1[15]\n0000\n0000\n0000\n'
+        )
+
+        self.assertEqual(expected_note_data, str(note_data))
+        self.assertEqual(notes, notes_from_note_data)
