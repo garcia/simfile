@@ -28,6 +28,10 @@ class NoteType(Enum):
     KEYSOUND = 'K'
     LIFT = 'L'
     MINE = 'M'
+
+    def __str__(self):
+        """Returns the character value of the note type."""
+        return self.value
     
     def __repr__(self):
         return f'{self.__class__.__name__}.{self.name}'
@@ -117,7 +121,7 @@ class NoteData:
         def push_row(row: List[Note] = []):
             chars = ['0'] * columns
             for note in row:
-                chars[note.column] = note.note_type.value
+                chars[note.column] = str(note.note_type)
             notedata.write(''.join(chars))
             notedata.write('\n')
 
