@@ -23,7 +23,18 @@ class NoteWithTail(NamedTuple):
     column: int
     note_type: NoteType
     tail_beat: Beat
+    
     player: int = 0
+    """
+    Only used in routine charts. The second player's note data will have
+    this value set to 1.
+    """
+
+    keysound_index: Optional[int] = None
+    """
+    Only used in keysounded SSC charts. Notes followed by a number in square
+    brackets will have this value set to the bracketed number.
+    """
 
     # Much like the fields above, this method is lifted from `Note` because
     # NamedTuple doesn't play nice with inheritance
@@ -136,6 +147,7 @@ def group_notes(
             note_type=head.note_type,
             tail_beat=tail.beat,
             player=head.player,
+            keysound_index=head.keysound_index,
         )
     
     def join_head_to_tail(
@@ -267,11 +279,15 @@ def ungroup_notes(
                     beat=note.beat,
                     column=note.column,
                     note_type=note.note_type,
+                    player=note.player,
+                    keysound_index=note.keysound_index,
                 ))
                 heappush(pending_tails, Note(
                     beat=note.tail_beat,
                     column=note.column,
                     note_type=NoteType.TAIL,
+                    player=note.player,
+                    keysound_index=note.keysound_index,
                 ))
     
     # Yield any remaining pending tails
