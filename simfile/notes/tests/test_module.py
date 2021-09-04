@@ -7,6 +7,63 @@ from ... import open as open_simfile
 from ...timing import Beat
 
 
+class TestNote(unittest.TestCase):
+    def test_repr(self):
+        self.assertEqual(
+            'Note(beat=Beat(4.5), column=0, note_type=NoteType.TAP)',
+            repr(Note(
+                beat=Beat(4.5),
+                column=0,
+                note_type=NoteType.TAP,
+            )),
+        )
+        self.assertEqual(
+            'Note(beat=Beat(100), column=1, note_type=NoteType.KEYSOUND, keysound_index=3)',
+            repr(Note(
+                beat=Beat(100),
+                column=1,
+                note_type=NoteType.KEYSOUND,
+                keysound_index=3,
+            )),
+        )
+        self.assertEqual(
+            'Note(beat=Beat(0.021), column=2, note_type=NoteType.HOLD_HEAD, player=1)',
+            repr(Note(
+                beat=Beat(1, 48),
+                column=2,
+                note_type=NoteType.HOLD_HEAD,
+                player=1,
+            )),
+        )
+        self.assertEqual(
+            'Note(beat=Beat(10.083), column=3, note_type=NoteType.TAIL, player=1, keysound_index=99)',
+            repr(Note(
+                beat=Beat(121, 12),
+                column=3,
+                note_type=NoteType.TAIL,
+                player=1,
+                keysound_index=99,
+            )),
+        )
+    
+    def test_str(self):
+        self.assertEqual('1', str(Note(
+            beat=Beat(0),
+            column=0,
+            note_type=NoteType.TAP,
+        )))
+        self.assertEqual('K', str(Note(
+            beat=Beat(5),
+            column=5,
+            note_type=NoteType.KEYSOUND,
+        )))
+        self.assertEqual('K[99]', str(Note(
+            beat=Beat(10),
+            column=10,
+            note_type=NoteType.KEYSOUND,
+            keysound_index=99,
+        )))
+
 class TestNoteData(unittest.TestCase):
     def test_iter(self):
         notes = list(NoteData.from_chart(testing_chart()))

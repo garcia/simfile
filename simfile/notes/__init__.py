@@ -68,6 +68,28 @@ class Note(NamedTuple):
     def __lt__(self, other) -> bool:
         # bool(...) wrapper to satisfy mypy
         return bool(self._comparable() < other._comparable())
+    
+    def __str__(self):
+        '''
+        Returns the note string as it would appear in note data.
+
+        Includes the note type's character, followed by a bracketed keysound
+        index if present.
+        '''
+        note_string = str(self.note_type)
+        if self.keysound_index is not None:
+            note_string += f'[{self.keysound_index}]'
+        return note_string
+    
+    def __repr__(self):
+        return f'{self.__class__.__name__}(' + ', '.join(filter(None, (
+            f'beat={repr(self.beat)}',
+            f'column={self.column}',
+            f'note_type={repr(self.note_type)}',
+            f'player={self.player}' if self.player != 0 else None,
+            f'keysound_index={self.keysound_index}' if self.keysound_index is not None else None,
+        ))) + ')'
+            
 
 
 class NoteData:
@@ -121,9 +143,7 @@ class NoteData:
         def push_row(row: List[Note] = []):
             note_strings = ['0'] * columns
             for note in row:
-                note_strings[note.column] = str(note.note_type)
-                if note.keysound_index is not None:
-                    note_strings[note.column] += f'[{note.keysound_index}]'
+                note_strings[note.column] = str(note)
             notedata.write(''.join(note_strings))
             notedata.write('\n')
 
