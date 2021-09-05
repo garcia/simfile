@@ -82,25 +82,28 @@ INVALID_PROPERTIES: Dict[Type, Dict[PropertyType, List[str]]] = {
 class InvalidPropertyBehavior(Enum):
     """
     How to handle an invalid property during conversion.
+    """
+    COPY_ANYWAY = 1
+    """Copy the property regardless of the destination type."""
 
-    If a known property can't be converted to the destination type...
+    IGNORE = 2
+    """Do not copy the property."""
 
-    * `COPY_ANYWAY`: copy the property regardless
-    * `IGNORE`: do not copy the property
-    * `ERROR_UNLESS_DEFAULT`: raise :class:`InvalidPropertyException`
-      unless its value is the default value
-    * `ERROR`: raise :class:`InvalidPropertyException` regardless of
-      the property's value
+    ERROR_UNLESS_DEFAULT = 3
+    """
+    Raise :class:`.InvalidPropertyException` unless the property's value is
+    the default for its field.
 
     The "default value" for most properties is an empty string. If the
     destination type's :code:`.blank` output has a non-empty value for
     the property, that value is considered the default instead (except
     for `BPMS`).
     """
-    COPY_ANYWAY = 1
-    IGNORE = 2
-    ERROR_UNLESS_DEFAULT = 3
+
     ERROR = 4
+    """
+    Raise :class:`.InvalidPropertyException` regardless of the value.
+    """
 
 
 InvalidPropertyBehaviorMapping = Dict[PropertyType, InvalidPropertyBehavior]
@@ -118,9 +121,7 @@ INVALID_PROPERTY_BEHAVIORS: InvalidPropertyBehaviorMapping = {
 class InvalidPropertyException(Exception):
     """
     Raised by conversion functions if a property cannot be converted.
-    """
-    # TODO: human-friendly string
-    pass
+    """ 
 
 
 _CONVERT_TYPE = TypeVar(
@@ -148,8 +149,7 @@ def _should_copy_property(
                 if value.strip() == DEFAULT_PROPERTIES[property]:
                     return False
             raise InvalidPropertyException(
-                invalid_property,
-                property,
+                f"cannot convert {repr(property)} (value: {repr(value)})"
             )
     return True
 
@@ -191,20 +191,12 @@ def _convert(
     for _chart in simfile.charts:
         chart: Chart = _chart # typing workaround
         output_chart = deepcopy(chart_template) or output_chart_type.blank()
-        if isinstance(chart, SMSimfile):
-            output_chart.stepstype = chart.stepstype
-            output_chart.description = chart.description
-            output_chart.difficulty = chart.difficulty
-            output_chart.meter = chart.meter
-            output_chart.radarvalues = chart.radarvalues
-            output_chart.notes = chart.notes
-        else:
-            _copy_properties(
-                source=chart,
-                output=output_chart,
-                output_type=output_chart_type,
-                invalid_property_behaviors=invalid_property_behaviors,
-            )
+        _copy_properties(
+            source=chart,
+            output=output_chart,
+            output_type=output_chart_type,
+            invalid_property_behaviors=invalid_property_behaviors,
+        )
         output_simfile.charts.append(output_chart)
     
     return output_simfile
