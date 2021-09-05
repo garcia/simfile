@@ -23,12 +23,12 @@ class SSCChart(BaseChart):
 
     Adds the following known properties:
 
-    * Metadata:  `chartname`, `chartstyle`, `credit`
+    * Metadata:  `chartname`, `chartstyle`, `credit`, `timesignatures`
     * File paths: `music`
-    * Timing data: `bpms`, `stops`, `delays`, `timesignatures`,
-      `tickcounts`, `combos`, `warps`, `speeds`, `scrolls`, `fakes`,
+    * Gameplay events: `tickcounts`, `combos`, `speeds`, `scrolls`,
+      `fakes`, `attacks`
+    * Timing data: `bpms`, `stops`, `delays`, `warps`,
       `labels`, `offset`, `displaybpm`
-    * Gameplay events: `attacks`
     """
     chartname = item_property('CHARTNAME')
     chartstyle = item_property('CHARTSTYLE')

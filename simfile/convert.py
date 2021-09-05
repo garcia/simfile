@@ -11,7 +11,7 @@ from .ssc import SSCChart, SSCSimfile
 
 
 __all__ = [
-    'KnownProperty', 'InvalidPropertyBehavior', 'InvalidPropertyException',
+    'PropertyType', 'InvalidPropertyBehavior', 'InvalidPropertyException',
     'sm_to_ssc', 'ssc_to_sm',
 ]
 
@@ -26,41 +26,53 @@ DEFAULT_PROPERTIES: DefaultDict[str, str] = defaultdict(lambda: '', {
 })
 
 
-class KnownProperty(Enum):
+class PropertyType(Enum):
     """
     Types of known properties.
 
-    These mirror the lists of known properties documented in
+    These roughly mirror the lists of known properties documented in
     :class:`.BaseSimfile` and :class:`.SSCSimfile`.
     """
     SSC_VERSION = 1
+    """The SSC version tag."""
+
     METADATA = 2
+    """Properties that don't affect the gameplay."""
+
     FILE_PATH = 3
+    """Properties that reference file paths (e.g. images)."""
+    
     GAMEPLAY_EVENT = 4
+    """Properties that affect gameplay in some fashion."""
+
     TIMING_DATA = 5
+    """Properties that influence when notes must be hit."""
 
 
-INVALID_PROPERTIES: Dict[Type, Dict[KnownProperty, List[str]]] = {
+INVALID_PROPERTIES: Dict[Type, Dict[PropertyType, List[str]]] = {
     SMSimfile: {
-        KnownProperty.SSC_VERSION: ['VERSION'],
-        KnownProperty.METADATA: ['ORIGIN', 'TIMESIGNATURES', 'LABELS'],
-        KnownProperty.FILE_PATH: [
-            'PREVIEWVID', 'JACKET', 'CDIMAGE', 'DISCIMAGE',
+        PropertyType.SSC_VERSION: ['VERSION'],
+        PropertyType.METADATA: [
+            'ORIGIN', 'TIMESIGNATURES', 'LABELS', 'MUSICLENGTH',
+            'LASTSECONDHINT',
         ],
-        KnownProperty.GAMEPLAY_EVENT: [
-            'TICKCOUNTS', 'COMBOS', 'SPEEDS', 'SCROLLS', 'FAKES',
+        PropertyType.FILE_PATH: [
+            'PREVIEWVID', 'JACKET', 'CDIMAGE', 'DISCIMAGE', 'PREVIEW',
         ],
-        KnownProperty.TIMING_DATA: ['DELAYS', 'WARPS'],
+        PropertyType.GAMEPLAY_EVENT: [
+            'COMBOS', 'SPEEDS', 'SCROLLS', 'FAKES',
+        ],
+        PropertyType.TIMING_DATA: ['WARPS'],
     },
     SMChart: {
-        KnownProperty.METADATA: [
+        PropertyType.METADATA: [
             'CHARTNAME', 'CHARTSTYLE', 'CREDIT', 'DISPLAYBPM',
             'TIMESIGNATURES', 'LABELS',
         ],
-        KnownProperty.GAMEPLAY_EVENT: [
-            'TICKCOUNTS', 'COMBOS', 'SPEEDS', 'SCROLLS', 'FAKES',
+        PropertyType.GAMEPLAY_EVENT: [
+            'TICKCOUNTS', 'COMBOS', 'SPEEDS', 'SCROLLS', 'FAKES', 'ATTACKS',
         ],
-        KnownProperty.TIMING_DATA: [
+        PropertyType.TIMING_DATA: [
             'OFFSET', 'BPMS', 'STOPS', 'DELAYS', 'WARPS',
         ],
     },
@@ -91,15 +103,15 @@ class InvalidPropertyBehavior(Enum):
     ERROR = 4
 
 
-InvalidPropertyBehaviorMapping = Dict[KnownProperty, InvalidPropertyBehavior]
+InvalidPropertyBehaviorMapping = Dict[PropertyType, InvalidPropertyBehavior]
 
 
 INVALID_PROPERTY_BEHAVIORS: InvalidPropertyBehaviorMapping = {
-    KnownProperty.SSC_VERSION: InvalidPropertyBehavior.IGNORE,
-    KnownProperty.METADATA: InvalidPropertyBehavior.IGNORE,
-    KnownProperty.FILE_PATH: InvalidPropertyBehavior.IGNORE,
-    KnownProperty.GAMEPLAY_EVENT: InvalidPropertyBehavior.ERROR_UNLESS_DEFAULT,
-    KnownProperty.TIMING_DATA: InvalidPropertyBehavior.ERROR,
+    PropertyType.SSC_VERSION: InvalidPropertyBehavior.IGNORE,
+    PropertyType.METADATA: InvalidPropertyBehavior.IGNORE,
+    PropertyType.FILE_PATH: InvalidPropertyBehavior.IGNORE,
+    PropertyType.GAMEPLAY_EVENT: InvalidPropertyBehavior.ERROR_UNLESS_DEFAULT,
+    PropertyType.TIMING_DATA: InvalidPropertyBehavior.ERROR_UNLESS_DEFAULT,
 }
 
 
@@ -121,7 +133,7 @@ _CONVERT_CHART = TypeVar('_CONVERT_CHART', SMChart, SSCChart)
 def _should_copy_property(
     property: str,
     value: str,
-    invalid_properties: Dict[KnownProperty, List[str]],
+    invalid_properties: Dict[PropertyType, List[str]],
     invalid_property_behaviors: InvalidPropertyBehaviorMapping
 ) -> bool:
     for invalid_property, properties in invalid_properties.items():
@@ -248,8 +260,8 @@ def ssc_to_sm(
 
     These behaviors can be overridden by supplying the
     `invalid_property_behaviors` parameter, which maps
-    :class:`KnownProperty` to :class:`InvalidPropertyBehavior` values.
-    This mapping need not cover every :class:`KnownProperty`; any
+    :class:`PropertyType` to :class:`InvalidPropertyBehavior` values.
+    This mapping need not cover every :class:`PropertyType`; any
     missing values will fall back to the default mapping described
     above.
     """

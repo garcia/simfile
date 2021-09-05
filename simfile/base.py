@@ -87,12 +87,13 @@ class BaseSimfile(OrderedDict, Serializable, metaclass=ABCMeta):
 
     * Metadata: `title`, `subtitle`, `artist`, `titletranslit`,
       `subtitletranslit`, `artisttranslit`, `genre`, `credit`,
-      `samplestart`, `samplelength`, `selectable`, `instrumenttrack`
+      `samplestart`, `samplelength`, `selectable`, `instrumenttrack`,
+      `timesignatures`
     * File paths: `banner`, `background`, `lyricspath`, `cdtitle`,
       `music`
-    * Gameplay events: `bgchanges`, `fgchanges`, `keysounds`, `attacks`
-    * Timing data: `offset`, `bpms`, `stops`, `delays`,
-      `timesignatures`, `tickcounts`
+    * Gameplay events: `bgchanges`, `fgchanges`, `keysounds`, `attacks`,
+      `tickcounts`
+    * Timing data: `offset`, `bpms`, `stops`, `delays`
 
     If a desired simfile property isn't in this list, it can still be
     accessed as a dict item.
