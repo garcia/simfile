@@ -113,6 +113,7 @@ class NoteData:
         first_comma = notes.find(',')
         first_measure = notes[:first_comma] if first_comma > 0 else notes
         first_line = first_measure.strip().splitlines()[0].strip()
+        first_line = NoteData._extract_keysound_indices(first_line)
         return len(first_line)
     
     @classmethod
@@ -216,6 +217,26 @@ class NoteData:
         """
         chart.notes = str(self)
     
+    # Returns the line without keysound indices and optionally populates the
+    # provided list with the indices
+    @staticmethod
+    def _extract_keysound_indices(
+        line: str,
+        keysound_indices: Optional[List[Optional[int]]] = None,
+    ) -> str:
+        while '[' in line:
+            opening_bracket = line.index('[')
+            closing_bracket = line.index(']')
+            keysound_index = int(line[opening_bracket+1:closing_bracket])
+            # As long as there are no earlier brackets, the string index of
+            # the opening bracket is always 1 greater than its note column
+            if keysound_indices is not None:
+                keysound_indices[opening_bracket-1] = keysound_index
+            # To maintain the invariant described above (and to construct
+            # the un-keysounded line), remove the bracket pair & number
+            line = line[:opening_bracket] + line[closing_bracket+1:]
+        return line
+    
     def _iter_measure(
         self,
         p: int,         # player index
@@ -227,18 +248,8 @@ class NoteData:
         
         for l, line in enumerate(lines):
             line = line.strip()
-            # Check for keysound indexes (only relevant for keysounded charts)
-            keysound_indexes: List[Optional[int]] = [None] * self._columns
-            while '[' in line:
-                opening_bracket = line.index('[')
-                closing_bracket = line.index(']')
-                keysound_index = int(line[opening_bracket+1:closing_bracket])
-                # As long as there are no earlier brackets, the string index of
-                # the opening bracket is always 1 greater than its note column
-                keysound_indexes[opening_bracket-1] = keysound_index
-                # To maintain the invariant described above (and to enable the
-                # loop below), remove the bracket pair & number from the line
-                line = line[:opening_bracket] + line[closing_bracket+1:]
+            keysound_indices: List[Optional[int]] = [None] * self._columns
+            line = NoteData._extract_keysound_indices(line, keysound_indices)
 
             for c, column in enumerate(line):
                 if column != '0':
@@ -247,7 +258,7 @@ class NoteData:
                         column=c,
                         note_type=NoteType(column),
                         player=p,
-                        keysound_index=keysound_indexes[c],
+                        keysound_index=keysound_indices[c],
                     )
 
     def __iter__(self) -> Iterator[Note]:

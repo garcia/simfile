@@ -65,6 +65,20 @@ class TestNote(unittest.TestCase):
         )))
 
 class TestNoteData(unittest.TestCase):
+    def test_columns(self):
+        notes_4p = "1000\n0001\n0100\n0010\n";
+        note_data_4p = NoteData(notes_4p)
+        self.assertEqual(4, note_data_4p.columns)
+
+        notes_8p = "00010000\n00001000\n00100000\n00000100\n";
+        note_data_8p = NoteData(notes_8p)
+        self.assertEqual(8, note_data_8p.columns)
+    
+    def test_columns_handles_keysounds(self):
+        notes_keysounded = "K[1]000\n0000\n0000\n0000\n";
+        note_data_keysounded = NoteData(notes_keysounded)
+        self.assertEqual(4, note_data_keysounded.columns)
+
     def test_iter(self):
         notes = list(NoteData.from_chart(testing_chart()))
         self.assertListEqual([
