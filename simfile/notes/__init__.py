@@ -6,7 +6,8 @@ from functools import reduce, total_ordering
 from itertools import groupby
 from io import StringIO
 from math import gcd
-from typing import Iterator, List, NamedTuple, Optional, Tuple, Type
+from simfile.base import BaseChart
+from typing import Iterator, List, NamedTuple, Optional, Tuple, Type, Union
 
 from ..timing import Beat
 from ..types import Chart
@@ -95,6 +96,9 @@ class Note(NamedTuple):
 class NoteData:
     """
     Wrapper for note data with iteration & serialization capabilities.
+
+    The constructor accepts a string of note data, any :data:`.Chart`, or
+    another :class:`NoteData` instance.
     """
     _notedata: str
     _columns: int
@@ -104,9 +108,19 @@ class NoteData:
         """How many note columns this chart has."""
         return self._columns
 
-    def __init__(self, notedata: str):
-        self._notedata = notedata
-        self._columns = NoteData._get_columns(notedata)
+    def __init__(self, source: Union[str, Chart, 'NoteData']):
+        if isinstance(source, str):
+            self._notedata = source
+        elif isinstance(source, BaseChart):
+            if source.notes is None:
+                raise ValueError('chart has no notes')
+            self._notedata = source.notes
+        elif isinstance(source, NoteData):
+            self._notedata = source._notedata
+        else:
+            raise TypeError('expected str, Chart, or NoteData')
+
+        self._columns = NoteData._get_columns(self._notedata)
     
     @staticmethod
     def _get_columns(notes: str):
@@ -205,6 +219,9 @@ class NoteData:
     def from_chart(cls: Type['NoteData'], chart: Chart) -> 'NoteData':
         """
         Get note data from a chart.
+
+        .. deprecated:: 2.0.0-beta.7
+           Use :code:`NoteData(chart)` instead.
         """
         return cls(chart.notes)
 

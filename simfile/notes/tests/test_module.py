@@ -65,19 +65,44 @@ class TestNote(unittest.TestCase):
         )))
 
 class TestNoteData(unittest.TestCase):
-    def test_columns(self):
-        notes_4p = "1000\n0001\n0100\n0010\n";
-        note_data_4p = NoteData(notes_4p)
-        self.assertEqual(4, note_data_4p.columns)
+    def test_init_with_str(self):
+        notedata = NoteData("1000\n0000\n0000\n0000\n")
+        
+        self.assertEqual(
+            [Note(beat=0, column=0, note_type=NoteType.TAP)],
+            list(notedata),
+        )
+    
+    def test_init_with_chart(self):
+        chart = testing_chart()
+        notedata_str = NoteData(chart.notes)
+        notedata_chart = NoteData(chart)
+        
+        self.assertEqual(list(notedata_str), list(notedata_chart))
+    
+    def test_init_with_notedata(self):
+        notedata_chart = NoteData(testing_chart())
+        notedata_clone = NoteData(notedata_chart)
 
-        notes_8p = "00010000\n00001000\n00100000\n00000100\n";
-        note_data_8p = NoteData(notes_8p)
-        self.assertEqual(8, note_data_8p.columns)
+        self.assertEqual(list(notedata_chart), list(notedata_clone))
+
+    def test_init_type_error(self):
+        self.assertRaises(TypeError, NoteData, None)
+        self.assertRaises(TypeError, NoteData, 3)
+
+    def test_columns(self):
+        notes_4p = "1000\n0001\n0100\n0010\n"
+        notedata_4p = NoteData(notes_4p)
+        self.assertEqual(4, notedata_4p.columns)
+
+        notes_8p = "00010000\n00001000\n00100000\n00000100\n"
+        notedata_8p = NoteData(notes_8p)
+        self.assertEqual(8, notedata_8p.columns)
     
     def test_columns_handles_keysounds(self):
-        notes_keysounded = "K[1]000\n0000\n0000\n0000\n";
-        note_data_keysounded = NoteData(notes_keysounded)
-        self.assertEqual(4, note_data_keysounded.columns)
+        notes_keysounded = "K[1]000\n0000\n0000\n0000\n"
+        notedata_keysounded = NoteData(notes_keysounded)
+        self.assertEqual(4, notedata_keysounded.columns)
 
     def test_iter(self):
         notes = list(NoteData.from_chart(testing_chart()))
