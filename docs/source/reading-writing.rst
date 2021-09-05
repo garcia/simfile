@@ -70,31 +70,37 @@ Accessing simfile properties
 ----------------------------
 
 Earlier we used the :attr:`~.BaseSimfile.title` attribute to get a simfile's
-title, but we could have used a key lookup as well:
+title. Many other properties are exposed as attributes as well:
 
 .. doctest::
 
     >>> import simfile
     >>> springtime = simfile.open('testdata/Springtime.ssc')
-    >>> springtime.title == springtime['TITLE']
+    >>> springtime.music
+    'Kommisar - Springtime.mp3'
+    >>> springtime.samplestart
+    '105.760'
+    >>> springtime.labels
+    '0=Song Start'
+
+Refer to :ref:`known-properties` for the full list of attributes for each
+simfile format. Many properties are shared between the SM and SSC formats, so
+you can use them without checking what kind of :data:`.Simfile` or
+:data:`.Chart` you have.
+
+Attributes are great, but they can't cover *every* property found in every
+simfile in existence. When you need to deal with unknown properties, you can
+use any simfile or chart as a dictionary of uppercase property names (they all
+extend :code:`OrderedDict` under the hood):
+
+.. doctest::
+
+    >>> import simfile
+    >>> springtime = simfile.open('testdata/Springtime.ssc')
+    >>> springtime['ARTIST']
+    'Kommisar'
+    >>> springtime['ARTIST'] is springtime.artist
     True
-
-Both simfile formats have a predefined set of "known properties" - properties
-used by StepMania and/or written by the StepMania editor - which can be
-accessed as attributes. The known properties for SSC files are a *superset* of
-those for SM files; the properties they have in common can be found in the
-:mod:`simfile.base` documentation, and the ones added by the SSC format are
-documented under :mod:`simfile.ssc`.
-
-If a property isn't "known", it can still be accessed through the dict-like
-interface. In fact, simfile objects extend :code:`OrderedDict`, so you can
-access & manipulate their properties as a dictionary of uppercase string keys
-mapped to string values:
-
-.. doctest::
-
-    >>> import simfile
-    >>> springtime = simfile.open('testdata/Springtime.ssc')
     >>> for property, value in springtime.items():
     ...     if property == 'TITLETRANSLIT': break
     ...     print(property, '=', repr(value))
@@ -117,8 +123,9 @@ mapped to string values:
 Accessing charts
 ----------------
 
-Stepcharts don't fit the key-value pattern used to store simfile properties, so
-they are stored in a list under the :attr:`~.BaseSimfile.charts` attribute:
+Stepcharts don't follow the same key-value convention as other simfile
+properties; a simfile can have zero to many charts. The charts are stored in a
+list under the :attr:`~.BaseSimfile.charts` attribute:
 
 .. doctest::
 
@@ -150,12 +157,10 @@ and :code:`stepstype` which can be fetched via attributes, as well as a backing
 
 .. note::
 
-    While :class:`simfile.sm.SMChart` uses the same :code:`OrderedDict` backing
-    as the other classes, its keys are fixed because SM charts are encoded
-    as a list of six properties. Of course, all six of these properties are
-    "known properties" with convenience attributes, so the only reason to use
-    the dictionary interface is when it's convenient for compatibility with SSC
-    charts, or when you want to iterate over the properties.
+    The keys of an :class:`~simfile.sm.SMChart` are **fixed** because SM charts
+    are encoded as a list of six properties. Of course, all six of these
+    properties are "known" and thus exposed through attributes, so it's rare to
+    need to use the underlying dictionary interface for this class.
 
 Editing simfile data
 --------------------
@@ -192,7 +197,7 @@ data, refer to :ref:`timing-note-data` for an overview of the available classes
     >>> springtime = simfile.open('testdata/Springtime.ssc')
     >>> first_chart = springtime.charts[0]
     >>> note_data = NoteData.from_chart(first_chart)
-    >>> # (modify the note data)
+    >>> # (...modify the note data...)
     >>> first_chart.notes = str(note_data.update_chart)
 
 Writing simfiles to disk
@@ -203,9 +208,10 @@ read simfiles from the disk, modify them, and then save them, you can use the
 :func:`simfile.mutate` context manager:
 
     >>> import simfile
+    >>> input_filename = 'testdata/Springtime.ssc'
     >>> with simfile.mutate(
-    ...     'testdata/Springtime.ssc',
-    ...     backup_filename='testdata/Springtime.ssc~',
+    ...     input_filename,
+    ...     backup_filename=f'{input_filename}.old',
     ... ) as springtime:
     ...     if springtime.subtitle.endswith('(edited)'):
     ...         raise simfile.CancelMutation
