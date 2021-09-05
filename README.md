@@ -1,4 +1,4 @@
-# simfile
+![simfile - for Python 3](docs/source/_static/simfile-600.png?raw=true)
 
 A modern simfile parsing & editing library for Python 3.
 

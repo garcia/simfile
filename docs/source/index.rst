@@ -1,3 +1,7 @@
+.. image:: _static/simfile-no-outline.svg
+  :width: 450
+  :alt: simfile - for Python 3
+
 simfile - Modern simfile library for Python
 ===========================================
 
