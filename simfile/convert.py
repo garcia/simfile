@@ -145,7 +145,7 @@ def _should_copy_property(
             if behavior == InvalidPropertyBehavior.IGNORE:
                 return False
             if behavior == InvalidPropertyBehavior.ERROR_UNLESS_DEFAULT:
-                if value.strip() != DEFAULT_PROPERTIES[property]:
+                if value.strip() == DEFAULT_PROPERTIES[property]:
                     return False
             raise InvalidPropertyException(
                 invalid_property,
