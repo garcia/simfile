@@ -91,18 +91,17 @@ class InvalidPropertyBehavior(Enum):
 
     ERROR_UNLESS_DEFAULT = 3
     """
-    Raise :class:`.InvalidPropertyException` unless the property's value is
+    Raise :class:`InvalidPropertyException` unless the property's value is
     the default for its field.
 
     The "default value" for most properties is an empty string. If the
-    destination type's :code:`.blank` output has a non-empty value for
-    the property, that value is considered the default instead (except
-    for `BPMS`).
+    destination type's :code:`.blank` output has a non-empty value for the
+    property, that value is considered the default instead.
     """
 
     ERROR = 4
     """
-    Raise :class:`.InvalidPropertyException` regardless of the value.
+    Raise :class:`InvalidPropertyException` regardless of the value.
     """
 
 
@@ -243,18 +242,16 @@ def ssc_to_sm(
     :meth:`.SSCSimfile.blank` and :meth:`.SSCChart.blank` will supply
     the template objects.
 
-    Not all SSC properties are valid for SM simfiles, and some of these
-    properties may be crucial for the simfile to behave as intended
-    during gameplay. By default, invalid properties are ignored unless:
+    Not all SSC properties are valid for SM simfiles, including some
+    gameplay events and timing data. If one of those types of properties
+    are found and contain a non-default value,
+    :class:`InvalidPropertyException` will be raised.
 
-    * The property is a gameplay event and has a non-default value, or
-    * The property contains timing data.
-
-    These behaviors can be overridden by supplying the
+    The behavior described above can be changed by supplying the
     `invalid_property_behaviors` parameter, which maps
     :class:`PropertyType` to :class:`InvalidPropertyBehavior` values.
-    This mapping need not cover every :class:`PropertyType`; any
-    missing values will fall back to the default mapping described
+    This mapping need not cover every :class:`PropertyType`; any missing
+    values will fall back to the default mapping described
     above.
     """
     return _convert(

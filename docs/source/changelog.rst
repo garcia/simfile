@@ -38,7 +38,7 @@ Bugfixes
   corollary, :class:`.NoteWithTail` now has a
   :attr:`~.NoteWithTail.keysound_index` attribute, bringing it back in parity
   with :class:`.Note`.
-* The behavior for :data:`InvalidPropertyBehavior.ERROR_UNLESS_DEFAULT` was
+* The behavior for :attr:`.InvalidPropertyBehavior.ERROR_UNLESS_DEFAULT` was
   backwards - it would raise an exception *only* if the property value was the
   default. This has been fixed.
 
