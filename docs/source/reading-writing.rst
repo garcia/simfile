@@ -47,8 +47,8 @@ The type returned by these functions is declared as
     >>> springtime = simfile.open('testdata/Springtime.ssc')
     >>> type(springtime)
     <class 'simfile.ssc.SSCSimfile'>
-    >>> robotix = simfile.open('testdata/Robotix.sm')
-    >>> type(robotix)
+    >>> kryptix = simfile.open('testdata/Kryptix.sm')
+    >>> type(kryptix)
     <class 'simfile.sm.SMSimfile'>
 
 The "magic" that determines which type to use is documented under

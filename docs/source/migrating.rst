@@ -36,9 +36,9 @@ In 1.0, the :code:`Simfile` constructor accepted a filename or file object, and
 a :code:`.from_string` class method handled loading from string data:
 
     >>> from simfile import Simfile # 1.0
-    >>> from_filename = Simfile('testdata/Robotix.sm')
+    >>> from_filename = Simfile('testdata/Kryptix.sm')
     >>> # or...
-    >>> with open('testdata/Robotix.sm', 'r') as infile:
+    >>> with open('testdata/Kryptix.sm', 'r') as infile:
     ...     from_file_obj = Simfile(infile)
     ...
     >>> # or...
@@ -50,9 +50,9 @@ In 2.0, each of these options has a corresponding function in the top-level
 .. doctest::
 
     >>> import simfile # 2.0
-    >>> from_filename = simfile.open('testdata/Robotix.sm')
+    >>> from_filename = simfile.open('testdata/Kryptix.sm')
     >>> # or...
-    >>> with open('testdata/Robotix.sm', 'r') as infile:
+    >>> with open('testdata/Kryptix.sm', 'r') as infile:
     ...     from_file_obj = simfile.load(infile)
     ...
     >>> # or...
@@ -65,7 +65,7 @@ alternatively instantiate the simfile classes directly. They take a *named*
 .. doctest::
 
     >>> from simfile.sm import SMSimfile # 2.0
-    >>> with open('testdata/Robotix.sm', 'r') as infile:
+    >>> with open('testdata/Kryptix.sm', 'r') as infile:
     ...     from_file_obj = SMSimfile(file=infile)
     ...
     >>> # or...
@@ -78,13 +78,13 @@ In 1.0, simfile objects had a :code:`.save` method that took a *maybe-optional*
 filename parameter:
 
     >>> from simfile import Simfile # 1.0
-    >>> from_filename = Simfile('testdata/Robotix.sm')        # filename supplied
+    >>> from_filename = Simfile('testdata/Kryptix.sm')        # filename supplied
     >>> from_filename.save()                                  # no problem!
     >>> from_string = Simfile.from_string(str(from_filename)) # no filename supplied
     >>> try:
     ...     from_string.save()                                # to where?
     ... except ValueError:
-    ...     from_string.save('testdata/Robotix.sm')           # much better 🙄
+    ...     from_string.save('testdata/Kryptix.sm')           # much better 🙄
 
 In 2.0, simfile objects no longer know their own filenames. Either pass a file
 object to the simfile's :meth:`~simfile.base.BaseSimfile.serialize` method or
@@ -97,7 +97,7 @@ In 1.0, the list of charts at :code:`Simfile.charts` offered convenience
 methods for getting a single chart or finding multiple charts:
 
     >>> from simfile import Simfile # 1.0
-    >>> sm = Simfile('testdata/Robotix.sm')
+    >>> sm = Simfile('testdata/Kryptix.sm')
     >>> single_novice = sm.charts.get(difficulty='Beginner')
     >>> single_novice.stepstype
     dance-single
@@ -120,7 +120,7 @@ from strings to richer representations.
     objects that offered convenient access to the beat & value pairs:
 
     >>> from simfile import Simfile # 1.0
-    >>> sm = Simfile('testdata/Robotix.sm')
+    >>> sm = Simfile('testdata/Kryptix.sm')
     >>> print(type(sm['BPMS']))
     <class 'simfile.simfile.Timing'>
     >>> print(type(sm['STOPS']))
@@ -130,7 +130,7 @@ from strings to richer representations.
     :code:`Notes` object, respectively:
 
     >>> from simfile import Simfile # 1.0
-    >>> sm = Simfile('testdata/Robotix.sm')
+    >>> sm = Simfile('testdata/Kryptix.sm')
     >>> chart = sm.charts[0]
     >>> print(type(chart.meter))
     <class 'int'>
@@ -146,8 +146,8 @@ If you need rich timing data, use the :mod:`simfile.timing` package:
 
     >>> import simfile # 2.0
     >>> from simfile.timing import TimingData
-    >>> robotix = simfile.open('testdata/Robotix.sm')
-    >>> timing_data = TimingData.from_simfile(robotix)
+    >>> kryptix = simfile.open('testdata/Kryptix.sm')
+    >>> timing_data = TimingData.from_simfile(kryptix)
     >>> print(timing_data.bpms[0])
     BeatValue(beat=Beat(0), value=Decimal('150.000'))
 
@@ -156,8 +156,8 @@ If you need rich note data, use the :mod:`simfile.notes` package:
     >>> import simfile # 2.0
     >>> from simfile.notes import NoteData
     >>> from simfile.timing import Beat
-    >>> robotix = simfile.open('testdata/Robotix.sm')
-    >>> for note in NoteData.from_chart(robotix.charts[0]):
+    >>> kryptix = simfile.open('testdata/Kryptix.sm')
+    >>> for note in NoteData.from_chart(kryptix.charts[0]):
     ...     if note.beat > Beat(18): break
     ...     print(note)
     ...

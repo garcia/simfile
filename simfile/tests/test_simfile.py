@@ -57,20 +57,24 @@ class TestCharts(unittest.TestCase):
 class TestBeatEvents(unittest.TestCase):
 
     def test_bpms(self):
-        bpms = BeatValues.from_str(get_simfile('Robotix.sm')['BPMS'])
+        bpms = BeatValues.from_str(get_simfile('Kryptix.sm')['BPMS'])
         self.assertIsInstance(bpms, BeatValues)
         self.assertEqual(bpms[0][0], 0)
-        self.assertEqual(bpms[0][1], 150)
-        self.assertEqual(bpms[1][0], 144)
-        self.assertEqual(bpms[1][1], decimal.Decimal('170.001'))
+        self.assertEqual(bpms[0][1], 155)
+        self.assertEqual(bpms[1][0], 24)
+        self.assertEqual(bpms[1][1], 310)
+        self.assertEqual(bpms[-1][0], 444)
+        self.assertEqual(bpms[-1][1], decimal.Decimal('154.999'))
 
     def test_stops(self):
-        stops = BeatValues.from_str(get_simfile('Robotix.sm')['STOPS'])
+        stops = BeatValues.from_str(get_simfile('Kryptix.sm')['STOPS'])
         self.assertIsInstance(stops, BeatValues)
-        self.assertEqual(stops[0][0], 313)
-        self.assertEqual(stops[0][1], decimal.Decimal('0.400'))
-        self.assertEqual(stops[1][0], 344)
-        self.assertEqual(stops[1][1], decimal.Decimal('0.400'))
+        self.assertEqual(stops[0][0], 230)
+        self.assertEqual(stops[0][1], decimal.Decimal('0.180'))
+        self.assertEqual(stops[1][0], 232)
+        self.assertEqual(stops[1][1], decimal.Decimal('0.180'))
+        self.assertEqual(stops[2][0], 235)
+        self.assertEqual(stops[2][1], decimal.Decimal('0.200'))
 
 
 class TestSimfile(unittest.TestCase):

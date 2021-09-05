@@ -8,7 +8,7 @@ from ..convert import *
 
 class TestConvert(unittest.TestCase):
     def test_sm_to_ssc(self):
-        with codecs.open('testdata/Robotix.sm', 'r', 'utf-8') as infile:
+        with codecs.open('testdata/Kryptix.sm', 'r', 'utf-8') as infile:
             sm = SMSimfile(file=infile)
         
         ssc = sm_to_ssc(sm)

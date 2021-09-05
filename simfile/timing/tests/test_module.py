@@ -140,7 +140,7 @@ class TestTimingData(unittest.TestCase):
         self.assertEqual(BeatValues.from_str(ssc.stops), timing_data.stops)
 
     def test_handles_omitted_offset(self):
-        sm = simfile.open('testdata/Robotix.sm')
+        sm = simfile.open('testdata/Kryptix.sm')
         del sm['OFFSET']
         timing_data = TimingData.from_simfile(sm)
         self.assertEqual(Decimal(0), timing_data.offset)

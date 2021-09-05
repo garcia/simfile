@@ -36,29 +36,34 @@ Load simfiles from disk using `simfile.open` or `simfile.load`:
 >>> springtime = simfile.open('testdata/Springtime.ssc')
 >>> springtime
 <SSCSimfile: Springtime>
->>> with open('testdata/Robotix.sm', 'r') as infile:
-...     robotix = simfile.load(infile)
+>>> with open('testdata/Kryptix.sm', 'r') as infile:
+...     kryptix = simfile.load(infile)
 ...
->>> robotix
-<SMSimfile: Robotix>
+>>> kryptix
+<SMSimfile: Kryptix>
 ```
 
-Access simfile properties through uppercase keys:
+Use lowercase attributes to access most common properties:
+
+```python
+>>> springtime.artist
+'Kommisar'
+>>> springtime.banner
+'springbn.png'
+>>> springtime.subtitle = '(edited)'
+>>> springtime
+<SSCSimfile: Springtime (edited)>
+```
+
+Alternatively, use uppercase strings to access the underlying dictionary:
 
 ```python
 >>> springtime['ARTIST']
 'Kommisar'
+>>> springtime['ARTIST'] is springtime.artist
+True
 >>> list(springtime.keys())[:7]
 ['VERSION', 'TITLE', 'SUBTITLE', 'ARTIST', 'TITLETRANSLIT', 'SUBTITLETRANSLIT', 'ARTISTTRANSLIT']
-```
-
-Alternatively, you can use lowercase attributes for known properties:
-
-```python
->>> robotix.displaybpm
-'150.000'
->>> robotix.displaybpm is robotix['DISPLAYBPM']
-True
 ```
 
 Charts are stored in a list under the `.charts` attribute and function similarly to simfile objects:
@@ -73,6 +78,6 @@ Charts are stored in a list under the `.charts` attribute and function similarly
 ['CHARTNAME', 'STEPSTYPE', 'DESCRIPTION', 'CHARTSTYLE', 'DIFFICULTY', 'METER', 'RADARVALUES']
 ```
 
-## Documentation
+## Further reading
 
 Full documentation can be found on **[Read the Docs](https://simfile.readthedocs.io/en/latest/)**.
