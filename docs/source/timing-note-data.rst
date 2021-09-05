@@ -198,14 +198,15 @@ out-of-memory conditions.
 .. warning ::
 
     Note iterators passed to the :mod:`simfile.notes` API should always be
-    sorted chronologically (ascending beats). :class:`.Note` objects are
-    intrinsically ordered by beat (followed by column), so you can use Python's
-    built-in sorting mechanisms like :code:`sorted()`, :code:`list.sort()`, and
-    the :code:`bisect` module to ensure your notes are in the right order.
+    sorted by their natural ordering, the same order in which they appear in
+    strings of note data (and the order you'll get by iterating over
+    :class:`.NoteData`). If necessary, you can use Python's built-in sorting
+    mechanisms on :class:`.Note` objects to ensure they are in the right order,
+    like :code:`sorted()`, :code:`list.sort()`, and the :code:`bisect` module.
 
-To insert note data back into a chart, use the instance method
-:meth:`.NoteData.update_chart`. In this example, we mirror the notes' columns
-in Springtime's first chart and update the simfile object in memory:
+To insert note data back into a chart, convert it to a string and assign it
+to the chart's :attr:`.notes` attribute. In this example, we mirror the notes'
+columns in Springtime's first chart and update the simfile object in memory:
 
 .. doctest::
 
@@ -225,9 +226,7 @@ in Springtime's first chart and update the simfile object in memory:
     ...  
     >>> mirrored_notes = (mirror(note, cols) for note in note_data)
     >>> mirrored_note_data = NoteData.from_notes(mirrored_notes, cols)
-    >>> mirrored_note_data.update_chart(chart)
-    >>> chart.notes == str(mirrored_note_data)
-    True
+    >>> chart.notes = str(mirrored_note_data)
 
 From there, we could write the modified simfile back to disk as described in
 :ref:`reading-writing`.

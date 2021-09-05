@@ -5,121 +5,134 @@ Known properties
 
 *Known properties* refer to properties of simfiles and their charts that the
 current stable version of StepMania actively uses. These are the properties
-that StepMania's built-in editor will preserve when it saves a simfile that was
-loaded from disk; any unknown properties will be lost if overwritten by the
-editor.
+that **simfile** exposes as attributes on simfile and chart objects. They are
+also the only properties that StepMania's built-in editor will preserve when
+saving a simfile; unknown properties are liable to be deleted if saved by the
+StepMania editor.
 
-**simfile** enables you to access properties of simfiles & charts in a few
-different ways:
+When they're available, you should prefer to use attributes (e.g.
+:code:`sim.title`, :code:`chart.stepstype`) rather than indexing into the
+underlying dictionary (e.g. :code:`sim['TITLE']`, :code:`chart['STEPSTYPE']`).
+While these are functionally equivalent in many cases, attributes generally
+behave closer to how StepMania interprets simfiles:
 
-* **Indexing** (e.g. :code:`sim['TITLE']`, :code:`chart['STEPSTYPE']`) provides
-  access to all properties via uppercase names. (They're converted to uppercase
-  so you don't need to!)
+* If a property is missing from the simfile, accessing the attribute returns
+  None instead of throwing a :code:`KeyError`. StepMania generally treats
+  missing properties as if they had an empty or default value, so it's nice
+  to be able to handle this case without having to catch exceptions everywhere.
+* StepMania supports a few legacy aliases for properties, and attributes make
+  use of these aliases when present. For example, if a simfile contains a
+  :code:`FREEZES` property instead of the usual :code:`STOPS`, :code:`sim.stops`
+  will use the alias in the backing dictionary (both for reads and writes!),
+  whereas :code:`sim['STOPS']` will throw a :code:`KeyError`. This lets you
+  write cleaner code with fewer special cases for old simfiles.
+* Attributes are implicitly spell-checked: misspelling a property like
+  :code:`sim.artistranslit` will consistently raise an :code:`AttributeError`,
+  and may even be flagged by your IDE depending on its Python type-checking
+  capabilities. By contrast, :code:`sim['ARTISTRANSLIT']` will generally raise
+  the more vague :code:`KeyError` exception, and your IDE would have no way to
+  know about the typo.
 
-  - Both indexing and **.get()** (e.g. :code:`sim.get('TITLE')`,
-    :code:`chart.get('STEPSTYPE')`) are features of the underlying
-    :code:`OrderedDict`. You may prefer to use .get() to handle missing
-    properties without having to catch a :code:`KeyError`.
-
-* **Attributes** (e.g. :code:`sim.title`, :code:`chart.stepstype`) provide
-  access to *known properties* via lowercase names. Like .get(), missing
-  properties return None.
-
-All of these options have their benefits and drawbacks. Indexing is a quick &
-intuitive way to access any property; .get() can handle any property, even if
-it's missing; attributes, though limited to known properties, are implicitly
-spell-checked and arguably look the nicest in code. Both indexing and
-attributes can handle reads, writes, and deletes, and all methods are backed by
-the same data structure.
+With that said, there are legitimate use cases for indexing. String keys are
+easier when you need to operate on multiple properties generically, and they're
+the only option for accessing "unknown properties" like numbered
+:code:`BGCHANGES` and properties only used by derivatives of StepMania.
+When dealing with property string keys, consider using the :code:`.get` method
+from the underlying dictionary to handle missing keys gracefully.
 
 What are the known properties?
 ------------------------------
 
 These are the known properties for simfiles:
 
-================ ===================== ========= ==========
-Uppercase (key)  Lowercase (attribute) SMSimfile SSCSimfile 
-================ ===================== ========= ==========
-TITLE            title                 ✓         ✓
-SUBTITLE         subtitle              ✓         ✓
-ARTIST           artist                ✓         ✓
-TITLETRANSLIT    titletranslit         ✓         ✓
-SUBTITLETRANSLIT subtitletranslit      ✓         ✓
-ARTISTTRANSLIT   artisttranslit        ✓         ✓
-GENRE            genre                 ✓         ✓
-CREDIT           credit                ✓         ✓
-BANNER           banner                ✓         ✓
-BACKGROUND       background            ✓         ✓
-LYRICSPATH       lyricspath            ✓         ✓
-CDTITLE          cdtitle               ✓         ✓
-MUSIC            music                 ✓         ✓
-OFFSET           offset                ✓         ✓
-BPMS             bpms                  ✓         ✓
-STOPS            stops                 ✓ [1]_    ✓
-DELAYS           delays                ✓         ✓
-TIMESIGNATURES   timesignatures        ✓         ✓
-TICKCOUNTS       tickcounts            ✓         ✓
-INSTRUMENTTRACK  instrumenttrack       ✓         ✓
-SAMPLESTART      samplestart           ✓         ✓
-SAMPLELENGTH     samplelength          ✓         ✓
-DISPLAYBPM       displaybpm            ✓         ✓
-SELECTABLE       selectable            ✓         ✓
-BGCHANGES        bgchanges             ✓ [2]_    ✓ [2]_
-FGCHANGES        fgchanges             ✓         ✓
-KEYSOUNDS        keysounds             ✓         ✓
-ATTACKS          attacks               ✓         ✓
-VERSION          version                         ✓
-ORIGIN           origin                          ✓
-PREVIEWVID       previewvid                      ✓
-JACKET           jacket                          ✓
-CDIMAGE          cdimage                         ✓
-DISCIMAGE        discimage                       ✓
-WARPS            warps                           ✓
-COMBOS           combos                          ✓
-SPEEDS           speeds                          ✓
-SCROLLS          scrolls                         ✓
-FAKES            fakes                           ✓
-LABELS           labels                          ✓
-================ ===================== ========= ==========
-
-.. [1] SM files support "FREEZES" as an alias for "STOPS". The property name is
-       converted during parsing, so no extra logic is required to handle this.
-.. [2] SM and SSC files support "ANIMATIONS" as an alias for "BGCHANGES". As
-       above, the property name is converted during parsing.
+================ ================ ========= ==========
+String key       Attribute        SMSimfile SSCSimfile
+================ ================ ========= ==========
+TITLE            title            ✓         ✓
+SUBTITLE         subtitle         ✓         ✓
+ARTIST           artist           ✓         ✓
+TITLETRANSLIT    titletranslit    ✓         ✓
+SUBTITLETRANSLIT subtitletranslit ✓         ✓
+ARTISTTRANSLIT   artisttranslit   ✓         ✓
+GENRE            genre            ✓         ✓
+CREDIT           credit           ✓         ✓
+BANNER           banner           ✓         ✓
+BACKGROUND       background       ✓         ✓
+LYRICSPATH       lyricspath       ✓         ✓
+CDTITLE          cdtitle          ✓         ✓
+MUSIC            music            ✓         ✓
+OFFSET           offset           ✓         ✓
+BPMS             bpms             ✓         ✓
+STOPS            stops            ✓         ✓
+FREEZES [1]_     stops            ✓         
+DELAYS           delays           ✓         ✓
+TIMESIGNATURES   timesignatures   ✓         ✓
+TICKCOUNTS       tickcounts       ✓         ✓
+INSTRUMENTTRACK  instrumenttrack  ✓         ✓
+SAMPLESTART      samplestart      ✓         ✓
+SAMPLELENGTH     samplelength     ✓         ✓
+DISPLAYBPM       displaybpm       ✓         ✓
+SELECTABLE       selectable       ✓         ✓
+BGCHANGES        bgchanges        ✓         ✓
+ANIMATIONS [1]_  bgchanges        ✓         ✓
+FGCHANGES        fgchanges        ✓         ✓
+KEYSOUNDS        keysounds        ✓         ✓
+ATTACKS          attacks          ✓         ✓
+VERSION          version                    ✓
+ORIGIN           origin                     ✓
+PREVIEWVID       previewvid                 ✓
+JACKET           jacket                     ✓
+CDIMAGE          cdimage                    ✓
+DISCIMAGE        discimage                  ✓
+PREVIEW          preview                    ✓
+MUSICLENGTH      musiclength                ✓
+LASTSECONDHINT   lastsecondhint             ✓
+WARPS            warps                      ✓
+LABELS           labels                     ✓
+COMBOS           combos                     ✓
+SPEEDS           speeds                     ✓
+SCROLLS          scrolls                    ✓
+FAKES            fakes                      ✓
+================ ================ ========= ==========
 
 And these are the known properties for charts:
 
-================ ===================== ======= ========
-Uppercase (key)  Lowercase (attribute) SMChart SSCChart
-================ ===================== ======= ========
-STEPSTYPE        stepstype             ✓       ✓
-DESCRIPTION      description           ✓       ✓
-DIFFICULTY       difficulty            ✓       ✓
-METER            meter                 ✓       ✓
-RADARVALUES      radarvalues           ✓       ✓
-NOTES            notes                 ✓       ✓
-CHARTNAME        chartname                     ✓
-CHARTSTYLE       chartstyle                    ✓
-CREDIT           credit                        ✓
-MUSIC            music                         ✓
-BPMS             bpms                          ✓
-STOPS            stops                         ✓
-DELAYS           delays                        ✓
-TIMESIGNATURES   timesignatures                ✓
-TICKCOUNTS       tickcounts                    ✓
-COMBOS           combos                        ✓
-WARPS            warps                         ✓
-SPEEDS           speeds                        ✓
-SCROLLS          scrolls                       ✓
-FAKES            fakes                         ✓
-LABELS           labels                        ✓
-ATTACKS          attacks                       ✓
-OFFSET           offset                        ✓
-DISPLAYBPM       displaybpm                    ✓
-================ ===================== ======= ========
+================ ================ ======= ========
+String key       Attribute        SMChart SSCChart
+================ ================ ======= ========
+STEPSTYPE        stepstype        ✓       ✓
+DESCRIPTION      description      ✓       ✓
+DIFFICULTY       difficulty       ✓       ✓
+METER            meter            ✓       ✓
+RADARVALUES      radarvalues      ✓       ✓
+NOTES            notes            ✓       ✓
+NOTES2 [1]_      notes                    ✓
+CHARTNAME        chartname                ✓
+CHARTSTYLE       chartstyle               ✓
+CREDIT           credit                   ✓
+MUSIC            music                    ✓
+BPMS             bpms                     ✓
+STOPS            stops                    ✓
+DELAYS           delays                   ✓
+TIMESIGNATURES   timesignatures           ✓
+TICKCOUNTS       tickcounts               ✓
+COMBOS           combos                   ✓
+WARPS            warps                    ✓
+SPEEDS           speeds                   ✓
+SCROLLS          scrolls                  ✓
+FAKES            fakes                    ✓
+LABELS           labels                   ✓
+ATTACKS          attacks                  ✓
+OFFSET           offset                   ✓
+DISPLAYBPM       displaybpm               ✓
+================ ================ ======= ========
 
-First, all simfiles & charts have a shared subset of known properties,
-documented in :class:`.BaseSimfile` and :class:`.BaseChart`. These are exactly
+.. [1] These keys are aliases supported by StepMania. The attribute will only
+       use the alias if it's present in the backing dictionary and the standard
+       name is not.
+
+Known properties supported by both the SM and SSC formats are documented in
+:class:`.BaseSimfile` and :class:`.BaseChart`. These are exactly
 the known properties for :class:`.SMSimfile` and :class:`.SMChart`. The SSC
 format then adds additional known properties on top of the base set.
 

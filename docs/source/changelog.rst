@@ -3,6 +3,34 @@
 Changelog
 =========
 
+2.0.0-beta.7
+------------
+
+New features
+~~~~~~~~~~~~
+
+* Simfiles and charts now support the same property aliases that StepMania
+  implements, namely :code:`FREEZES` (SM only), :code:`ANIMATIONS` (SM and
+  SSC), and :code:`NOTES2` (SSC only). This feature supersedes the more naïve
+  implementation from beta 6 where the alias keys :code:`FREEZES` and
+  :code:`ANIMATIONS` were converted to the standard name during parsing. See
+  :ref:`known-properties` for more information.
+* Converting a :class:`NoteType` to a string using :code:`str(note_type)` now
+  returns the note type's character. Converting a :class:`Note` to a string
+  does the same, followed by a bracketed keysound index if present on the Note.
+
+
+Bugfixes
+~~~~~~~~
+
+* :meth:`NoteData.from_notes` now makes use of the :attr:`.player` and
+  :attr:`.keysound_index` attributes on notes, so routine charts & keysounded
+  SSC charts can be serialized back into note data.
+* The functions in :mod:`simfile.notes.group` no longer erase :attr:`.player`
+  and :attr:`.keysound_index` values. As a corollary, :class:`.NoteWithTail`
+  now has a :attr:`~NoteWithTail.keysound_index` attribute, bringing it back in
+  parity with :class:`.Note`.
+
 2.0.0-beta.6
 ------------
 
