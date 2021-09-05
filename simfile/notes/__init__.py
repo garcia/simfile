@@ -208,6 +208,12 @@ class NoteData:
         return cls(chart.notes)
 
     def update_chart(self, chart: Chart) -> None:
+        """
+        Replace the note data in the chart with this object's note data.
+
+        .. deprecated:: 2.0.0-beta.7
+           Use :code:`chart.notes = str(notedata)` instead.
+        """
         chart.notes = str(self)
     
     def _iter_measure(
