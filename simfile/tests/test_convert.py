@@ -1,6 +1,7 @@
 import codecs
 import unittest
 
+import simfile
 from ..sm import SMSimfile
 from ..ssc import SSCSimfile
 from ..convert import *
@@ -8,8 +9,7 @@ from ..convert import *
 
 class TestConvert(unittest.TestCase):
     def test_sm_to_ssc(self):
-        with codecs.open('testdata/Kryptix.sm', 'r', 'utf-8') as infile:
-            sm = SMSimfile(file=infile)
+        sm: SMSimfile = simfile.open('testdata/Kryptix.sm')
         
         ssc = sm_to_ssc(sm)
 
@@ -22,20 +22,18 @@ class TestConvert(unittest.TestCase):
                 self.assertEqual(value, ssc_chart[property])
     
     def test_ssc_to_sm_raises_by_default(self):
-        with codecs.open('testdata/Springtime.ssc', 'r', 'utf-8') as infile:
-            ssc = SSCSimfile(file=infile)
+        ssc: SSCSimfile = simfile.open('testdata/Springtime.ssc')
         
         self.assertRaises(InvalidPropertyException, ssc_to_sm, ssc)
 
     def test_ssc_to_sm_with_lenient_invalid_property_behaviors(self):
-        with codecs.open('testdata/Springtime.ssc', 'r', 'utf-8') as infile:
-            ssc = SSCSimfile(file=infile)
+        ssc: SSCSimfile = simfile.open('testdata/Springtime.ssc')
         
         sm = ssc_to_sm(
             ssc,
             invalid_property_behaviors={
-                KnownProperty.GAMEPLAY_EVENT: InvalidPropertyBehavior.IGNORE,
-                KnownProperty.TIMING_DATA: InvalidPropertyBehavior.IGNORE,
+                PropertyType.GAMEPLAY_EVENT: InvalidPropertyBehavior.IGNORE,
+                PropertyType.TIMING_DATA: InvalidPropertyBehavior.IGNORE,
             },
         )
 
