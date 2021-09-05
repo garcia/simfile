@@ -190,9 +190,10 @@ data, refer to :ref:`timing-note-data` for an overview of the available classes
     >>> import simfile
     >>> from simfile.notes import NoteData
     >>> springtime = simfile.open('testdata/Springtime.ssc')
-    >>> note_data = NoteData.from_chart(springtime.charts[0])
+    >>> first_chart = springtime.charts[0]
+    >>> note_data = NoteData.from_chart(first_chart)
     >>> # (modify the note data)
-    >>> note_data.update_chart(springtime.charts[0])
+    >>> first_chart.notes = str(note_data.update_chart)
 
 Writing simfiles to disk
 ------------------------

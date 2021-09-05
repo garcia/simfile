@@ -161,7 +161,7 @@ class TestNoteData(unittest.TestCase):
         modified_notedata.update_chart(chart)
 
         self.assertEqual(chart.notes, str(modified_notedata))
-        self.assertIn('NOTES2', chart)
+        self.assertIs(chart.notes, chart['NOTES2'])
         self.assertNotIn('NOTES', chart)
     
     def test_from_notes(self):
