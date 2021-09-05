@@ -6,6 +6,12 @@ Changelog
 2.0.0-beta.7
 ------------
 
+Breaking changes
+~~~~~~~~~~~~~~~~
+
+* The enum :code:`simfile.convert.KnownProperty` was renamed to
+  :class:`PropertyType` to reflect its semantics better.
+
 New features
 ~~~~~~~~~~~~
 
@@ -18,7 +24,6 @@ New features
 * Converting a :class:`NoteType` to a string using :code:`str(note_type)` now
   returns the note type's character. Converting a :class:`Note` to a string
   does the same, followed by a bracketed keysound index if present on the Note.
-
 
 Bugfixes
 ~~~~~~~~
@@ -33,6 +38,15 @@ Bugfixes
   corollary, :class:`.NoteWithTail` now has a
   :attr:`~.NoteWithTail.keysound_index` attribute, bringing it back in parity
   with :class:`.Note`.
+* The behavior for :data:`InvalidPropertyBehavior.ERROR_UNLESS_DEFAULT` was
+  backwards - it would raise an exception *only* if the property value was the
+  default. This has been fixed.
+
+Miscellaneous
+~~~~~~~~~~~~~
+
+* The known property type mappings in :mod:`simfile.convert` have been updated
+  with the full set of known SSC-exclusive properties.
 
 2.0.0-beta.6
 ------------
