@@ -3,13 +3,15 @@
 from __future__ import with_statement, unicode_literals
 import codecs
 import decimal
-from fractions import Fraction
 import os
 import unittest
 
 import simfile
 from simfile.timing import BeatValues
 from simfile.sm import *
+
+
+# Legacy test cases from simfile 1.0, roughly adapted for version 2.0
 
 
 def get_simfile(filename, cache={}):
@@ -136,7 +138,3 @@ class TestSimfile(unittest.TestCase):
         del sm['SUBTITLE']
         del sm['TITLE']
         self.assertEqual(repr(sm), '<SMSimfile>')
-
-
-if __name__ == '__main__':
-    unittest.main()
