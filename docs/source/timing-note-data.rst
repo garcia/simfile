@@ -205,8 +205,8 @@ out-of-memory conditions.
     like :code:`sorted()`, :code:`list.sort()`, and the :code:`bisect` module.
 
 To insert note data back into a chart, convert it to a string and assign it
-to the chart's :attr:`.notes` attribute. In this example, we mirror the notes'
-columns in Springtime's first chart and update the simfile object in memory:
+to the chart's :attr:`~.BaseChart.notes` attribute. In this example, we mirror
+the notes' columns in Springtime's first chart and update the simfile object:
 
 .. doctest::
 
