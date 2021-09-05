@@ -10,7 +10,7 @@ also the only properties that StepMania's built-in editor will preserve when
 saving a simfile; unknown properties are liable to be deleted if saved by the
 StepMania editor.
 
-When they're available, you should prefer to use attributes (e.g.
+When working with known properties, you should prefer to use attributes (e.g.
 :code:`sim.title`, :code:`chart.stepstype`) rather than indexing into the
 underlying dictionary (e.g. :code:`sim['TITLE']`, :code:`chart['STEPSTYPE']`).
 While these are functionally equivalent in many cases, attributes generally
@@ -29,9 +29,11 @@ behave closer to how StepMania interprets simfiles:
 * Attributes are implicitly spell-checked: misspelling a property like
   :code:`sim.artistranslit` will consistently raise an :code:`AttributeError`,
   and may even be flagged by your IDE depending on its Python type-checking
-  capabilities. By contrast, :code:`sim['ARTISTRANSLIT']` will generally raise
-  the more vague :code:`KeyError` exception, and your IDE would have no way to
-  know about the typo.
+  capabilities. By contrast, reading from :code:`sim['ARTISTRANSLIT']` will
+  generally raise the more vague :code:`KeyError` exception, and writing to
+  such a field would create a new, unknown property in the simfile, which is
+  probably not what you wanted. Furthermore, your IDE would have no way to
+  know the string property is misspelled.
 
 With that said, there are legitimate use cases for indexing. String keys are
 easier when you need to operate on multiple properties generically, and they're

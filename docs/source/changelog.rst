@@ -23,13 +23,16 @@ New features
 Bugfixes
 ~~~~~~~~
 
-* :meth:`NoteData.from_notes` now makes use of the :attr:`.player` and
-  :attr:`.keysound_index` attributes on notes, so routine charts & keysounded
-  SSC charts can be serialized back into note data.
-* The functions in :mod:`simfile.notes.group` no longer erase :attr:`.player`
-  and :attr:`.keysound_index` values. As a corollary, :class:`.NoteWithTail`
-  now has a :attr:`~NoteWithTail.keysound_index` attribute, bringing it back in
-  parity with :class:`.Note`.
+* :meth:`.NoteData.from_notes` now makes use of the :attr:`~.Note.player` and
+  :attr:`~.Note.keysound_index` attributes on notes, so routine charts &
+  keysounded SSC charts can be serialized back into note data correctly.
+* :attr:`.NoteData.columns` now handles all keysounded charts correctly.
+  Previously, any keysound data on beat 0 would cause this value to be wrong.
+* The functions in :mod:`simfile.notes.group` no longer erase
+  :attr:`~.Note.player` and :attr:`~.Note.keysound_index` values. As a
+  corollary, :class:`.NoteWithTail` now has a
+  :attr:`~.NoteWithTail.keysound_index` attribute, bringing it back in parity
+  with :class:`.Note`.
 
 2.0.0-beta.6
 ------------
@@ -37,14 +40,14 @@ Bugfixes
 New features
 ~~~~~~~~~~~~
 
-* :class:`.Note` now has a :attr:`.player` attribute to support routine charts,
-  which store the notes for each of the two players separately. This attribute
-  will always be 0 for non-routine charts, but will be incremented to 1 for the
-  second player's notes in routine charts. Notes are now ordered first by
-  player, then by beat and column.
-* :class:`.Note` now has a :attr:`.keysound_index` attribute that stores any
-  keysound index attached to the note. This only affects keysounded SSC charts;
-  in all other cases, this attribute should be None.
+* :class:`.Note` now has a :attr:`~.Note.player` attribute to support routine
+  charts, which store the notes for each of the two players separately. This
+  attribute will always be 0 for non-routine charts, but will be incremented to
+  1 for the second player's notes in routine charts. As a corollary, notes are
+  now ordered first by *player*, then by beat and column as before.
+* :class:`.Note` now has a :attr:`~.Note.keysound_index` attribute that stores
+  any keysound index attached to the note. This only affects keysounded SSC
+  charts; in all other cases, this attribute should be None.
 * :ref:`known-properties` for simfiles and charts now exactly mirror those
   supported by StepMania as intended:
   
