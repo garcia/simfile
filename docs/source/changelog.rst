@@ -21,8 +21,13 @@ New features
   implementation from beta 6 where the alias keys :code:`FREEZES` and
   :code:`ANIMATIONS` were converted to the standard name during parsing. See
   :ref:`known-properties` for more information.
-* Converting a :class:`NoteType` to a string using :code:`str(note_type)` now
-  returns the note type's character. Converting a :class:`Note` to a string
+* The :class:`.NoteData` constructor now accepts a :data:`.Chart` or another
+  :class:`.NoteData` instance, in addition to a string of note data as before.
+  This means what previously required typing :code:`NoteData.from_chart(chart)`
+  or :code:`NoteData(str(notedata))` can now be accomplished with
+  :code:`NoteData(chart)` or :code:`NoteData(notedata)`.
+* Converting a :class:`.NoteType` to a string using :code:`str(note_type)` now
+  returns the note type's character. Converting a :class:`.Note` to a string
   does the same, followed by a bracketed keysound index if present on the Note.
 
 Bugfixes
