@@ -1,5 +1,0 @@
-#TITLE:Comments; // This is a comment, so it should be ignored. #COMMENT:Bad;
-#SUBTITLE:Split // by a comment
-into two lines;
-#ART// Comment
-IST:Ash/Garcia; // One slash isn't enough!
