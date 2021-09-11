@@ -1,5 +1,4 @@
-from simfile.notes import Note, NoteData
-from typing import Iterable
+from simfile.notes import NoteData
 from ...sm import SMSimfile, SMChart
 
 

@@ -2,9 +2,7 @@ import unittest
 
 from .. import Note, NoteType, NoteData
 from ..group import *
-from ...sm import SMChart
 from ...timing import Beat
-from simfile.notes import group
 
 
 def testing_valid_notes():

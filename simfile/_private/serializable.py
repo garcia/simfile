@@ -1,6 +1,6 @@
 from abc import ABCMeta, abstractmethod
 from io import StringIO
-from typing import Optional, TextIO
+from typing import TextIO
 
 
 class Serializable(metaclass=ABCMeta):
