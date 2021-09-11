@@ -2,6 +2,8 @@
 
 A modern simfile parsing & editing library for Python 3.
 
+Full documentation can be found on **[Read the Docs](https://simfile.readthedocs.io/en/latest/)**.
+
 ## Features
 
 * Supports both SM and SSC files
@@ -76,6 +78,22 @@ Charts are stored in a list under the `.charts` attribute and function similarly
 ['CHARTNAME', 'STEPSTYPE', 'DESCRIPTION', 'CHARTSTYLE', 'DIFFICULTY', 'METER', 'RADARVALUES']
 ```
 
-## Further reading
+## Developing
 
-Full documentation can be found on **[Read the Docs](https://simfile.readthedocs.io/en/latest/)**.
+**simfile** uses Pipenv for dependency management. Activate the environment:
+
+```bash
+pipenv shell
+```
+
+To run the unit tests:
+
+```bash
+py -m unittest
+```
+
+To build the documentation:
+
+```bash
+docs/make html
+```
