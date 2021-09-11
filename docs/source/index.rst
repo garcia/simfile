@@ -10,17 +10,11 @@ A modern simfile parsing & editing library for Python 3.
 Installation
 ------------
 
-**simfile** is available on PyPI. During the current beta phase, make sure
-to pass :code:`--pre` to :code:`pip`, otherwise you will fetch the 1.0 release:
+**simfile** is available on PyPI:
 
 .. code-block:: bash
 
-   pip3 install --pre simfile
-
-Version 2.0 is a substantial departure from the 1.0 release. Read
-:ref:`migrating` for a breakdown of the changes. While 2.0 is currently in
-beta, no further breaking API changes are anticipated before the official 2.0
-release.
+   pip3 install simfile
 
 Quickstart
 ----------

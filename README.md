@@ -5,27 +5,25 @@ A modern simfile parsing & editing library for Python 3.
 ## Features
 
 * Supports both SM and SSC files
-  - Format-agnostic API for reading & writing simfiles
-  - SM ↔︎ SSC conversion
-* Timing data support
-  - Beat ↔︎ song time conversion
+  - [Format-agnostic API for reading & writing simfiles](https://simfile.readthedocs.io/en/latest/reading-writing.html)
+  - [SM ↔︎ SSC conversion](https://simfile.readthedocs.io/en/latest/autoapi/simfile/convert/index.html)
+* [Timing data support](https://simfile.readthedocs.io/en/latest/timing-note-data.html#reading-timing-data)
+  - [Beat ↔︎ song time conversion](https://simfile.readthedocs.io/en/latest/timing-note-data.html#converting-song-time-to-beats)
   - Handles BPM changes, stops, delays and warps
   - Accepts "split timing" from SSC charts
-* Note streams from charts
-  - Algorithms for grouping jumps & hold/roll head/tail notes
-  - Flexible note counting functions
-  - Timing data integration
-* Fully typed & documented API
+* [Note streams from charts](https://simfile.readthedocs.io/en/latest/timing-note-data.html#reading-note-data)
+  - [Algorithms for grouping jumps & hold/roll head/tail notes](https://simfile.readthedocs.io/en/latest/timing-note-data.html#handling-holds-rolls-and-jumps)
+  - [Flexible note counting functions](https://simfile.readthedocs.io/en/latest/timing-note-data.html#counting-notes)
+  - [Timing data integration](https://simfile.readthedocs.io/en/latest/timing-note-data.html#combining-notes-and-time)
+* Fully typed, documented, and tested API
 
 ## Installation
 
-**simfile** is available on PyPI. During the current beta phase, make sure to pass `--pre` to `pip`, otherwise you will fetch the 1.0 release:
+**simfile** is available on PyPI:
 
 ```bash
-pip3 install --pre simfile
+pip3 install simfile
 ```
-
-Version 2.0 is a substantial departure from the 1.0 release. Read **[Migrating from simfile 1.0 to 2.0](https://simfile.readthedocs.io/en/latest/migrating.html)** for a breakdown of the changes. While 2.0 is currently in beta, no further breaking API changes are anticipated before the official 2.0 release.
 
 ## Quickstart
 
