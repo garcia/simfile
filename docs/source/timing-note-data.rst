@@ -26,7 +26,7 @@ use the :class:`.NoteData` class:
     >>> from simfile.timing import Beat
     >>> springtime = simfile.open('testdata/Springtime.ssc')
     >>> chart = springtime.charts[0]
-    >>> note_data = NoteData.from_chart(chart)
+    >>> note_data = NoteData(chart)
     >>> note_data.columns
     4
     >>> for note in note_data:
@@ -66,7 +66,7 @@ the :mod:`simfile.notes.count` module:
     >>> from simfile.notes.count import *
     >>> springtime = simfile.open('testdata/Springtime.ssc')
     >>> chart = springtime.charts[0]
-    >>> note_data = NoteData.from_chart(chart)
+    >>> note_data = NoteData(chart)
     >>> count_steps(note_data)
     864
     >>> count_jumps(note_data)
@@ -101,7 +101,7 @@ we find that the longest hold in Springtime's Lv. 21 chart is 6½ beats long:
     >>> from simfile.notes.group import OrphanedNotes, group_notes
     >>> springtime = simfile.open('testdata/Springtime.ssc')
     >>> chart = next(filter(lambda chart: chart.meter == '21', springtime.charts))
-    >>> note_data = NoteData.from_chart(chart)
+    >>> note_data = NoteData(chart)
     >>> group_iterator = group_notes(
     ...     note_data,
     ...     include_note_types={NoteType.HOLD_HEAD, NoteType.TAIL},
@@ -215,7 +215,7 @@ the notes' columns in Springtime's first chart and update the simfile object:
     >>> from simfile.notes.count import *
     >>> springtime = simfile.open('testdata/Springtime.ssc')
     >>> chart = springtime.charts[0]
-    >>> note_data = NoteData.from_chart(chart)
+    >>> note_data = NoteData(chart)
     >>> cols = note_data.columns
     >>> def mirror(note, cols):
     ...     return Note(
@@ -242,7 +242,7 @@ the simfile, use the :class:`.TimingData` class:
     >>> import simfile
     >>> from simfile.timing import TimingData
     >>> springtime = simfile.open('testdata/Springtime.ssc')
-    >>> timing_data = TimingData.from_simfile(springtime)
+    >>> timing_data = TimingData(springtime)
     >>> timing_data.bpms
     BeatValues([BeatValue(beat=Beat(0), value=Decimal('181.685'))])
 
@@ -256,7 +256,7 @@ chart:
     >>> from simfile.timing import TimingData
     >>> springtime = simfile.open('testdata/Springtime.ssc')
     >>> chart = springtime.charts[0]
-    >>> split_timing = TimingData.from_simfile(springtime, chart)
+    >>> split_timing = TimingData(springtime, chart)
     >>> split_timing.bpms
     BeatValues([BeatValue(beat=Beat(0), value=Decimal('181.685')), BeatValue(beat=Beat(304), value=Decimal('90.843')), BeatValue(beat=Beat(311), value=Decimal('181.685'))])
 
@@ -309,7 +309,7 @@ Consider using the :class:`.TimingEngine` for this use case:
     >>> from simfile.timing import Beat, TimingData
     >>> from simfile.timing.engine import TimingEngine
     >>> springtime = simfile.open('testdata/Springtime.ssc')
-    >>> timing_data = TimingData.from_simfile(springtime)
+    >>> timing_data = TimingData(springtime)
     >>> engine = TimingEngine(timing_data)
     >>> engine.time_at(Beat(32))
     10.658
@@ -334,8 +334,8 @@ which converts a :class:`.Note` stream into a :class:`.TimedNote` stream:
     >>> from simfile.notes.timed import time_notes
     >>> springtime = simfile.open('testdata/Springtime.ssc')
     >>> chart = springtime.charts[0]
-    >>> note_data = NoteData.from_chart(chart)
-    >>> timing_data = TimingData.from_simfile(springtime, chart)
+    >>> note_data = NoteData(chart)
+    >>> timing_data = TimingData(springtime, chart)
     >>> for timed_note in time_notes(note_data, timing_data):
     ...     if 60 < timed_note.time < 61:
     ...         print(timed_note)

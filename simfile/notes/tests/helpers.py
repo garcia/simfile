@@ -59,4 +59,4 @@ def testing_chart():
 
 
 def testing_notes() -> NoteData:
-    return NoteData.from_chart(testing_chart())
+    return NoteData(testing_chart())

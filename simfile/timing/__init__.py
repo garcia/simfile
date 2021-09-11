@@ -142,9 +142,20 @@ class BeatValues(ListWithRepr[BeatValue]):
         return ',\n'.join(f'{event.beat}={event.value}' for event in self)
 
 
-class TimingData(NamedTuple):
+class TimingData:
     """
     Timing data for a simfile, possibly enriched with SSC chart timing.
+
+    If both an :class:`.SSCSimfile` (version 0.7 or higher) and an
+    :class:`.SSCChart` are supplied to the constructor, and if the chart
+    contains any timing fields, the chart will be used as the source of
+    timing data.
+
+    Per StepMania's behavior, the offset defaults to zero if the simfile
+    (and/or SSC chart) doesn't specify one. (However, unlike StepMania, the
+    BPM does not default to 60 when omitted; the default BPM doesn't appear
+    to be used deliberately in any existing simfiles, whereas the default
+    offset does get used intentionally from time to time.)
     """
     bpms: BeatValues
     stops: BeatValues
@@ -152,32 +163,11 @@ class TimingData(NamedTuple):
     warps: BeatValues
     offset: Decimal
 
-    @classmethod
-    def from_simfile(
-        cls: Type['TimingData'],
-        simfile: Simfile,
-        chart: Optional[Chart] = None
-    ) -> 'TimingData':
-        """
-        Obtain timing data from a simfile and optionally an SSC chart.
-
-        If both an :class:`.SSCSimfile` (version 0.7 or higher) and an
-        :class:`.SSCChart` are provided, and if the chart contains any
-        timing fields, the chart will be used as the source of timing.
-
-        Per StepMania's behavior, the offset defaults to zero if the
-        simfile (and/or SSC chart) doesn't specify one. (However,
-        unlike StepMania, the BPM does not default to 60 when omitted;
-        the default BPM doesn't appear to be used deliberately in any
-        existing simfiles, whereas the default offset does get used
-        intentionally from time to time.)
-        """
+    def __init__(self, simfile: Simfile, chart: Optional[Chart] = None):
         simfile_or_chart = timing_source(simfile, chart)
-        return TimingData(
-            bpms=BeatValues.from_str(simfile_or_chart.bpms),
-            stops=BeatValues.from_str(simfile_or_chart.stops),
-            delays=BeatValues.from_str(simfile_or_chart.delays),
-            # SMSimfile has no warps property, so fall back to key access
-            warps=BeatValues.from_str(simfile_or_chart.get('WARPS')),
-            offset=Decimal(simfile_or_chart.offset or 0),
-        )
+        self.bpms = BeatValues.from_str(simfile_or_chart.bpms)
+        self.stops = BeatValues.from_str(simfile_or_chart.stops)
+        self.delays = BeatValues.from_str(simfile_or_chart.delays)
+        # SMSimfile has no warps property, so fall back to key access
+        self.warps = BeatValues.from_str(simfile_or_chart.get('WARPS'))
+        self.offset = Decimal(simfile_or_chart.offset or 0)

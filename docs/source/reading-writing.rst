@@ -196,7 +196,7 @@ data, refer to :ref:`timing-note-data` for an overview of the available classes
     >>> from simfile.notes import NoteData
     >>> springtime = simfile.open('testdata/Springtime.ssc')
     >>> first_chart = springtime.charts[0]
-    >>> note_data = NoteData.from_chart(first_chart)
+    >>> note_data = NoteData(first_chart)
     >>> # (...modify the note data...)
     >>> first_chart.notes = str(note_data.update_chart)
 

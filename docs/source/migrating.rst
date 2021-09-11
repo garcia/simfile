@@ -147,7 +147,7 @@ If you need rich timing data, use the :mod:`simfile.timing` package:
     >>> import simfile # 2.0
     >>> from simfile.timing import TimingData
     >>> kryptix = simfile.open('testdata/Kryptix.sm')
-    >>> timing_data = TimingData.from_simfile(kryptix)
+    >>> timing_data = TimingData(kryptix)
     >>> print(timing_data.bpms[0])
     BeatValue(beat=Beat(0), value=Decimal('150.000'))
 
@@ -157,7 +157,7 @@ If you need rich note data, use the :mod:`simfile.notes` package:
     >>> from simfile.notes import NoteData
     >>> from simfile.timing import Beat
     >>> kryptix = simfile.open('testdata/Kryptix.sm')
-    >>> for note in NoteData.from_chart(kryptix.charts[0]):
+    >>> for note in NoteData(kryptix.charts[0]):
     ...     if note.beat > Beat(18): break
     ...     print(note)
     ...

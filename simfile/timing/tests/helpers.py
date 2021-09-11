@@ -3,7 +3,7 @@ from simfile.ssc import SSCSimfile
 
 
 def testing_timing_data():
-    return TimingData.from_simfile(SSCSimfile(string=
+    return TimingData(SSCSimfile(string=
         '#VERSION:0.83;\n'
         '#OFFSET:-0.009;\n'
         '#BPMS:0.000=120.000,\n'
@@ -28,7 +28,7 @@ def testing_timing_data_with_delays_and_warps():
     # 10. consecutive warps
     # 11. partially overlapping warps
     # 12. warp inside warp
-    return TimingData.from_simfile(SSCSimfile(string=
+    return TimingData(SSCSimfile(string=
         '#VERSION:0.83;\n'
         '#OFFSET:0.000;\n'
         '#BPMS:0.000=120.000;\n'

@@ -102,32 +102,32 @@ class TestTimingData(unittest.TestCase):
         self.assertEqual(BeatValues(), timing_data.warps)
         self.assertEqual(Decimal('-0.009'), timing_data.offset)
     
-    def test_from_simfile_with_ssc_chart_without_distinct_timing_data(self):
+    def test_constructor_with_ssc_chart_without_distinct_timing_data(self):
         ssc = simfile.open('testdata/Springtime.ssc')
         ssc_chart = next(filter(
             lambda c: c.stepstype == 'pump-single' and c.difficulty == 'Hard',
             ssc.charts
         ))
-        timing_data = TimingData.from_simfile(ssc, ssc_chart)
+        timing_data = TimingData(ssc, ssc_chart)
         self.assertEqual(BeatValues.from_str(ssc.bpms), timing_data.bpms)
         self.assertEqual(BeatValues.from_str(ssc.stops), timing_data.stops)
         self.assertEqual(BeatValues(), timing_data.warps)
         self.assertEqual(Decimal(ssc.offset), timing_data.offset)
     
-    def test_from_simfile_with_ssc_chart_with_distinct_timing_data(self):
+    def test_constructor_with_ssc_chart_with_distinct_timing_data(self):
         ssc = simfile.open('testdata/Springtime.ssc')
         ssc_chart = next(filter(
             lambda c: c.stepstype == 'pump-single'
                 and c.difficulty == 'Challenge',
             ssc.charts
         ))
-        timing_data = TimingData.from_simfile(ssc, ssc_chart)
+        timing_data = TimingData(ssc, ssc_chart)
         self.assertEqual(BeatValues.from_str(ssc_chart['BPMS']), timing_data.bpms)
         self.assertEqual(BeatValues.from_str(ssc_chart['STOPS']), timing_data.stops)
         self.assertEqual(BeatValues(), timing_data.warps)
         self.assertEqual(Decimal(ssc_chart['OFFSET']), timing_data.offset)
     
-    def test_from_simfile_with_ssc_chart_but_too_old_version(self):
+    def test_constructor_with_ssc_chart_but_too_old_version(self):
         ssc = simfile.open('testdata/Springtime.ssc')
         ssc.version = '0.69'
         ssc_chart = next(filter(
@@ -135,12 +135,12 @@ class TestTimingData(unittest.TestCase):
                 and c.difficulty == 'Challenge',
             ssc.charts
         ))
-        timing_data = TimingData.from_simfile(ssc, ssc_chart)
+        timing_data = TimingData(ssc, ssc_chart)
         self.assertEqual(BeatValues.from_str(ssc.bpms), timing_data.bpms)
         self.assertEqual(BeatValues.from_str(ssc.stops), timing_data.stops)
 
     def test_handles_omitted_offset(self):
         sm = simfile.open('testdata/Kryptix.sm')
         del sm['OFFSET']
-        timing_data = TimingData.from_simfile(sm)
+        timing_data = TimingData(sm)
         self.assertEqual(Decimal(0), timing_data.offset)

@@ -214,25 +214,6 @@ class NoteData:
                 push_measure()
         
         return cls(notedata.getvalue())
-
-    @classmethod
-    def from_chart(cls: Type['NoteData'], chart: Chart) -> 'NoteData':
-        """
-        Get note data from a chart.
-
-        .. deprecated:: 2.0.0-beta.7
-           Use :code:`NoteData(chart)` instead.
-        """
-        return cls(chart.notes)
-
-    def update_chart(self, chart: Chart) -> None:
-        """
-        Replace the note data in the chart with this object's note data.
-
-        .. deprecated:: 2.0.0-beta.7
-           Use :code:`chart.notes = str(notedata)` instead.
-        """
-        chart.notes = str(self)
     
     # Returns the line without keysound indices and optionally populates the
     # provided list with the indices

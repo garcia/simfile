@@ -3,6 +3,24 @@
 Changelog
 =========
 
+2.0.0-rc.1
+----------
+
+Breaking changes
+~~~~~~~~~~~~~~~~
+
+* The classmethods :code:`NoteData.from_chart` and
+  :code:`TimingData.from_simfile` have been removed in favor of the
+  :class:`.NoteData` and :class:`.TimingData` constructors. Simply remove
+  :code:`.from_simfile` or :code:`.from_chart` to use the constructor instead.
+* The instance method :code:`NoteData.update_chart` has been removed in favor
+  of the more intuitive pattern :code:`chart.notes = str(notedata)`. The method
+  only existed because keysounded charts (for which note data is stored in the
+  :code:`NOTES2` property instead of :code:`NOTES`) would have required extra
+  code to update properly. With the advent of property aliases, this is no
+  longer necessary, as references to the :attr:`~.BaseChart.notes` attribute
+  will identify the correct underlying property.
+
 2.0.0-beta.7
 ------------
 

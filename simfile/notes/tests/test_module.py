@@ -105,7 +105,7 @@ class TestNoteData(unittest.TestCase):
         self.assertEqual(4, notedata_keysounded.columns)
 
     def test_iter(self):
-        notes = list(NoteData.from_chart(testing_chart()))
+        notes = list(NoteData(testing_chart()))
         self.assertListEqual([
             Note(beat=Beat(16,4), column=0, note_type=NoteType.TAP),
             Note(beat=Beat(18,4), column=2, note_type=NoteType.TAP),
@@ -142,7 +142,7 @@ class TestNoteData(unittest.TestCase):
     def test_iter_handles_whitespace(self):
         chart = testing_chart()
         chart.notes = indent(chart.notes, '     ')
-        notedata = NoteData.from_chart(chart)
+        notedata = NoteData(chart)
         first_3_notes = list(notedata)[:3]
         
         self.assertListEqual([
@@ -154,7 +154,7 @@ class TestNoteData(unittest.TestCase):
     def test_iter_handles_routine_chart(self):
         chart = testing_chart()
         chart.notes = f'{chart.notes}\n&\n{chart.notes}'
-        notedata = NoteData.from_chart(chart)
+        notedata = NoteData(chart)
         notes = list(notedata)
         first_half = notes[:len(notes)]
         second_half = notes[len(notes):]
@@ -172,7 +172,7 @@ class TestNoteData(unittest.TestCase):
         l9 = open_simfile('testdata/L9.ssc')
         chart = l9.charts[0]
         
-        notes = list(NoteData.from_chart(chart))
+        notes = list(NoteData(chart))
         self.assertListEqual([
             Note(beat=Beat(191, 48), column=0, note_type=NoteType.KEYSOUND, keysound_index=6),
             Note(beat=Beat(191, 48), column=1, note_type=NoteType.KEYSOUND, keysound_index=7),
@@ -186,10 +186,10 @@ class TestNoteData(unittest.TestCase):
             Note(beat=Beat(204, 48), column=1, note_type=NoteType.TAP, keysound_index=9),
         ], notes[:10])
     
-    def test_update_chart_handles_notes2(self):
+    def test_notes_assignment_handles_notes2(self):
         l9 = open_simfile('testdata/L9.ssc')
         chart = l9.charts[0]
-        notedata = NoteData.from_chart(chart)
+        notedata = NoteData(chart)
         modified_notedata: NoteData = NoteData.from_notes(
             (
                 Note(beat=n.beat, column=3-n.column, note_type=n.note_type)
@@ -197,14 +197,14 @@ class TestNoteData(unittest.TestCase):
             ),
             notedata.columns,
         )
-        modified_notedata.update_chart(chart)
+        chart.notes = str(modified_notedata)
 
         self.assertEqual(chart.notes, str(modified_notedata))
         self.assertIs(chart.notes, chart['NOTES2'])
         self.assertNotIn('NOTES', chart)
     
     def test_from_notes(self):
-        note_data = NoteData.from_chart(testing_chart())
+        note_data = NoteData(testing_chart())
         note_data_from_notes = NoteData.from_notes(note_data, 4)
         self.assertEqual(str(note_data).strip(), str(note_data_from_notes).strip())
         self.assertListEqual(list(note_data), list(note_data_from_notes))
