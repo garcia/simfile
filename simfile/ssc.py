@@ -3,7 +3,7 @@ Simfile & chart classes for SSC files.
 """
 from typing import Optional, Type
 
-from msdparser import parse_msd
+from msdparser import parse_msd, MSDParameter
 
 from .base import BaseChart, BaseCharts, BaseSimfile, MSD_ITERATOR
 from ._private.dedent import dedent_and_trim
@@ -105,15 +105,17 @@ class SSCChart(BaseChart):
                 break
 
     def serialize(self, file):
-        file.write('#NOTEDATA:;\n')
+        file.write(f"{MSDParameter('NOTEDATA', '')}\n")
         notes_key = 'NOTES'
         for (key, value) in self.items():
             # notes must always be the last property in a chart
             if value is self.notes:
                 notes_key = key
                 continue
-            file.write(f'#{key}:{value};\n')
-        file.write(f'#{notes_key}:{self[notes_key]};\n\n')
+            param = MSDParameter(key, value)
+            file.write(f'{param}\n')
+        notes_param = MSDParameter(notes_key, self[notes_key])
+        file.write(f'{notes_param}\n\n')
 
 
 class SSCCharts(BaseCharts[SSCChart]):

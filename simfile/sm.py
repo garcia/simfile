@@ -1,6 +1,7 @@
 """
 Simfile & chart classes for SM files.
 """
+from msdparser import MSDParameter
 from simfile._private.property import item_property
 from typing import Iterator, List, Optional, Tuple, Type
 
@@ -84,8 +85,9 @@ class SMChart(BaseChart):
         self._from_str(value)
 
     def serialize(self, file):
-        file.write(
-            f'#NOTES:\n'
+        param = MSDParameter(
+            'NOTES',
+            f'\n'
             f'     {self.stepstype}:\n'
             f'     {self.description}:\n'
             f'     {self.difficulty}:\n'
@@ -93,8 +95,8 @@ class SMChart(BaseChart):
             f'     {self.radarvalues}:\n'
             f'{self.notes}\n'
             f'{":" + ":".join(self.extradata) if self.extradata else ""}'
-            f';'
         )
+        file.write(str(param))
 
     def __eq__(self, other):
         return (type(self) is type(other) and

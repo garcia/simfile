@@ -9,7 +9,7 @@ from abc import ABCMeta, abstractclassmethod, abstractmethod
 from collections import OrderedDict
 from typing import Iterator, Optional, TextIO, Tuple, Union
 
-from msdparser import parse_msd
+from msdparser import parse_msd, MSDParameter
 
 from ._private.generic import E, ListWithRepr
 from ._private.property import item_property
@@ -157,7 +157,8 @@ class BaseSimfile(OrderedDict, Serializable, metaclass=ABCMeta):
 
     def serialize(self, file: TextIO):
         for (key, value) in self.items():
-            file.write(f'#{key}:{value};\n')
+            param = MSDParameter(key, value)
+            file.write(f'{param}\n')
         file.write('\n')
         self.charts.serialize(file)
 
