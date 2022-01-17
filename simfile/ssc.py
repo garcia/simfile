@@ -95,26 +95,26 @@ class SSCChart(BaseChart):
     def _parse(self, parser: MSD_ITERATOR) -> None:
         iterator = iter(parser)
         
-        first_key, _ = next(iterator)
-        if first_key.upper() != 'NOTEDATA':
+        param = next(iterator)
+        if param.key.upper() != 'NOTEDATA':
             raise ValueError('expected NOTEDATA property first')
         
-        for key, value in iterator:
-            self[key] = value
-            if value is self.notes:
+        for param in iterator:
+            self[param.key] = param.value
+            if param.value is self.notes:
                 break
 
     def serialize(self, file):
-        file.write(f"{MSDParameter('NOTEDATA', '')}\n")
+        file.write(f"{MSDParameter(('NOTEDATA', ''))}\n")
         notes_key = 'NOTES'
         for (key, value) in self.items():
             # notes must always be the last property in a chart
             if value is self.notes:
                 notes_key = key
                 continue
-            param = MSDParameter(key, value)
+            param = MSDParameter((key, value))
             file.write(f'{param}\n')
-        notes_param = MSDParameter(notes_key, self[notes_key])
+        notes_param = MSDParameter((notes_key, self[notes_key]))
         file.write(f'{notes_param}\n\n')
 
 
@@ -199,11 +199,15 @@ class SSCSimfile(BaseSimfile):
             #ATTACKS:;
         """))
 
-    def _parse(self, parser):
+    def _parse(self, parser: MSD_ITERATOR):
         self._charts = SSCCharts()
         partial_chart: Optional[SSCChart] = None
-        for key, value in parser:
-            key = key.upper()            
+        for param in parser:
+            key = param.key.upper()
+            if key not in ('ATTACKS', 'DISPLAYBPM'):
+                value = ':'.join(param.components[1:])
+            else:
+                value = param.value
             if key == 'NOTEDATA':
                 if partial_chart is not None:
                     self._charts.append(partial_chart)

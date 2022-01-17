@@ -42,11 +42,12 @@ def _detect_ssc(
 
     # Check if the first property is an SSC version
     parser = parse_msd(file=peek_file, ignore_stray_text=not strict)
-    first_key = ''
-    for first_key, _ in parser:
-        break
+    try:
+        first_param = next(parser)
+    except StopIteration:
+        return False
 
-    return first_key.upper() == 'VERSION'
+    return first_param.key is not None and first_param.key.upper() == 'VERSION'
 
 
 def load(file: Union[TextIO, Iterator[str]], strict: bool = True) -> Simfile:

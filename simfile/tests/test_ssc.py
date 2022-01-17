@@ -82,8 +82,12 @@ class TestSSCChart(unittest.TestCase):
             '\n'
         )
 
+    def test_serialize_with_escapes(self):
+        unit = SSCChart.from_str(testing_chart())
+        unit.chartname = 'A:B;C//D\\E'
+        expected_substring = '#CHARTNAME:A\\:B\\;C\\//D\\\\E;\n'
 
-        self.assertEqual(expected, str(unit))
+        self.assertIn(expected_substring, str(unit))
     
     def test_handles_notes2(self):
         with_notes = SSCChart.from_str(testing_chart())

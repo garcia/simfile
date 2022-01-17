@@ -19,7 +19,7 @@ from ._private.serializable import Serializable
 __all__ = ['BaseChart', 'BaseCharts', 'BaseSimfile']
 
 
-MSD_ITERATOR = Iterator[Tuple[str, str]]
+MSD_ITERATOR = Iterator[MSDParameter]
 
 
 class BaseChart(OrderedDict, Serializable, metaclass=ABCMeta):
@@ -157,7 +157,10 @@ class BaseSimfile(OrderedDict, Serializable, metaclass=ABCMeta):
 
     def serialize(self, file: TextIO):
         for (key, value) in self.items():
-            param = MSDParameter(key, value)
+            if key in ('ATTACKS', 'DISPLAYBPM'):
+                param = MSDParameter((key, *value.split(':')))
+            else:
+                param = MSDParameter((key, value))
             file.write(f'{param}\n')
         file.write('\n')
         self.charts.serialize(file)

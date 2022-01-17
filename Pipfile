@@ -12,7 +12,7 @@ twine = "*"
 mypy = "*"
 
 [packages]
-msdparser = "==2.0.0b1"
+msdparser = {git = "https://github.com/garcia/msdparser.git", ref="lexer"}
 pyfakefs = "*"
 
 [requires]

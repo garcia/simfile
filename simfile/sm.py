@@ -85,17 +85,16 @@ class SMChart(BaseChart):
         self._from_str(value)
 
     def serialize(self, file):
-        param = MSDParameter(
+        param = MSDParameter((
             'NOTES',
-            f'\n'
-            f'     {self.stepstype}:\n'
-            f'     {self.description}:\n'
-            f'     {self.difficulty}:\n'
-            f'     {self.meter}:\n'
-            f'     {self.radarvalues}:\n'
-            f'{self.notes}\n'
-            f'{":" + ":".join(self.extradata) if self.extradata else ""}'
-        )
+            f'\n     {self.stepstype}',
+            f'\n     {self.description}',
+            f'\n     {self.difficulty}',
+            f'\n     {self.meter}',
+            f'\n     {self.radarvalues}',
+            f'\n{self.notes}\n',
+            *(self.extradata or []),
+        ))
         file.write(str(param))
 
     def __eq__(self, other):
@@ -158,12 +157,14 @@ class SMSimfile(BaseSimfile):
 
     def _parse(self, parser: MSD_ITERATOR):
         self._charts = SMCharts()
-        for (key, value) in parser:
-            key = key.upper()
+        for param in parser:
+            key = param.key.upper()
             if key == 'NOTES':
-                self._charts.append(SMChart.from_str(value))
+                self._charts.append(SMChart.from_str(':'.join(param.components[1:])))
+            elif key in ('ATTACKS', 'DISPLAYBPM'):
+                self[key] = ':'.join(param.components[1:])
             else:                
-                self[key] = value
+                self[key] = param.value
     
     @classmethod
     def blank(cls: Type['SMSimfile']) -> 'SMSimfile':
