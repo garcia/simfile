@@ -30,23 +30,24 @@ ENCODINGS = ['utf-8', 'cp1252', 'cp932', 'cp949']
 
 
 def _detect_ssc(
-    peek_file: Union[TextIO, Iterator[str]],
+    file: Union[TextIO, Iterator[str]],
     strict: bool = True
 ) -> bool:
-    if isinstance(peek_file, TextIO) and type(peek_file.name) is str:
-        _, _, suffix = peek_file.name.rpartition('.')
+    if isinstance(file, TextIO) and type(file.name) is str:
+        _, _, suffix = file.name.rpartition('.')
         if suffix == '.ssc':
             return True
         elif suffix == '.sm':
             return False
 
     # Check if the first property is an SSC version
-    parser = parse_msd(file=peek_file, ignore_stray_text=not strict)
+    parser = parse_msd(file=file, ignore_stray_text=not strict)
     try:
         first_param = next(parser)
     except StopIteration:
         return False
-
+    
+    file.seek(0)
     return first_param.key is not None and first_param.key.upper() == 'VERSION'
 
 
@@ -60,8 +61,7 @@ def load(file: Union[TextIO, Iterator[str]], strict: bool = True) -> Simfile:
     the file is treated as an SSC simfile; otherwise, it's treated as
     an SM simfile.
     """
-    peek_file, file = tee_file(file)
-    is_ssc = _detect_ssc(peek_file)
+    is_ssc = _detect_ssc(file)
     if is_ssc:
         return SSCSimfile(file=file, strict=strict)
     else:

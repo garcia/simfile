@@ -3,7 +3,7 @@ Simfile & chart classes for SM files.
 """
 from msdparser import MSDParameter
 from simfile._private.property import item_property
-from typing import Iterator, List, Optional, Tuple, Type
+from typing import Iterator, List, Optional, Sequence, Type
 
 from .base import BaseChart, BaseCharts, BaseSimfile, MSD_ITERATOR
 from ._private.dedent import dedent_and_trim
@@ -49,22 +49,44 @@ class SMChart(BaseChart):
     @classmethod
     def from_str(cls: Type['SMChart'], string: str) -> 'SMChart':
         """
-        Parse the MSD value component of a NOTES property.
+        Parse the serialized MSD value components of a NOTES property.
 
         The string should contain six colon-separated components,
-        corresponding to each of the base known properties documented
-        in :class:`.BaseChart`. Any additional components will be
-        stored in :data:`extradata`.
+        corresponding to each of the base known properties documented in
+        :class:`.BaseChart`. Any additional components will be stored in
+        :data:`extradata`.
 
         Raises :code:`ValueError` if the string contains fewer than six
         components.
+
+        .. deprecated:: 2.1
+            This is now a less efficient version of :func:`from_msd`, which
+            interoperates better with ``msdparser`` version 2.0.
         """
         instance = cls()
         instance._from_str(string)
         return instance
     
+    @classmethod
+    def from_msd(cls: Type['SMChart'], values: Sequence[str]) -> 'SMChart':
+        """
+        Parse the MSD value components of a NOTES property.
+
+        The list should contain six strings, corresponding to each of the
+        base known properties documented in :class:`.BaseChart`. Any
+        additional components will be stored in :data:`extradata`.
+
+        Raises :code:`ValueError` if the list contains fewer than six
+        components.
+        """
+        instance = cls()
+        instance._from_msd(values)
+        return instance
+    
     def _from_str(self, string: str) -> None:
-        values = string.split(':')
+        self._from_msd(string.split(':'))
+    
+    def _from_msd(self, values: Sequence[str]) -> None:
         if len(values) < len(SM_CHART_PROPERTIES):
             raise ValueError(
                 f'expected at least {len(SM_CHART_PROPERTIES)} '
@@ -75,14 +97,14 @@ class SMChart(BaseChart):
             self[property] = value.strip()
         
         if len(values) > len(SM_CHART_PROPERTIES):
-            self.extradata = values[len(SM_CHART_PROPERTIES):]
+            self.extradata = list(values[len(SM_CHART_PROPERTIES):])
     
-    def _parse(self, parser: Iterator[Tuple[str, str]]):
-        property, value = next(parser)
-        if property.upper() != 'NOTES':
+    def _parse(self, parser: Iterator[MSDParameter]):
+        param = next(parser)
+        if param.key.upper() != 'NOTES':
             raise ValueError(f'expected a NOTES property, got {property}')
         
-        self._from_str(value)
+        self._from_msd(param.components[1:])
 
     def serialize(self, file):
         param = MSDParameter((
@@ -160,7 +182,7 @@ class SMSimfile(BaseSimfile):
         for param in parser:
             key = param.key.upper()
             if key == 'NOTES':
-                self._charts.append(SMChart.from_str(':'.join(param.components[1:])))
+                self._charts.append(SMChart.from_msd(param.components[1:]))
             elif key in ('ATTACKS', 'DISPLAYBPM'):
                 self[key] = ':'.join(param.components[1:])
             else:                
