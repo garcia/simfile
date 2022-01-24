@@ -9,6 +9,7 @@ setting `strict` to False.
 import builtins
 from contextlib import contextmanager
 from io import StringIO
+from itertools import tee
 from typing import Iterator, List, Optional, TextIO, Tuple, Union
 
 from msdparser import parse_msd
@@ -16,7 +17,6 @@ from msdparser import parse_msd
 from .ssc import SSCSimfile
 from .sm import SMSimfile
 from .types import Simfile
-from ._private.tee_file import tee_file
 
 
 __version__ = '2.0.0'
@@ -32,23 +32,32 @@ ENCODINGS = ['utf-8', 'cp1252', 'cp932', 'cp949']
 def _detect_ssc(
     file: Union[TextIO, Iterator[str]],
     strict: bool = True
-) -> bool:
-    if isinstance(file, TextIO) and type(file.name) is str:
-        _, _, suffix = file.name.rpartition('.')
-        if suffix == '.ssc':
-            return True
-        elif suffix == '.sm':
-            return False
+) -> Tuple[Union[TextIO, Iterator[str]], bool]:
+    if isinstance(file, TextIO):
+        if type(file.name) is str:
+            _, _, suffix = file.name.rpartition('.')
+            if suffix == '.ssc':
+                return (file, True)
+            elif suffix == '.sm':
+                return (file, False)
+        parser = parse_msd(file=file, ignore_stray_text=not strict)
+    else:
+        file, peek_file = [StringIO(''.join(f)) for f in tee(file)]
+        parser = parse_msd(
+            string=''.join(peek_file),
+            ignore_stray_text=not strict,
+        )
 
     # Check if the first property is an SSC version
-    parser = parse_msd(file=file, ignore_stray_text=not strict)
     try:
         first_param = next(parser)
     except StopIteration:
-        return False
+        return (file, False)
     
-    file.seek(0)
-    return first_param.key is not None and first_param.key.upper() == 'VERSION'
+    if isinstance(file, TextIO):
+        file.seek(0)
+
+    return (file, first_param.key is not None and first_param.key.upper() == 'VERSION')
 
 
 def load(file: Union[TextIO, Iterator[str]], strict: bool = True) -> Simfile:
@@ -61,7 +70,7 @@ def load(file: Union[TextIO, Iterator[str]], strict: bool = True) -> Simfile:
     the file is treated as an SSC simfile; otherwise, it's treated as
     an SM simfile.
     """
-    is_ssc = _detect_ssc(file)
+    file, is_ssc = _detect_ssc(file)
     if is_ssc:
         return SSCSimfile(file=file, strict=strict)
     else:
@@ -146,7 +155,7 @@ def open_with_detected_encoding(
             continue
     
     # If all encodings failed, raise the exception chain
-    raise exception or UnicodeDecodeError
+    raise exception or UnicodeError
 
 
 class CancelMutation(BaseException):
