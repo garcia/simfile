@@ -7,6 +7,7 @@ the SM and SSC formats.
 """
 from abc import ABCMeta, abstractclassmethod, abstractmethod
 from collections import OrderedDict
+from io import StringIO
 from typing import Iterator, Optional, TextIO, Tuple, Union
 
 from msdparser import parse_msd, MSDParameter
@@ -137,9 +138,18 @@ class BaseSimfile(OrderedDict, Serializable, metaclass=ABCMeta):
                  file: Optional[Union[TextIO, Iterator[str]]] = None,
                  string: Optional[str] = None,
                  strict: bool = True):
+        # msdparser no longer supports Iterator[str] as a file-like object
+        # but simfile does for backwards compatibility
+        file_for_msdparser = None
+        if file:
+            if isinstance(file, TextIO):
+                file_for_msdparser = file
+            else:
+                file_for_msdparser = StringIO(''.join(file))
+        
         if file is not None or string is not None:
             self._parse(parse_msd(
-                file=file,
+                file=file_for_msdparser,
                 string=string,
                 ignore_stray_text=not strict,
             ))
