@@ -102,6 +102,8 @@ class BaseSimfile(OrderedDict, Serializable, metaclass=ABCMeta):
     finds any stray text between parameters. This behavior can be
     overridden by setting `strict` to False in the constructor.
     """
+    MULTI_VALUE_PROPERTIES = ('ATTACKS', 'DISPLAYBPM')
+
     title = item_property('TITLE')
     subtitle = item_property('SUBTITLE')
     artist = item_property('ARTIST')
@@ -157,7 +159,7 @@ class BaseSimfile(OrderedDict, Serializable, metaclass=ABCMeta):
 
     def serialize(self, file: TextIO):
         for (key, value) in self.items():
-            if key in ('ATTACKS', 'DISPLAYBPM'):
+            if key in BaseSimfile.MULTI_VALUE_PROPERTIES:
                 param = MSDParameter((key, *value.split(':')))
             else:
                 param = MSDParameter((key, value))

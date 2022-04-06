@@ -183,7 +183,7 @@ class SMSimfile(BaseSimfile):
             key = param.key.upper()
             if key == 'NOTES':
                 self._charts.append(SMChart.from_msd(param.components[1:]))
-            elif key in ('ATTACKS', 'DISPLAYBPM'):
+            elif key in BaseSimfile.MULTI_VALUE_PROPERTIES:
                 self[key] = ':'.join(param.components[1:])
             else:                
                 self[key] = param.value

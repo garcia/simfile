@@ -204,8 +204,8 @@ class SSCSimfile(BaseSimfile):
         partial_chart: Optional[SSCChart] = None
         for param in parser:
             key = param.key.upper()
-            if key not in ('ATTACKS', 'DISPLAYBPM'):
-                value = ':'.join(param.components[1:])
+            if key not in BaseSimfile.MULTI_VALUE_PROPERTIES:
+                value: Optional[str] = ':'.join(param.components[1:])
             else:
                 value = param.value
             if key == 'NOTEDATA':
