@@ -72,3 +72,46 @@ class TestSimfileDirectory(TestCase):
         dir = 'dir'        
         os.mkdir(dir)
         self.assertRaises(FileNotFoundError, SimfileDirectory, dir)
+    
+    def test_inferred_banner(self):
+        dir = 'dir'
+        sm_path = os.path.join(dir, 'sm_file.sm')
+        bn_path = os.path.join(dir, 'bn.png')
+        other_path = os.path.join(dir, 'other.png')
+        
+        os.mkdir(dir)
+
+        sm_file = SMSimfile.blank()
+        sm_file.title = 'SM'
+        with open(sm_path, 'w') as writer:
+            sm_file.serialize(writer)
+        
+        with open(bn_path, 'w'): pass
+        with open(other_path, 'w'): pass
+        
+        sd = SimfileDirectory('dir')
+
+        self.assertEqual(sm_file, sd.simfile)
+        self.assertEqual(bn_path, sd.banner)
+    
+    def test_specified_banner(self):
+        dir = 'dir'
+        sm_path = os.path.join(dir, 'sm_file.sm')
+        bn_path = os.path.join(dir, 'bn.png')
+        other_path = os.path.join(dir, 'other.png')
+        
+        os.mkdir(dir)
+
+        sm_file = SMSimfile.blank()
+        sm_file.banner = 'other.png'
+        sm_file.title = 'SM'
+        with open(sm_path, 'w') as writer:
+            sm_file.serialize(writer)
+        
+        with open(bn_path, 'w'): pass
+        with open(other_path, 'w'): pass
+        
+        sd = SimfileDirectory('dir')
+
+        self.assertEqual(sm_file, sd.simfile)
+        self.assertEqual(other_path, sd.banner)
