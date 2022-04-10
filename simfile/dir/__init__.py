@@ -88,9 +88,9 @@ def _asset_property(prop: str):
             if self.filesystem.isfile(full_path):
                 return self._cache_path(prop, specified_path)
         
-        asset_def = ASSET_DEFINITIONS[prop]
+        asset_definition = ASSET_DEFINITIONS[prop]
         for file_in_simfile_dir in self._dirlist:
-            if asset_def.matches(file_in_simfile_dir):
+            if asset_definition.matches(file_in_simfile_dir):
                 return self._cache_path(prop, file_in_simfile_dir)
         
         return self._cache_path(prop, None)
