@@ -12,8 +12,12 @@ twine = "*"
 mypy = "*"
 
 [packages]
-msdparser = ">=1.0.0"
+msdparser = "==2.0.0b3"
 pyfakefs = "*"
 
 [requires]
 python_version = "3.7"
+allow_prereleases = true
+
+[pipenv]
+allow_prereleases = true

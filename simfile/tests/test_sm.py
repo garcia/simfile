@@ -54,6 +54,13 @@ class TestSMChart(unittest.TestCase):
         unit = SMChart.from_str(testing_chart())
 
         self.assertEqual(f'#NOTES:{testing_chart()};', str(unit))
+    
+    def test_serialize_with_escapes(self):
+        unit = SMChart.from_str(testing_chart())
+        unit.description = 'A;B//C\\D:E'
+        expected_substring = 'A\\;B\\//C\\\\D\\:E:\n'
+
+        self.assertIn(expected_substring, str(unit))
 
     def test_eq(self):
         variants = testing_charts()

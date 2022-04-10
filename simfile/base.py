@@ -7,9 +7,10 @@ the SM and SSC formats.
 """
 from abc import ABCMeta, abstractclassmethod, abstractmethod
 from collections import OrderedDict
+from io import StringIO
 from typing import Iterator, Optional, TextIO, Tuple, Union
 
-from msdparser import parse_msd
+from msdparser import parse_msd, MSDParameter
 
 from ._private.generic import E, ListWithRepr
 from ._private.property import item_property
@@ -19,7 +20,7 @@ from ._private.serializable import Serializable
 __all__ = ['BaseChart', 'BaseCharts', 'BaseSimfile']
 
 
-MSD_ITERATOR = Iterator[Tuple[str, str]]
+MSD_ITERATOR = Iterator[MSDParameter]
 
 
 class BaseChart(OrderedDict, Serializable, metaclass=ABCMeta):
@@ -102,6 +103,8 @@ class BaseSimfile(OrderedDict, Serializable, metaclass=ABCMeta):
     finds any stray text between parameters. This behavior can be
     overridden by setting `strict` to False in the constructor.
     """
+    MULTI_VALUE_PROPERTIES = ('ATTACKS', 'DISPLAYBPM')
+
     title = item_property('TITLE')
     subtitle = item_property('SUBTITLE')
     artist = item_property('ARTIST')
@@ -135,9 +138,18 @@ class BaseSimfile(OrderedDict, Serializable, metaclass=ABCMeta):
                  file: Optional[Union[TextIO, Iterator[str]]] = None,
                  string: Optional[str] = None,
                  strict: bool = True):
+        # msdparser no longer supports Iterator[str] as a file-like object
+        # but simfile does for backwards compatibility
+        file_for_msdparser = None
+        if file:
+            if isinstance(file, TextIO):
+                file_for_msdparser = file
+            else:
+                file_for_msdparser = StringIO(''.join(file))
+        
         if file is not None or string is not None:
             self._parse(parse_msd(
-                file=file,
+                file=file_for_msdparser,
                 string=string,
                 ignore_stray_text=not strict,
             ))
@@ -157,7 +169,11 @@ class BaseSimfile(OrderedDict, Serializable, metaclass=ABCMeta):
 
     def serialize(self, file: TextIO):
         for (key, value) in self.items():
-            file.write(f'#{key}:{value};\n')
+            if key in BaseSimfile.MULTI_VALUE_PROPERTIES:
+                param = MSDParameter((key, *value.split(':')))
+            else:
+                param = MSDParameter((key, value))
+            file.write(f'{param}\n')
         file.write('\n')
         self.charts.serialize(file)
 
