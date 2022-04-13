@@ -226,6 +226,19 @@ class TestSSCSimfile(unittest.TestCase):
         # Inequality checks
         self.assertNotEqual(base, variants[1])
         self.assertNotEqual(base, variants[2])
+    
+    def test_charts(self):
+        unit = SSCSimfile(string=testing_simfile())
+        
+        self.assertIsInstance(unit.charts, SSCCharts)
+        self.assertEqual(10, len(unit.charts))
+        self.assertIsInstance(unit.charts[0], SSCChart)
+        
+        unit.charts = unit.charts[:3]
+        self.assertEqual(3, len(unit.charts))
+
+        unit.charts = SSCCharts()
+        self.assertEqual(0, len(unit.charts))
 
 
 if __name__ == '__main__':
