@@ -239,7 +239,3 @@ class TestSSCSimfile(unittest.TestCase):
 
         unit.charts = SSCCharts()
         self.assertEqual(0, len(unit.charts))
-
-
-if __name__ == '__main__':
-    unittest.main()
