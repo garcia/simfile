@@ -187,6 +187,8 @@ class SMSimfile(BaseSimfile):
                 self.charts.append(SMChart.from_msd(param.components[1:]))
             elif key in BaseSimfile.MULTI_VALUE_PROPERTIES:
                 self[key] = ':'.join(param.components[1:])
+            else:
+                self[key] = param.value
     
     @classmethod
     def blank(cls: Type['SMSimfile']) -> 'SMSimfile':
