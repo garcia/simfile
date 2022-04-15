@@ -134,6 +134,9 @@ class BaseSimfile(OrderedDict, Serializable, metaclass=ABCMeta):
     keysounds = item_property('KEYSOUNDS')
     attacks = item_property('ATTACKS')
 
+    charts: BaseCharts
+    """List of charts associated with this simfile."""
+
     def __init__(self, *,
                  file: Optional[Union[TextIO, Iterator[str]]] = None,
                  string: Optional[str] = None,
@@ -176,13 +179,6 @@ class BaseSimfile(OrderedDict, Serializable, metaclass=ABCMeta):
             file.write(f'{param}\n')
         file.write('\n')
         self.charts.serialize(file)
-
-    @property
-    @abstractmethod
-    def charts(self):
-        """
-        List of charts associated with this simfile.
-        """
 
     def __repr__(self) -> str:
         """

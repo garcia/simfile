@@ -138,9 +138,7 @@ class SSCSimfile(BaseSimfile):
       `preview`
     * Gameplay events: `combos`, `speeds`, `scrolls`, `fakes`
     * Timing data: `warps`
-    """
-    _charts: SSCCharts
-    
+    """    
     version = item_property('VERSION')
     origin = item_property('ORIGIN')
     previewvid = item_property('PREVIEWVID')
@@ -200,7 +198,7 @@ class SSCSimfile(BaseSimfile):
         """))
 
     def _parse(self, parser: MSD_ITERATOR):
-        self._charts = SSCCharts()
+        self.charts = SSCCharts()
         partial_chart: Optional[SSCChart] = None
         for param in parser:
             key = param.key.upper()
@@ -210,15 +208,11 @@ class SSCSimfile(BaseSimfile):
                 value = param.value
             if key == 'NOTEDATA':
                 if partial_chart is not None:
-                    self._charts.append(partial_chart)
+                    self.charts.append(partial_chart)
                 partial_chart = SSCChart()
             elif partial_chart is not None:
                 partial_chart[key] = value
             else:
                 self[key] = value
         if partial_chart is not None:
-            self._charts.append(partial_chart)
-    
-    @property
-    def charts(self) -> SSCCharts:
-        return self._charts
+            self.charts.append(partial_chart)

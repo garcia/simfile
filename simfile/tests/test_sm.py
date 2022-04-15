@@ -189,7 +189,16 @@ class TestSMSimfile(unittest.TestCase):
         # Inequality checks
         self.assertNotEqual(base, variants[1])
         self.assertNotEqual(base, variants[2])
+    
+    def test_charts(self):
+        unit = SMSimfile(string=testing_simfile())
+        
+        self.assertIsInstance(unit.charts, SMCharts)
+        self.assertEqual(7, len(unit.charts))
+        self.assertIsInstance(unit.charts[0], SMChart)
+        
+        unit.charts = unit.charts[:3]
+        self.assertEqual(3, len(unit.charts))
 
-
-if __name__ == '__main__':
-    unittest.main()
+        unit.charts = SMCharts()
+        self.assertEqual(0, len(unit.charts))
