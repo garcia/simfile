@@ -12,7 +12,7 @@ twine = "*"
 mypy = "*"
 
 [packages]
-msdparser = ">=1.0.0"
+msdparser = "~=1.0.0"
 pyfakefs = "*"
 
 [requires]
