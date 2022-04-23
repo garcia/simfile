@@ -1,14 +1,13 @@
-import os
 from typing import Iterator, List, Optional
 
 from fs.base import FS
-import fs.path
 
 import simfile
+from .assets import Assets
+from .types import Simfile
 from simfile._private.path import FSPath
 from ._private import extensions
 from ._private.nativeosfs import NativeOSFS
-from .types import Simfile
 
 
 __all__ = ['SimfileDirectory', 'SimfilePack']
@@ -32,10 +31,10 @@ class SimfileDirectory:
         self._path = FSPath(filesystem)
         self._dirlist: List[str] = self.filesystem.listdir(simfile_dir)
         
-        for asset_path in self._dirlist:
-            match = extensions.match(asset_path, *extensions.SIMFILE)
+        for simfile_item in self._dirlist:
+            match = extensions.match(simfile_item, *extensions.SIMFILE)
             if match:
-                simfile_path = self._path.join(simfile_dir, asset_path)
+                simfile_path = self._path.join(simfile_dir, simfile_item)
                 if match == '.sm':
                     if self.sm_path:
                         raise DuplicateSimfileError(
@@ -54,7 +53,14 @@ class SimfileDirectory:
         if not preferred_simfile:
             raise FileNotFoundError('no simfile in directory')
         
-        return simfile.load(self.filesystem.open(preferred_simfile, **kwargs), strict=strict)
+        return simfile.open(
+            preferred_simfile,
+            filesystem=self.filesystem,
+            **kwargs
+        )
+    
+    def assets(self) -> Assets:
+        return Assets(self.simfile_dir, simfile=self.open())
 
 
 class SimfilePack:
