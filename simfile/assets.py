@@ -1,14 +1,17 @@
 import os
 import re
-from typing import Mapping, MutableMapping, NamedTuple, Optional, Sequence
+from typing import Mapping, MutableMapping, NamedTuple, Optional, Sequence, Tuple
 
 from fs.base import FS
 
-from .dir import SimfileDirectory
+import simfile
 from .types import Simfile
 from ._private import extensions
 from ._private.nativeosfs import NativeOSFS
 from ._private.path import FSPath
+
+
+__all__ = ['Assets']
 
 
 class AssetDefinition(NamedTuple):
@@ -86,6 +89,7 @@ class Assets:
         self._cache: MutableMapping[str, Optional[str]] = {}
         self._path = FSPath(filesystem)
 
+        from simfile.dir import SimfileDirectory
         self.simfile = simfile or SimfileDirectory(
             simfile_dir,
             filesystem=filesystem,
@@ -115,3 +119,18 @@ class Assets:
         else:
             self._cache[key] = None
         return self._cache[key]
+
+
+def open_with_assets(
+    filename: str,
+    strict: bool = True,
+    filesystem: FS = NativeOSFS(),
+    **kwargs
+) -> Tuple[Simfile, Assets]:
+    path = FSPath(filesystem)
+    simfile_dir, _ = path.split(filename)
+
+    sim = simfile.open(filename, strict=strict, filesystem=filesystem)
+    assets = Assets(simfile_dir, simfile=sim, filesystem=filesystem)
+
+    return (sim, assets)

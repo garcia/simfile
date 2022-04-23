@@ -6,13 +6,15 @@ default, the underlying parser will throw an exception if it finds any
 stray text between parameters. This behavior can be overridden by
 setting `strict` to False.
 """
-import builtins
 from contextlib import contextmanager
 from io import StringIO
 from itertools import tee
-from typing import Iterator, List, Optional, TextIO, Tuple, Union
+from typing import Iterator, List, Optional, TextIO, Tuple, Union, cast
 
+from fs.base import FS
 from msdparser import parse_msd
+
+from simfile._private.nativeosfs import NativeOSFS
 
 from .ssc import SSCSimfile
 from .sm import SMSimfile
@@ -77,14 +79,19 @@ def load(file: Union[TextIO, Iterator[str]], strict: bool = True) -> Simfile:
         return SMSimfile(file=file, strict=strict)
 
 
-def loads(string: str = None, strict: bool = True) -> Simfile:
+def loads(string: str, strict: bool = True) -> Simfile:
     """
     Load a string containing simfile data as a simfile.
     """
     return load(StringIO(string), strict=strict)
 
 
-def open(filename: str, strict: bool = True, **kwargs) -> Simfile:
+def open(
+    filename: str,
+    strict: bool = True,
+    filesystem: FS = NativeOSFS(),
+    **kwargs
+) -> Simfile:
     """
     Load a simfile by filename.
 
@@ -100,6 +107,7 @@ def open(filename: str, strict: bool = True, **kwargs) -> Simfile:
         filename,
         try_encodings=try_encodings,
         strict=strict,
+        filesystem=filesystem,
         **kwargs
     )[0]
 
@@ -108,6 +116,7 @@ def open_with_detected_encoding(
     filename: str,
     try_encodings: List[str] = ENCODINGS,
     strict: bool = True,
+    filesystem: FS = NativeOSFS(),
     **kwargs
 ) -> Tuple[Simfile, str]:
     """
@@ -138,7 +147,7 @@ def open_with_detected_encoding(
     
     for encoding in try_encodings:
         try:
-            with builtins.open(
+            with filesystem.open(
                 filename,
                 'r',
                 encoding=encoding,
@@ -171,6 +180,7 @@ def mutate(
     backup_filename: Optional[str] = None,
     try_encodings: List[str] = ENCODINGS,
     strict: bool = True,
+    filesystem: FS = NativeOSFS(),
     **kwargs
 ) -> Iterator[Simfile]:
     """
@@ -205,6 +215,7 @@ def mutate(
         input_filename,
         try_encodings=try_encodings,
         strict=strict,
+        filesystem=filesystem,
         **kwargs
     )
 
@@ -222,7 +233,7 @@ def mutate(
         
         # Write backup file if requested
         if backup_filename:
-            with builtins.open(
+            with filesystem.open(
                 backup_filename,
                 'w',
                 encoding=encoding,
@@ -231,10 +242,10 @@ def mutate(
                 writer.write(backup_data)
         
         # Write output file
-        with builtins.open(
+        with filesystem.open(
             output_filename or input_filename,
             'w',
             encoding=encoding,
             **kwargs
         ) as writer:
-            simfile.serialize(writer)
+            simfile.serialize(cast(TextIO, writer))
