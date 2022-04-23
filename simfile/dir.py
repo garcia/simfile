@@ -67,20 +67,24 @@ class SimfilePack:
         self.pack_dir = pack_dir
         self.filesystem = filesystem
         self._path = FSPath(filesystem)
-        self.simfile_paths = self._find_simfile_paths()
+        self.simfile_paths = tuple(self._find_simfile_paths())
     
     def _find_simfile_paths(self) -> Iterator[str]:
-        for simfile_path in self.filesystem.listdir(self.pack_dir):
+        for pack_item in self.filesystem.listdir(self.pack_dir):
+            simfile_path = self._path.join(self.pack_dir, pack_item)
+            if not self.filesystem.isdir(simfile_path):
+                continue
+            
             # Check whether this directory has any simfiles in it
-            for asset_path in self.filesystem.listdir(simfile_path):
-                if extensions.match(asset_path, *extensions.SIMFILE):
-                    yield self._path.join(self.pack_dir, simfile_path)
+            for simfile_item in self.filesystem.listdir(simfile_path):
+                if extensions.match(simfile_item, *extensions.SIMFILE):
+                    yield simfile_path
                     break
     
     @property
     def simfile_directories(self) -> Iterator[SimfileDirectory]:
         for simfile_path in self.simfile_paths:
-            yield SimfileDirectory(simfile_path)
+            yield SimfileDirectory(simfile_path, filesystem=self.filesystem)
     
     @property
     def simfiles(self) -> Iterator[Simfile]:
