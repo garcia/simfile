@@ -77,6 +77,13 @@ class NativeOSFS(FS):
 
     def makedir(self, sys_path, permissions=None, recreate=False):
         raise NotImplementedError()
+    
+    def open(
+        self,
+        *args,
+        **kwargs,
+    ):
+        return io.open(*args, **kwargs)
 
     def openbin( # type: ignore
         self,
