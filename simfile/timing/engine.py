@@ -148,6 +148,8 @@ class TimingEngine:
     _tagged_beats: MutableSequence[Tuple[Beat, EventTag]]
     _tagged_times: MutableSequence[Tuple[SongTime, EventTag]]
     _state_machine: TimingStateMachine
+    # Used by simfile.timing.negatives
+    _use_linear_search: bool = False
 
     def __init__(self, timing_data: TimingData):
         self.timing_data = timing_data
