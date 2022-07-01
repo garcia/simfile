@@ -3,6 +3,22 @@
 Changelog
 =========
 
+2.0.1
+-----
+
+Bugfixes
+~~~~~~~~
+
+* The dependency on msdparser 1.0.0 was mis-specified in both the Pipfile and
+  setup.py. Publishing msdparser 2.0.0-beta.3 (a breaking release) caused
+  fresh installs to be broken. This patch fixes the version specification in
+  both files.
+
+2.0.0
+-----
+
+Stable release. No changes from the release candidate below.
+
 2.0.0-rc.1
 ----------
 
