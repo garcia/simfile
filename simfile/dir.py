@@ -146,3 +146,25 @@ class SimfilePack:
         """
         for simfile_dir in self.simfile_directories():
             yield simfile_dir.open(**kwargs)
+    
+    @property
+    def name(self):
+        """Get the name of the pack (the directory name by itself)."""
+        return self._path.split(self.pack_dir)[1]
+    
+    def banner(self) -> Optional[str]:
+        """
+        Get the pack's banner image, if present, as an absolute path.
+        """
+        for image_type in extensions.IMAGE[::-1]:
+            for pack_item in self.filesystem.listdir(self.pack_dir):
+                if extensions.match(pack_item, image_type):
+                    return self._path.join(self.pack_dir, pack_item)
+        
+        # No image matches found in the pack directory
+        # Check for images alongside the pack directory with the same name
+        songs_dir, pack_name = self._path.split(self.pack_dir)
+        for image_type in extensions.IMAGE[::-1]:
+            parent_banner = self._path.join(songs_dir, pack_name + image_type)
+            if self.filesystem.exists(parent_banner):
+                return parent_banner
