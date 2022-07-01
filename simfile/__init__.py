@@ -15,6 +15,7 @@ from fs.base import FS
 from msdparser import parse_msd
 
 from simfile._private.nativeosfs import NativeOSFS
+from simfile.dir import SimfileDirectory, SimfilePack
 
 from .ssc import SSCSimfile
 from .sm import SMSimfile
@@ -165,6 +166,28 @@ def open_with_detected_encoding(
     
     # If all encodings failed, raise the exception chain
     raise exception or UnicodeError
+
+
+def opendir(
+    simfile_dir: str,
+    filesystem: FS = NativeOSFS(),
+    **kwargs
+) -> SimfileDirectory:
+    """
+    Convenience method for the :class:`.SimfileDirectory` constructor.
+    """
+    return SimfileDirectory(simfile_dir, filesystem=filesystem, **kwargs)
+
+
+def openpack(
+    pack_dir: str,
+    filesystem: FS = NativeOSFS(),
+    **kwargs
+) -> SimfilePack:
+    """
+    Convenience method for the :class:`.SimfilePack` constructor.
+    """
+    return SimfilePack(pack_dir, filesystem=filesystem, **kwargs)
 
 
 class CancelMutation(BaseException):
