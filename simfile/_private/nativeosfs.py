@@ -11,12 +11,16 @@ from fs.osfs import OSFS
 
 class NativeOSFS(FS):
     """
-    OS filesystem implementation that sticks to native system paths.
+    OS filesystem implementation that works with native system paths.
 
     This implementation differs from :class:`fs.osfs.OSFS` in that the
     constructor takes no `root_path` (and thus performs no sandboxing), and
     all methods take & return *system paths* - on Windows, that means
     backslash separators and drive letters are preserved.
+
+    Note that this violates one of the contracts of the PyFilesystem API,
+    namely that paths are *PyFileSystem paths*, which always use forward
+    slash :code:`/` as separators.
     
     Errata:
     
