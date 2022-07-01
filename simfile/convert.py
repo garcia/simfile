@@ -4,10 +4,12 @@ Functions for converting SM to SSC simfiles and vice-versa.
 from collections import defaultdict
 from copy import deepcopy
 from enum import Enum
-from simfile.types import Simfile, Chart
-from typing import DefaultDict, Dict, List, Optional, Type, TypeVar
+from typing import DefaultDict, Dict, List, Optional, Type, TypeVar, cast
+
 from .sm import SMChart, SMSimfile
 from .ssc import SSCChart, SSCSimfile
+from .timing import BeatValue, BeatValues
+from .types import Simfile, Chart
 
 
 __all__ = [
@@ -76,6 +78,8 @@ INVALID_PROPERTIES: Dict[Type, Dict[PropertyType, List[str]]] = {
             'OFFSET', 'BPMS', 'STOPS', 'DELAYS', 'WARPS',
         ],
     },
+    SSCSimfile: {},
+    SSCChart: {},
 }
 
 
@@ -170,6 +174,25 @@ def _copy_properties(
             output[property] = value
 
 
+def _convert_warps(source: Simfile, output: Simfile):
+    """
+    Stub method for warp conversion.
+    
+    Currently raises :code:`NotImplementedError` if warp timing is found.
+    """
+    if isinstance(source, SMSimfile):
+        bpms = BeatValues.from_str(source.bpms)
+        stops = BeatValues.from_str(source.stops)
+        for beat_values in (bpms, stops):
+            for _beat_value in beat_values:
+                beat_value: BeatValue = _beat_value # typing workaround
+                if beat_value.value < 0:
+                    raise NotImplementedError("Warp timing in SMSimfile can't be converted yet")
+    elif isinstance(source, SSCSimfile):
+        if len(BeatValues(source.warps)):
+            raise NotImplementedError("Warp timing in SSCSimfile can't be converted yet")
+
+
 def _convert(
     simfile: Simfile,
     output_simfile_type: Type[_CONVERT_SIMFILE],
@@ -180,6 +203,8 @@ def _convert(
 ) -> _CONVERT_SIMFILE:
     output_simfile = deepcopy(simfile_template) or output_simfile_type.blank()
 
+    _convert_warps(source=simfile, output=output_simfile)
+    
     _copy_properties(
         source=simfile,
         output=output_simfile,
@@ -198,7 +223,7 @@ def _convert(
         )
         output_simfile.charts.append(output_chart)
     
-    return output_simfile
+    return cast(_CONVERT_SIMFILE, output_simfile)
 
 
 def sm_to_ssc(
