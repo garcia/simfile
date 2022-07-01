@@ -77,7 +77,7 @@ def load(file: Union[TextIO, Iterator[str]], strict: bool = True) -> Simfile:
         return SMSimfile(file=file, strict=strict)
 
 
-def loads(string: str = None, strict: bool = True) -> Simfile:
+def loads(string: str, strict: bool = True) -> Simfile:
     """
     Load a string containing simfile data as a simfile.
     """
