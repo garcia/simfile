@@ -1,4 +1,4 @@
-from typing import Iterator, List, Optional
+from typing import Iterator, List, Optional, Tuple
 
 from fs.base import FS
 
@@ -10,15 +10,29 @@ from ._private import extensions
 from ._private.nativeosfs import NativeOSFS
 
 
-__all__ = ['SimfileDirectory', 'SimfilePack']
+__all__ = ['DuplicateSimfileError', 'SimfileDirectory', 'SimfilePack']
 
 
 class DuplicateSimfileError(Exception):
-    pass
+    """
+    Raised when a simfile directory contains multiple simfiles of the same
+    type (e.g. two SM files).
+    """
+
 
 class SimfileDirectory:
+    """
+    A simfile directory, containing an SM and/or SSC file, or neither.
+
+    Raises :class:`DuplicateSimfileError` if the directory contains
+    multiple simfiles of the same type (e.g. two SM files).
+    """
+
     sm_path: Optional[str] = None
+    """Absolute path to the SM file, if present."""
+    
     ssc_path: Optional[str] = None
+    """Absolute path to the SSC file, if present."""
 
     def __init__(
         self,
@@ -48,7 +62,22 @@ class SimfileDirectory:
                         )
                     self.ssc_path = simfile_path
     
-    def open(self, *, strict=True, **kwargs) -> Simfile:
+    def open(self, **kwargs) -> Simfile:
+        """
+        Open the simfile in this directory.
+        
+        If both SSC and SM are present, SSC is preferred. Keyword arguments
+        are passed down to :func:`simfile.open`.
+
+        Raises :code:`FileNotFoundError` if there is no SM or SSC file in
+        the directory.
+        """
+        if 'filesystem' in kwargs:
+            raise ValueError(
+                "Can't specify filesystem from SimfileDirectory.open "
+                "(try specifying it when creating the SimfileDirectory)"
+            )
+        
         preferred_simfile = self.ssc_path or self.sm_path
         if not preferred_simfile:
             raise FileNotFoundError('no simfile in directory')
@@ -60,10 +89,21 @@ class SimfileDirectory:
         )
     
     def assets(self) -> Assets:
+        """
+        Get the file assets for this simfile.
+        """
         return Assets(self.simfile_dir, simfile=self.open())
 
 
 class SimfilePack:
+    simfile_paths: Tuple[str]
+    """
+    Absolute paths to the simfile directories in this pack.
+
+    Only immediate subdirectories containing an SM or SSC file are
+    included.
+    """
+    
     def __init__(
         self,
         pack_dir: str,
@@ -87,12 +127,23 @@ class SimfilePack:
                     yield simfile_path
                     break
     
-    @property
     def simfile_directories(self) -> Iterator[SimfileDirectory]:
+        """
+        Iterator over the simfile directories in the pack.
+
+        Only immediate subdirectories containing an SM or SSC file are
+        included.
+        """
         for simfile_path in self.simfile_paths:
             yield SimfileDirectory(simfile_path, filesystem=self.filesystem)
     
-    @property
-    def simfiles(self) -> Iterator[Simfile]:
-        for simfile_dir in self.simfile_directories:
-            yield simfile_dir.open()
+    def simfiles(self, **kwargs) -> Iterator[Simfile]:
+        """
+        Iterator over the simfiles in the pack.
+
+        If both SSC and SM are present in a simfile directory, SSC is
+        preferred. Keyword arguments are passed down to
+        :func:`simfile.open`.
+        """
+        for simfile_dir in self.simfile_directories():
+            yield simfile_dir.open(**kwargs)

@@ -61,6 +61,23 @@ ASSET_DEFINITIONS: Mapping[str, AssetDefinition] = {
 
 
 class Assets:
+    """
+    Asset loader for a simfile directory.
+
+    This loader uses the same heuristics as StepMania to determine a
+    default path for assets not specified in the simfile. For example, if
+    the BACKGROUND property is missing or blank, StepMania will look for an
+    image whose filename contains "background" or ends with "bg".
+
+    The simfile will be loaded from the :code:`simfile_dir` unless an
+    explicit :code:`simfile` argument is supplied. This is intended mostly
+    as an optimization for when the simfile has already been loaded from
+    disk.
+
+    All asset paths are absolute and normalized. Keyword arguments are
+    passed down to :func:`simfile.open`.
+    """
+
     @property
     def music(self): return self._asset_property('MUSIC')
     @property
@@ -82,6 +99,7 @@ class Assets:
         *,
         simfile: Optional[Simfile] = None,
         filesystem: FS = NativeOSFS(),
+        **kwargs,
     ):
         self.simfile_dir = simfile_dir
         self.filesystem = filesystem
@@ -89,11 +107,14 @@ class Assets:
         self._cache: MutableMapping[str, Optional[str]] = {}
         self._path = FSPath(filesystem)
 
-        from simfile.dir import SimfileDirectory
-        self.simfile = simfile or SimfileDirectory(
-            simfile_dir,
-            filesystem=filesystem,
-        ).open()
+        if simfile:
+            self.simfile = simfile
+        else:
+            from simfile.dir import SimfileDirectory
+            self.simfile = SimfileDirectory(
+                simfile_dir,
+                filesystem=filesystem,
+            ).open(**kwargs)
     
     def _asset_property(self: 'Assets', prop: str) -> Optional[str]:
         if prop in self._cache: return self._cache[prop]
