@@ -4,7 +4,7 @@ Timing data classes, plus submodules that operate on timing data.
 from decimal import Decimal
 from fractions import Fraction
 from numbers import Rational
-from typing import Optional, Type, NamedTuple
+from typing import Any, Optional, Type, NamedTuple, Union
 
 from ._private.timingsource import timing_source
 from simfile._private.generic import ListWithRepr
@@ -22,12 +22,19 @@ class Beat(Fraction):
     """
     A fractional beat value, denoting vertical position in a simfile.
 
-    The constructor the same arguments as Python's :code:`Fraction`. If
-    the input doesn't have an explicit denominator (either as a
-    `denominator` argument or a lone rational argument), the resulting
-    fraction will be rounded to the nearest :meth:`tick`.
+    The constructor the same arguments as Python's :code:`Fraction`:
+
+      Takes a string like '3/2' or '1.5', another Rational instance, a
+      numerator/denominator pair, or a float.
+    
+    If the input is a float or string, the resulting fraction will be
+    rounded to the nearest :meth:`tick`.
     """
-    def __new__(cls, numerator=0, denominator=None):
+    def __new__(
+        cls,
+        numerator: Any = 0,
+        denominator: Optional[Union[int, Rational]] = None,
+    ):
         self = super().__new__(cls, numerator, denominator)
         if denominator or isinstance(numerator, Rational):
             return self
