@@ -96,13 +96,15 @@ class SimfileDirectory:
 
 
 class SimfilePack:
-    simfile_paths: Tuple[str]
     """
-    Absolute paths to the simfile directories in this pack.
+    A simfile pack directory, containing any number of simfile directories.
 
-    Only immediate subdirectories containing an SM or SSC file are
-    included.
+    Only immediate subdirectories of :code:`pack_dir` containing an SM or
+    SSC file are included. Simfiles aren't guaranteed to appear in any
+    particular order.
     """
+    simfile_paths: Tuple[str]
+    """Absolute paths to the simfile directories in this pack."""
     
     def __init__(
         self,
@@ -130,9 +132,6 @@ class SimfilePack:
     def simfile_directories(self) -> Iterator[SimfileDirectory]:
         """
         Iterator over the simfile directories in the pack.
-
-        Only immediate subdirectories containing an SM or SSC file are
-        included.
         """
         for simfile_path in self.simfile_paths:
             yield SimfileDirectory(simfile_path, filesystem=self.filesystem)
