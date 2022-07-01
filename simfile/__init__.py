@@ -172,22 +172,36 @@ def opendir(
     simfile_dir: str,
     filesystem: FS = NativeOSFS(),
     **kwargs
-) -> SimfileDirectory:
+) -> Simfile:
     """
-    Convenience method for the :class:`.SimfileDirectory` constructor.
+    Open a simfile from its directory path.
+
+    If both SSC and SM are present, SSC is preferred. Keyword arguments
+    are passed down to :func:`simfile.open`. For more control, try using
+    :class:`.SimfileDirectory` directly.
     """
-    return SimfileDirectory(simfile_dir, filesystem=filesystem, **kwargs)
+    return SimfileDirectory(
+        simfile_dir,
+        filesystem=filesystem,
+    ).open(**kwargs)
 
 
 def openpack(
     pack_dir: str,
     filesystem: FS = NativeOSFS(),
     **kwargs
-) -> SimfilePack:
+) -> Iterator[Simfile]:
     """
-    Convenience method for the :class:`.SimfilePack` constructor.
+    Open a pack of simfiles from the pack's directory path.
+
+    Only immediate subdirectories of :code:`pack_dir` containing an SM or
+    SSC file are included. Simfiles aren't guaranteed to appear in any
+    particular order. If both SSC and SM are present, SSC is preferred.
+    
+    Keyword arguments are passed down to :func:`simfile.open`. For more
+    control, try using :class:`.SimfileDirectory` directly.
     """
-    return SimfilePack(pack_dir, filesystem=filesystem, **kwargs)
+    return SimfilePack(pack_dir, filesystem=filesystem).simfiles(**kwargs)
 
 
 class CancelMutation(BaseException):
