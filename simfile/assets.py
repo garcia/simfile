@@ -75,7 +75,8 @@ class Assets:
     disk.
 
     All asset paths are absolute and normalized. Keyword arguments are
-    passed down to :func:`simfile.open`.
+    passed down to :func:`simfile.open` (and are only valid if
+    :code:`simfile` is not provided).
     """
 
     @property
@@ -101,6 +102,11 @@ class Assets:
         filesystem: FS = NativeOSFS(),
         **kwargs,
     ):
+        if simfile and kwargs:
+            raise TypeError(
+                "Assets can't take both a simfile and kwargs (kwargs are only "
+                "useful if no explicit simfile is provided)"
+            )
         self.simfile_dir = simfile_dir
         self.filesystem = filesystem
         self._dirlist = self.filesystem.listdir(simfile_dir)

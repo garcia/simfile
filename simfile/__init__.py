@@ -24,8 +24,8 @@ from .types import Simfile
 
 __version__ = '2.0.1'
 __all__ = [
-    'load', 'loads', 'open', 'open_with_detected_encoding', 'CancelMutation',
-    'mutate',
+    'load', 'loads', 'open', 'open_with_detected_encoding', 'opendir',
+    'openpack', 'CancelMutation', 'mutate',
 ]
 
 
@@ -199,7 +199,7 @@ def openpack(
     particular order. If both SSC and SM are present, SSC is preferred.
     
     Keyword arguments are passed down to :func:`simfile.open`. For more
-    control, try using :class:`.SimfileDirectory` directly.
+    control, try using :class:`.SimfilePack` directly.
     """
     return SimfilePack(pack_dir, filesystem=filesystem).simfiles(**kwargs)
 

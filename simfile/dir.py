@@ -73,7 +73,7 @@ class SimfileDirectory:
         the directory.
         """
         if 'filesystem' in kwargs:
-            raise ValueError(
+            raise TypeError(
                 "Can't specify filesystem from SimfileDirectory.open "
                 "(try specifying it when creating the SimfileDirectory)"
             )
