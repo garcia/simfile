@@ -103,7 +103,7 @@ class SimfilePack:
     SSC file are included. Simfiles aren't guaranteed to appear in any
     particular order.
     """
-    simfile_paths: Tuple[str]
+    simfile_dir_paths: Tuple[str]
     """Absolute paths to the simfile directories in this pack."""
     
     def __init__(
@@ -112,10 +112,10 @@ class SimfilePack:
         *,
         filesystem: FS = NativeOSFS(),
     ):
-        self.pack_dir = pack_dir
-        self.filesystem = filesystem
         self._path = FSPath(filesystem)
-        self.simfile_paths = tuple(self._find_simfile_paths())
+        self.pack_dir = self._path.normpath(pack_dir)
+        self.filesystem = filesystem
+        self.simfile_dir_paths = tuple(self._find_simfile_paths())
     
     def _find_simfile_paths(self) -> Iterator[str]:
         for pack_item in self.filesystem.listdir(self.pack_dir):
@@ -129,11 +129,11 @@ class SimfilePack:
                     yield simfile_path
                     break
     
-    def simfile_directories(self) -> Iterator[SimfileDirectory]:
+    def simfile_dirs(self) -> Iterator[SimfileDirectory]:
         """
         Iterator over the simfile directories in the pack.
         """
-        for simfile_path in self.simfile_paths:
+        for simfile_path in self.simfile_dir_paths:
             yield SimfileDirectory(simfile_path, filesystem=self.filesystem)
     
     def simfiles(self, **kwargs) -> Iterator[Simfile]:
@@ -144,7 +144,7 @@ class SimfilePack:
         preferred. Keyword arguments are passed down to
         :func:`simfile.open`.
         """
-        for simfile_dir in self.simfile_directories():
+        for simfile_dir in self.simfile_dirs():
             yield simfile_dir.open(**kwargs)
     
     @property
@@ -155,6 +155,15 @@ class SimfilePack:
     def banner(self) -> Optional[str]:
         """
         Get the pack's banner image, if present, as an absolute path.
+
+        Follows the same logic as StepMania:
+
+        * When there are multiple images in the pack directory, the banner
+          is chosen first by extension priority (PNG is highest, then JPG,
+          JPEG, GIF, BMP), then alphabetically.
+        * If there are no images in the pack directory, checks for a banner
+          *alongside* the pack with the same base name, using the same
+          extension priority as before.
         """
         for image_type in extensions.IMAGE:
             for pack_item in self.filesystem.listdir(self.pack_dir):
