@@ -1,7 +1,7 @@
 import os
 
 from pyfakefs.fake_filesystem_unittest import TestCase # type: ignore
-from simfile.dir import SimfileDirectory
+from simfile.dir import SimfileDirectory, SimfilePack
 
 from simfile.sm import SMSimfile
 from simfile.ssc import SSCSimfile
@@ -76,3 +76,163 @@ class TestSimfileDirectory(TestCase):
         self.assertIsNone(sd.sm_path)
         self.assertIsNone(sd.ssc_path)
         self.assertRaises(FileNotFoundError, sd.open)
+
+
+class TestSimfilePack(TestCase):
+    def setUp(self):
+        self.setUpPyfakefs()
+    
+    def make_pack(self, pack_dir):
+        os.mkdir(pack_dir)
+        
+        a_dir = os.path.join(pack_dir, 'Simfile A')
+        os.mkdir(a_dir)
+        a_sm_path = os.path.join(a_dir, 'a.sm')
+
+        b_dir = os.path.join(pack_dir, 'Simfile B')
+        os.mkdir(b_dir)
+        b_sm_path = os.path.join(b_dir, 'b.sm')
+        b_ssc_path = os.path.join(b_dir, 'b.ssc')
+
+        no_simfile_dir = os.path.join(pack_dir, 'tmp')
+        os.mkdir(no_simfile_dir)
+        no_simfile_file = os.path.join(no_simfile_dir, 'tmp.txt')
+
+        for blank_file in (a_sm_path, b_sm_path, b_ssc_path, no_simfile_file):
+            with open(blank_file, 'w') as writer:
+                if blank_file.endswith('.sm'):
+                    SMSimfile.blank().serialize(writer)
+                if blank_file.endswith('.ssc'):
+                    SSCSimfile.blank().serialize(writer)
+        
+        # TODO: find a better way to manage this
+        return a_dir, a_sm_path, b_dir, b_sm_path, b_ssc_path
+    
+    def test_simfile_discovery(self):
+        pack_dir = 'My Pack'
+        a_dir, a_sm_path, b_dir, b_sm_path, b_ssc_path = self.make_pack(
+            pack_dir,
+        )
+
+        sp = SimfilePack(pack_dir)
+        self.assertEqual(set(sp.simfile_dir_paths), set((a_dir, b_dir)))
+        
+        a_index = sp.simfile_dir_paths.index(a_dir)
+        b_index = sp.simfile_dir_paths.index(b_dir)
+        
+        simfile_dirs = list(sp.simfile_dirs())
+        self.assertEqual(2, len(simfile_dirs))
+        simfile_dir_a = simfile_dirs[a_index]
+        simfile_dir_b = simfile_dirs[b_index]
+        self.assertEqual(a_sm_path, simfile_dir_a.sm_path)
+        self.assertIsNone(simfile_dir_a.ssc_path)
+        self.assertEqual(b_sm_path, simfile_dir_b.sm_path)
+        self.assertEqual(b_ssc_path, simfile_dir_b.ssc_path)
+
+        simfiles = list(sp.simfiles())
+        self.assertEqual(2, len(simfiles))
+        simfile_a = simfiles[a_index]
+        simfile_b = simfiles[b_index]
+        self.assertIsInstance(simfile_a, SMSimfile)
+        self.assertIsInstance(simfile_b, SSCSimfile)
+    
+    def test_simfile_discovery_with_trailing_slash(self):
+        pack_dir = 'My Pack'
+        a_dir, a_sm_path, b_dir, b_sm_path, b_ssc_path = self.make_pack(
+            pack_dir,
+        )
+
+        sp = SimfilePack(pack_dir + os.path.sep)
+        self.assertEqual(set(sp.simfile_dir_paths), set((a_dir, b_dir)))
+        
+        a_index = sp.simfile_dir_paths.index(a_dir)
+        b_index = sp.simfile_dir_paths.index(b_dir)
+        
+        simfile_dirs = list(sp.simfile_dirs())
+        self.assertEqual(2, len(simfile_dirs))
+        simfile_dir_a = simfile_dirs[a_index]
+        simfile_dir_b = simfile_dirs[b_index]
+        self.assertEqual(a_sm_path, simfile_dir_a.sm_path)
+        self.assertIsNone(simfile_dir_a.ssc_path)
+        self.assertEqual(b_sm_path, simfile_dir_b.sm_path)
+        self.assertEqual(b_ssc_path, simfile_dir_b.ssc_path)
+
+        simfiles = list(sp.simfiles())
+        self.assertEqual(2, len(simfiles))
+        simfile_a = simfiles[a_index]
+        simfile_b = simfiles[b_index]
+        self.assertIsInstance(simfile_a, SMSimfile)
+        self.assertIsInstance(simfile_b, SSCSimfile)
+    
+    def test_name(self):
+        enclosing_dir = 'Songs'
+        os.mkdir(enclosing_dir)
+
+        pack_name = 'My Pack'
+        pack_dir = os.path.join(enclosing_dir, pack_name)
+        a_dir, a_sm_path, b_dir, b_sm_path, b_ssc_path = self.make_pack(
+            pack_dir,
+        )
+        
+        sp = SimfilePack(pack_dir)
+        self.assertEqual(pack_name, sp.name)
+
+    def test_name_with_trailing_slash(self):
+        enclosing_dir = 'Songs'
+        os.mkdir(enclosing_dir)
+
+        pack_name = 'My Pack'
+        pack_dir = os.path.join(enclosing_dir, pack_name)
+        a_dir, a_sm_path, b_dir, b_sm_path, b_ssc_path = self.make_pack(
+            pack_dir,
+        )
+
+        sp = SimfilePack(pack_dir + os.path.sep)
+        self.assertEqual(pack_name, sp.name)
+    
+    def test_banner(self):
+        enclosing_dir = 'Songs'
+        os.mkdir(enclosing_dir)
+
+        pack_name = 'My Pack'
+        pack_dir = os.path.join(enclosing_dir, pack_name)
+        a_dir, a_sm_path, b_dir, b_sm_path, b_ssc_path = self.make_pack(
+            pack_dir,
+        )
+
+        # In descending order of priority
+        # This list will be mutated as each banner is deleted from the test FS
+        pack_banner_paths = [
+            os.path.join(pack_dir, 'banner.png'),
+            os.path.join(pack_dir, 'artwork.jpg'),
+            os.path.join(pack_dir, 'cdtitle.bmp'),
+            os.path.join(enclosing_dir, 'My Pack.jpg'),
+            os.path.join(enclosing_dir, 'My Pack.jpeg'),
+        ]
+
+        other_paths = [
+            os.path.join(enclosing_dir, 'Other Pack.png'),
+            os.path.join(enclosing_dir, 'My Pack.webp'),
+            os.path.join(pack_dir, 'idk.webp'),
+            os.path.join(a_dir, 'a.png'),
+        ]
+
+        for image_location in pack_banner_paths + other_paths:
+            with open(image_location, 'w') as _:
+                pass
+        
+        # Check against the highest priority pack banner, then delete it to
+        # check the next highest priority until no banners remain
+        iteration = 1
+        while pack_banner_paths:
+            pack_banner_path = pack_banner_paths.pop(0)
+            sp = SimfilePack(pack_dir)
+            
+            self.assertEqual(pack_banner_path, sp.banner(), f"Wrong banner path on iteration={iteration}")
+
+            os.remove(pack_banner_path)
+            iteration += 1
+        
+        # No banners left - we shouldn't return any of the other image paths
+        sp = SimfilePack(pack_dir)
+        self.assertIsNone(sp.banner())
