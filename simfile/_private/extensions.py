@@ -1,11 +1,11 @@
 from typing import Optional
 
 
-SIMFILE = ('.sm', '.ssc')
+SIMFILE = ('.ssc', '.sm')
 
-IMAGE = ('.bmp', '.gif', '.jpeg', '.jpg', '.png')
+IMAGE = ('.png', '.jpg', '.jpeg', '.gif', '.bmp')
 """
-Image formats. Incidentally in *ascending* order of preference
+Incidentally in descending order of preference
 (SimfilePack.banner relies on this).
 """
 

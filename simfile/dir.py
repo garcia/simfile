@@ -156,7 +156,7 @@ class SimfilePack:
         """
         Get the pack's banner image, if present, as an absolute path.
         """
-        for image_type in extensions.IMAGE[::-1]:
+        for image_type in extensions.IMAGE:
             for pack_item in self.filesystem.listdir(self.pack_dir):
                 if extensions.match(pack_item, image_type):
                     return self._path.join(self.pack_dir, pack_item)
@@ -164,7 +164,7 @@ class SimfilePack:
         # No image matches found in the pack directory
         # Check for images alongside the pack directory with the same name
         songs_dir, pack_name = self._path.split(self.pack_dir)
-        for image_type in extensions.IMAGE[::-1]:
+        for image_type in extensions.IMAGE:
             parent_banner = self._path.join(songs_dir, pack_name + image_type)
             if self.filesystem.exists(parent_banner):
                 return parent_banner
