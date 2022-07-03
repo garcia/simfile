@@ -169,7 +169,7 @@ class TestNoteData(unittest.TestCase):
             self.assertEqual(note2.player, 1)
     
     def test_from_chart_and_iter_handle_notes2(self):
-        l9 = open_simfile('testdata/L9.ssc')
+        l9 = open_simfile('testdata/L9/L9.ssc')
         chart = l9.charts[0]
         
         notes = list(NoteData(chart))
@@ -187,7 +187,7 @@ class TestNoteData(unittest.TestCase):
         ], notes[:10])
     
     def test_notes_assignment_handles_notes2(self):
-        l9 = open_simfile('testdata/L9.ssc')
+        l9 = open_simfile('testdata/L9/L9.ssc')
         chart = l9.charts[0]
         notedata = NoteData(chart)
         modified_notedata: NoteData = NoteData.from_notes(
