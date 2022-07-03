@@ -33,10 +33,10 @@ Load simfiles from disk using `simfile.open` or `simfile.load`:
 
 ```python
 >>> import simfile
->>> springtime = simfile.open('testdata/Springtime.ssc')
+>>> springtime = simfile.open('testdata/Springtime/Springtime.ssc')
 >>> springtime
 <SSCSimfile: Springtime>
->>> with open('testdata/Kryptix.sm', 'r') as infile:
+>>> with open('testdata/Kryptix/Kryptix.sm', 'r') as infile:
 ...     kryptix = simfile.load(infile)
 ...
 >>> kryptix
