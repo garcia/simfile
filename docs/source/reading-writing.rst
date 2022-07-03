@@ -3,8 +3,8 @@
 Reading & writing simfiles
 ==========================
 
-Reading simfiles from disk
---------------------------
+Opening simfiles
+----------------
 
 The top-level :mod:`simfile` module offers 3 convenience functions for loading
 simfiles from the filesystem, depending on what kind of filename you have:
@@ -27,26 +27,12 @@ simfiles from the filesystem, depending on what kind of filename you have:
 
 Plus two more that don't take filenames:
 
-* :func:`simfile.load`  :func:`simfile.loads`:
+* :func:`simfile.load` takes a file object.
+* :func:`simfile.loads` takes a string of simfile data.
 
-.. doctest::
-
-    >>> import simfile
-    >>> with open('testdata/Springtime/Springtime.ssc', 'r') as infile:
-    ...     springtime = simfile.load(infile)
-    ...
-    >>> string_contents = str(springtime)
-    >>> springtime2 = simfile.loads(string_contents)
-    >>> springtime == springtime2
-    True
-
-Notice the usage of :code:`str(simfile)` to turn the simfile object back into
-its native format. This is a common pattern throughout **simfile**:
-stringifying data turns it into what you would see in Notepad!
-
-The type returned by these functions is declared as
-:data:`simfile.types.Simfile`. This is a union of the two concrete simfile
-types, :class:`simfile.sm.SMSimfile` and :class:`simfile.ssc.SSCSimfile`:
+The type returned by functions like :func:`.open` and :func:`.load` is declared
+as :data:`.Simfile`. This is a union of the two concrete simfile
+types, :class:`.SMSimfile` and :class:`.SSCSimfile`:
 
  .. doctest::
 
