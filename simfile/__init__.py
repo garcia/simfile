@@ -172,36 +172,48 @@ def opendir(
     simfile_dir: str,
     filesystem: FS = NativeOSFS(),
     **kwargs
-) -> Simfile:
+) -> Tuple[Simfile, str]:
     """
-    Open a simfile from its directory path.
+    Open a simfile from its directory path; returns the simfile and its path.
 
     If both SSC and SM are present, SSC is preferred. Keyword arguments
-    are passed down to :func:`simfile.open`. For more control, try using
-    :class:`.SimfileDirectory` directly.
+    are passed down to :func:`simfile.open`.
+    
+    If you need more flexibility (for example, if you need both the SM and
+    SSC files), try using :class:`.SimfileDirectory`.
     """
-    return SimfileDirectory(
+    sd = SimfileDirectory(
         simfile_dir,
         filesystem=filesystem,
-    ).open(**kwargs)
+    )
+    
+    return (sd.open(**kwargs), cast(str, sd.ssc_path or sd.sm_path))
 
 
 def openpack(
     pack_dir: str,
     filesystem: FS = NativeOSFS(),
     **kwargs
-) -> Iterator[Simfile]:
+) -> Iterator[Tuple[Simfile, str]]:
     """
-    Open a pack of simfiles from the pack's directory path.
+    Open a pack of simfiles from the pack's directory path;
+    yields (simfile, filename) tuples.
 
     Only immediate subdirectories of :code:`pack_dir` containing an SM or
     SSC file are included. Simfiles aren't guaranteed to appear in any
     particular order. If both SSC and SM are present, SSC is preferred.
+    Keyword arguments are passed down to :func:`simfile.open`.
     
-    Keyword arguments are passed down to :func:`simfile.open`. For more
-    control, try using :class:`.SimfilePack` directly.
+    If you need more flexibility (for example, if you need the pack's
+    banner or a :class:`.SimfileDirectory` for each simfile), try using
+    :class:`.SimfilePack`.
     """
-    return SimfilePack(pack_dir, filesystem=filesystem).simfiles(**kwargs)
+    sp = SimfilePack(pack_dir, filesystem=filesystem)
+
+    yield from (
+        (simfile_dir.open(), cast(str, simfile_dir.ssc_path or simfile_dir.sm_path))
+        for simfile_dir in sp.simfile_dirs()
+    )
 
 
 class CancelMutation(BaseException):

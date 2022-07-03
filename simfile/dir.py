@@ -40,9 +40,9 @@ class SimfileDirectory:
         *,
         filesystem: FS = NativeOSFS(),
     ):
-        self.simfile_dir = simfile_dir
-        self.filesystem = filesystem
         self._path = FSPath(filesystem)
+        self.simfile_dir = self._path.normpath(simfile_dir)
+        self.filesystem = filesystem
         self._dirlist: List[str] = self.filesystem.listdir(simfile_dir)
         
         for simfile_item in self._dirlist:
