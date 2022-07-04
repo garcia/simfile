@@ -22,7 +22,7 @@ from .sm import SMSimfile
 from .types import Simfile
 
 
-__version__ = '2.1.0-beta.2'
+__version__ = '2.1.0-beta.3'
 __all__ = [
     'load', 'loads', 'open', 'open_with_detected_encoding', 'opendir',
     'openpack', 'CancelMutation', 'mutate',
