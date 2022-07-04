@@ -3,6 +3,39 @@
 Changelog
 =========
 
+2.1.0-beta.1
+------------
+
+New features
+~~~~~~~~~~~~
+
+* The new :mod:`simfile.dir` module offers :class:`.SimfileDirectory` and
+  :class:`.SimfilePack` classes for nagivating simfile filesystem structures.
+* The new :mod:`simfile.assets` module provides an :class:`.Assets` class that
+  can reliably discover paths to simfile assets, even if they're not specified
+  in the simfile.
+* `PyFilesystem2 <https://docs.pyfilesystem.org/en/latest/index.html>`_ has
+  been integrated throughout this library's filesystem interactions, enabling
+  OS and non-OS filesystems to be traversed using the same code. All functions,
+  methods, and constructors that lead to filesystem interactions now have an
+  optional :code:`filesystem` parameter for specifying a PyFS filesystem
+  object. When omitted, the filesystem defaults to the native OS filesystem as
+  before.
+
+Bugfixes
+~~~~~~~~
+
+* The :data:`.charts` property on simfiles is now writable, meaning the list
+  of charts can be overwritten directly (not just added to / removed from).
+* Backslash escape sequences and multi-value MSD parameters are now handled
+  correctly, both when opening and serializing simfiles. Previously,
+  backslashes and any colons after the key-value separator were treated as
+  regular text.
+* :func:`.sm_to_ssc` no longer produces invalid output when there are negative
+  BPMs or stops in the timing data. (It throws :code:`NotImplementedError` as
+  a temporary stopgap. In the future, negative timing data will be converted to
+  warps, as StepMania does automatically.)
+
 2.0.1
 -----
 
