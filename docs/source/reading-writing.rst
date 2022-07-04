@@ -40,8 +40,8 @@ types, :class:`.SMSimfile` and :class:`.SSCSimfile`:
     >>> springtime = simfile.open('testdata/Springtime/Springtime.ssc')
     >>> type(springtime)
     <class 'simfile.ssc.SSCSimfile'>
-    >>> kryptix = simfile.open('testdata/Kryptix/Kryptix.sm')
-    >>> type(kryptix)
+    >>> nekonabe = simfile.open('testdata/nekonabe/nekonabe.sm')
+    >>> type(nekonabe)
     <class 'simfile.sm.SMSimfile'>
 
 The "magic" that determines which type to use is documented under

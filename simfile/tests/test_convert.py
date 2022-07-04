@@ -9,7 +9,7 @@ from ..convert import *
 
 class TestConvert(unittest.TestCase):
     def test_sm_to_ssc(self):
-        sm = simfile.open('testdata/Kryptix/Kryptix.sm')
+        sm = simfile.open('testdata/nekonabe/nekonabe.sm')
         assert isinstance(sm, SMSimfile)
         
         ssc = sm_to_ssc(sm)
