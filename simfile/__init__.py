@@ -6,13 +6,16 @@ default, the underlying parser will throw an exception if it finds any
 stray text between parameters. This behavior can be overridden by
 setting `strict` to False.
 """
-import builtins
 from contextlib import contextmanager
 from io import StringIO
 from itertools import tee
-from typing import Iterator, List, Optional, TextIO, Tuple, Union
+from typing import Iterator, List, Optional, TextIO, Tuple, Union, cast
 
+from fs.base import FS
 from msdparser import parse_msd
+
+from simfile._private.nativeosfs import NativeOSFS
+from simfile.dir import SimfileDirectory, SimfilePack
 
 from .ssc import SSCSimfile
 from .sm import SMSimfile
@@ -21,8 +24,8 @@ from .types import Simfile
 
 __version__ = '2.0.1'
 __all__ = [
-    'load', 'loads', 'open', 'open_with_detected_encoding', 'CancelMutation',
-    'mutate',
+    'load', 'loads', 'open', 'open_with_detected_encoding', 'opendir',
+    'openpack', 'CancelMutation', 'mutate',
 ]
 
 
@@ -84,7 +87,12 @@ def loads(string: str, strict: bool = True) -> Simfile:
     return load(StringIO(string), strict=strict)
 
 
-def open(filename: str, strict: bool = True, **kwargs) -> Simfile:
+def open(
+    filename: str,
+    strict: bool = True,
+    filesystem: FS = NativeOSFS(),
+    **kwargs
+) -> Simfile:
     """
     Load a simfile by filename.
 
@@ -100,6 +108,7 @@ def open(filename: str, strict: bool = True, **kwargs) -> Simfile:
         filename,
         try_encodings=try_encodings,
         strict=strict,
+        filesystem=filesystem,
         **kwargs
     )[0]
 
@@ -108,6 +117,7 @@ def open_with_detected_encoding(
     filename: str,
     try_encodings: List[str] = ENCODINGS,
     strict: bool = True,
+    filesystem: FS = NativeOSFS(),
     **kwargs
 ) -> Tuple[Simfile, str]:
     """
@@ -138,7 +148,7 @@ def open_with_detected_encoding(
     
     for encoding in try_encodings:
         try:
-            with builtins.open(
+            with filesystem.open(
                 filename,
                 'r',
                 encoding=encoding,
@@ -158,6 +168,54 @@ def open_with_detected_encoding(
     raise exception or UnicodeError
 
 
+def opendir(
+    simfile_dir: str,
+    filesystem: FS = NativeOSFS(),
+    **kwargs
+) -> Tuple[Simfile, str]:
+    """
+    Open a simfile from its directory path; returns the simfile and its path.
+
+    If both SSC and SM are present, SSC is preferred. Keyword arguments
+    are passed down to :func:`simfile.open`.
+    
+    If you need more flexibility (for example, if you need both the SM and
+    SSC files), try using :class:`.SimfileDirectory`.
+    """
+    sd = SimfileDirectory(
+        simfile_dir,
+        filesystem=filesystem,
+    )
+    
+    return (sd.open(**kwargs), cast(str, sd.ssc_path or sd.sm_path))
+
+
+def openpack(
+    pack_dir: str,
+    filesystem: FS = NativeOSFS(),
+    **kwargs
+) -> Iterator[Tuple[Simfile, str]]:
+    """
+    Open a pack of simfiles from the pack's directory path;
+    yields (simfile, filename) tuples.
+
+    Only immediate subdirectories of :code:`pack_dir` containing an SM or
+    SSC file are included. Simfiles aren't guaranteed to appear in any
+    particular order. If both SSC and SM are present, SSC is preferred.
+    Keyword arguments are passed down to :func:`simfile.open`.
+    
+    If you need more flexibility (for example, if you need the pack's
+    banner or a :class:`.SimfileDirectory` for each simfile), try using
+    :class:`.SimfilePack`.
+    """
+    sp = SimfilePack(pack_dir, filesystem=filesystem)
+
+    yield from (
+        (simfile_dir.open(), cast(str, simfile_dir.ssc_path or simfile_dir.sm_path))
+        for simfile_dir in sp.simfile_dirs()
+    )
+
+
 class CancelMutation(BaseException):
     """
     Raise from inside a :func:`mutate` block to prevent saving the simfile.
@@ -171,6 +229,7 @@ def mutate(
     backup_filename: Optional[str] = None,
     try_encodings: List[str] = ENCODINGS,
     strict: bool = True,
+    filesystem: FS = NativeOSFS(),
     **kwargs
 ) -> Iterator[Simfile]:
     """
@@ -205,6 +264,7 @@ def mutate(
         input_filename,
         try_encodings=try_encodings,
         strict=strict,
+        filesystem=filesystem,
         **kwargs
     )
 
@@ -222,7 +282,7 @@ def mutate(
         
         # Write backup file if requested
         if backup_filename:
-            with builtins.open(
+            with filesystem.open(
                 backup_filename,
                 'w',
                 encoding=encoding,
@@ -231,10 +291,10 @@ def mutate(
                 writer.write(backup_data)
         
         # Write output file
-        with builtins.open(
+        with filesystem.open(
             output_filename or input_filename,
             'w',
             encoding=encoding,
             **kwargs
         ) as writer:
-            simfile.serialize(writer)
+            simfile.serialize(cast(TextIO, writer))

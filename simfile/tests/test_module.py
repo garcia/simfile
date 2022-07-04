@@ -1,4 +1,6 @@
 # coding=utf-8
+import os
+from typing import List, Set, Type
 from msdparser import MSDParserError
 from pyfakefs.fake_filesystem_unittest import TestCase # type: ignore
 
@@ -6,6 +8,7 @@ import simfile
 from simfile.sm import SMSimfile
 from simfile.ssc import SSCSimfile
 from simfile.tests import test_sm, test_ssc
+from simfile.types import Simfile
 
 test_encoding_strings = {
     'utf-8': 'μουσικός',
@@ -151,6 +154,60 @@ class TestSimfileModule(TestCase):
             strict=False,
         )
         self.assertEqual('Song', sim.title)
+    
+    def test_opendir(self):
+        dir = 'dir'
+        sm_path = os.path.join(dir, 'sm_file.sm')
+        ssc_path = os.path.join(dir, 'ssc_file.ssc')
+        
+        os.mkdir(dir)
+
+        sm_file = SMSimfile.blank()
+        sm_file.title = 'SM'
+        with open(sm_path, 'w') as writer:
+            sm_file.serialize(writer)
+        
+        ssc_file = SSCSimfile.blank()
+        ssc_file.title = 'SSC'
+        with open(ssc_path, 'w') as writer:
+            ssc_file.serialize(writer)
+        
+        sim, path = simfile.opendir('dir')
+        self.assertEqual(ssc_file, sim)
+        self.assertEqual(ssc_path, path)
+    
+    def test_openpack(self):
+        pack_dir = 'My Pack'
+        os.mkdir(pack_dir)
+        
+        a_dir = os.path.join(pack_dir, 'Simfile A')
+        os.mkdir(a_dir)
+        a_sm_path = os.path.join(a_dir, 'a.sm')
+
+        b_dir = os.path.join(pack_dir, 'Simfile B')
+        os.mkdir(b_dir)
+        b_sm_path = os.path.join(b_dir, 'b.sm')
+        b_ssc_path = os.path.join(b_dir, 'b.ssc')
+
+        no_simfile_dir = os.path.join(pack_dir, 'tmp')
+        os.mkdir(no_simfile_dir)
+        no_simfile_file = os.path.join(no_simfile_dir, 'tmp.txt')
+
+        for blank_file in (a_sm_path, b_sm_path, b_ssc_path, no_simfile_file):
+            with open(blank_file, 'w') as writer:
+                if blank_file.endswith('.sm'):
+                    SMSimfile.blank().serialize(writer)
+                if blank_file.endswith('.ssc'):
+                    SSCSimfile.blank().serialize(writer)
+        
+        sim_types: Set[Type] = set()
+        paths: Set[str] = set()
+        for sim, path in simfile.openpack(pack_dir):
+            sim_types.add(type(sim))
+            paths.add(path)
+        
+        self.assertEqual(set((SMSimfile, SSCSimfile)), sim_types)
+        self.assertEqual(set((a_sm_path, b_ssc_path)), paths)
 
     def test_mutate_with_sm_file(self):
         with simfile.mutate('testing_simfile.sm') as sm:

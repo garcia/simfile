@@ -3,52 +3,45 @@
 Reading & writing simfiles
 ==========================
 
-Reading simfiles from disk
---------------------------
+Opening simfiles
+----------------
 
-The top-level :mod:`simfile` module offers convenience functions for loading
-simfiles from the filesystem.
+The top-level :mod:`simfile` module offers 3 convenience functions for loading
+simfiles from the filesystem, depending on what kind of filename you have:
 
-Use :py:func:`simfile.open` to load a simfile by filename:
-
-.. doctest::
-
-    >>> import simfile
-    >>> springtime = simfile.open('testdata/Springtime.ssc')
-    >>> print(springtime)
-    <SSCSimfile: Springtime>
-    >>> print(springtime.title)
-    Springtime
-
-Alternatively, if you have your own file object or string containing simfile
-data, use :func:`simfile.load` or :func:`simfile.loads`:
+* :func:`simfile.open` takes a path to an SM or SSC file.
+* :func:`simfile.opendir` takes a path to a simfile directory.
+* :func:`simfile.openpack` takes a path to a simfile pack.
 
 .. doctest::
 
     >>> import simfile
-    >>> with open('testdata/Springtime.ssc', 'r') as infile:
-    ...     springtime = simfile.load(infile)
+    >>> springtime1 = simfile.open('testdata/Springtime/Springtime.ssc')
+    >>> springtime2, filename = simfile.opendir('testdata/Springtime')
+    >>> for sim, filename in simfile.openpack('testdata'):
+    ...     if sim.title == 'Springtime':
+    ...         springtime3 = sim
     ...
-    >>> string_contents = str(springtime)
-    >>> springtime2 = simfile.loads(string_contents)
-    >>> springtime == springtime2
+    >>> print springtime1 == springtime2 and springtime2 == springtime3
     True
 
-Notice that :code:`str(simfile)` turns the simfile object back into the raw
-file contents.
+Plus two more that don't take filenames:
 
-The type returned by these functions is declared as
-:data:`simfile.types.Simfile`. This is a union of the two actual simfile types,
-:class:`simfile.sm.SMSimfile` and :class:`simfile.ssc.SSCSimfile`:
+* :func:`simfile.load` takes a file object.
+* :func:`simfile.loads` takes a string of simfile data.
 
-.. doctest::
+The type returned by functions like :func:`.open` and :func:`.load` is declared
+as :data:`.Simfile`. This is a union of the two concrete simfile
+types, :class:`.SMSimfile` and :class:`.SSCSimfile`:
+
+ .. doctest::
 
     >>> import simfile
-    >>> springtime = simfile.open('testdata/Springtime.ssc')
+    >>> springtime = simfile.open('testdata/Springtime/Springtime.ssc')
     >>> type(springtime)
     <class 'simfile.ssc.SSCSimfile'>
-    >>> kryptix = simfile.open('testdata/Kryptix.sm')
-    >>> type(kryptix)
+    >>> nekonabe = simfile.open('testdata/nekonabe/nekonabe.sm')
+    >>> type(nekonabe)
     <class 'simfile.sm.SMSimfile'>
 
 The "magic" that determines which type to use is documented under
@@ -58,13 +51,17 @@ instantiate them with either a `file` or `string` argument:
 .. doctest::
 
     >>> from simfile.ssc import SSCSimfile
-    >>> with open('testdata/Springtime.ssc', 'r') as infile:
+    >>> with open('testdata/Springtime/Springtime.ssc', 'r') as infile:
     ...     springtime = SSCSimfile(file=infile)
 
-Note that the underlying simfile types don't know about the filesystem: you
-can't pass them a filename directly, nor do they offer a :code:`.save()`
-method. This is different from how version 1.0 of this package worked; refer to
-:ref:`migrating` for more details on the differences.
+.. note::
+
+    These :data:`.Simfile` types don't know about the filesystem; you can't
+    pass them a filename directly, nor do they offer a :code:`.save()`
+    method (see :ref:`writing-simfiles-to-disk` for alternatives).
+    Decoupling this knowledge from the simfile itself enables them to
+    live in-memory, without a corresponding file and without introducing
+    state-specific functionality to the core simfile classes.
 
 Accessing simfile properties
 ----------------------------
@@ -75,7 +72,7 @@ title. Many other properties are exposed as attributes as well:
 .. doctest::
 
     >>> import simfile
-    >>> springtime = simfile.open('testdata/Springtime.ssc')
+    >>> springtime = simfile.open('testdata/Springtime/Springtime.ssc')
     >>> springtime.music
     'Kommisar - Springtime.mp3'
     >>> springtime.samplestart
@@ -96,7 +93,7 @@ extend :code:`OrderedDict` under the hood):
 .. doctest::
 
     >>> import simfile
-    >>> springtime = simfile.open('testdata/Springtime.ssc')
+    >>> springtime = simfile.open('testdata/Springtime/Springtime.ssc')
     >>> springtime['ARTIST']
     'Kommisar'
     >>> springtime['ARTIST'] is springtime.artist
@@ -130,7 +127,7 @@ list under the :attr:`~.BaseSimfile.charts` attribute:
 .. doctest::
 
     >>> import simfile
-    >>> springtime = simfile.open('testdata/Springtime.ssc')
+    >>> springtime = simfile.open('testdata/Springtime/Springtime.ssc')
     >>> len(springtime.charts)
     9
     >>> springtime.charts[0]
@@ -142,7 +139,7 @@ function:
 .. doctest::
 
     >>> import simfile
-    >>> springtime = simfile.open('testdata/Springtime.ssc')
+    >>> springtime = simfile.open('testdata/Springtime/Springtime.ssc')
     >>> list(filter(
     ...     lambda chart: chart.stepstype == 'pump-single' and int(chart.meter) > 20,
     ...     springtime.charts,
@@ -175,7 +172,7 @@ the scenes.
 .. doctest::
 
     >>> import simfile
-    >>> springtime = simfile.open('testdata/Springtime.ssc')
+    >>> springtime = simfile.open('testdata/Springtime/Springtime.ssc')
     >>> springtime.subtitle = '(edited)'
     >>> springtime
     <SSCSimfile: Springtime (edited)>
@@ -194,11 +191,14 @@ data, refer to :ref:`timing-note-data` for an overview of the available classes
 
     >>> import simfile
     >>> from simfile.notes import NoteData
-    >>> springtime = simfile.open('testdata/Springtime.ssc')
+    >>> springtime = simfile.open('testdata/Springtime/Springtime.ssc')
     >>> first_chart = springtime.charts[0]
     >>> notedata = NoteData(first_chart)
     >>> # (...modify the note data...)
     >>> first_chart.notes = str(notedata)
+
+
+.. _writing-simfiles-to-disk:
 
 Writing simfiles to disk
 ------------------------
@@ -208,7 +208,7 @@ read simfiles from the disk, modify them, and then save them, you can use the
 :func:`simfile.mutate` context manager:
 
     >>> import simfile
-    >>> input_filename = 'testdata/Springtime.ssc'
+    >>> input_filename = 'testdata/Springtime/Springtime.ssc'
     >>> with simfile.mutate(
     ...     input_filename,
     ...     backup_filename=f'{input_filename}.old',
@@ -231,7 +231,7 @@ If this workflow doesn't suit your use case, you can serialize to a file object
 using the simfile's :meth:`~simfile.base.BaseSimfile.serialize` method:
 
     >>> import simfile
-    >>> springtime = simfile.open('testdata/Springtime.ssc')
+    >>> springtime = simfile.open('testdata/Springtime/Springtime.ssc')
     >>> springtime.subtitle = '(edited)'
     >>> with open('testdata/Springtime (edit).ssc', 'w', encoding='utf-8') as outfile:
     ...     springtime.serialize(outfile)
@@ -251,7 +251,7 @@ The functions exposed by the top-level :mod:`simfile` module accept a `strict`
 parameter that can be set to False to suppress MSD parser errors:
 
     >>> import simfile
-    >>> springtime = simfile.open('testdata/Springtime.ssc', strict=False)
+    >>> springtime = simfile.open('testdata/Springtime/Springtime.ssc', strict=False)
 
 .. warning::
 

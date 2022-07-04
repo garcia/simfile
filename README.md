@@ -33,14 +33,14 @@ Load simfiles from disk using `simfile.open` or `simfile.load`:
 
 ```python
 >>> import simfile
->>> springtime = simfile.open('testdata/Springtime.ssc')
+>>> springtime = simfile.open('testdata/Springtime/Springtime.ssc')
 >>> springtime
 <SSCSimfile: Springtime>
->>> with open('testdata/Kryptix.sm', 'r') as infile:
-...     kryptix = simfile.load(infile)
+>>> with open('testdata/nekonabe/nekonabe.sm', 'r') as infile:
+...     nekonabe = simfile.load(infile)
 ...
->>> kryptix
-<SMSimfile: Kryptix>
+>>> nekonabe
+<SMSimfile: 猫鍋>
 ```
 
 Use lowercase attributes to access most common properties:

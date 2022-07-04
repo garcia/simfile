@@ -9,7 +9,7 @@ from ..convert import *
 
 class TestConvert(unittest.TestCase):
     def test_sm_to_ssc(self):
-        sm = simfile.open('testdata/Kryptix.sm')
+        sm = simfile.open('testdata/nekonabe/nekonabe.sm')
         assert isinstance(sm, SMSimfile)
         
         ssc = sm_to_ssc(sm)
@@ -23,13 +23,13 @@ class TestConvert(unittest.TestCase):
                 self.assertEqual(value, ssc_chart[property])
     
     def test_ssc_to_sm_raises_by_default(self):
-        ssc = simfile.open('testdata/Springtime.ssc')
+        ssc = simfile.open('testdata/Springtime/Springtime.ssc')
         assert isinstance(ssc, SSCSimfile)
         
         self.assertRaises(InvalidPropertyException, ssc_to_sm, ssc)
 
     def test_ssc_to_sm_with_lenient_invalid_property_behaviors(self):
-        ssc = simfile.open('testdata/Springtime.ssc')
+        ssc = simfile.open('testdata/Springtime/Springtime.ssc')
         assert isinstance(ssc, SSCSimfile)
         
         sm = ssc_to_sm(
