@@ -3,7 +3,7 @@
 Changelog
 =========
 
-2.1.0-beta.2
+2.1.0-beta.3
 ------------
 
 New features
@@ -35,11 +35,6 @@ Bugfixes
   BPMs or stops in the timing data. (It throws :code:`NotImplementedError` as
   a temporary stopgap. In the future, negative timing data will be converted to
   warps, as StepMania does automatically.)
-
-2.1.0-beta.1
-------------
-
-Broken prerelease of 2.1.0-beta.2.
 
 2.0.1
 -----
