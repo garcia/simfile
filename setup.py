@@ -32,6 +32,7 @@ setup(
     zip_safe=False,
     install_requires=[
         'msdparser~=1.0.0',
+        'fs~=2.4.15',
     ],
     python_requires='>=3.6',
     tests_require=[

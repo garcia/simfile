@@ -13,8 +13,8 @@ mypy = "*"
 
 [packages]
 msdparser = "==2.0.0b4"
-pyfakefs = "*"
-fs = "*"
+pyfakefs = "~=4.5.6"
+fs = "~=2.4.15"
 
 [requires]
 python_version = "3.7"
