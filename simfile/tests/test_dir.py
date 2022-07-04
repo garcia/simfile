@@ -1,8 +1,9 @@
 import os
 
+from fs.zipfs import ZipFS
 from pyfakefs.fake_filesystem_unittest import TestCase # type: ignore
-from simfile.dir import SimfileDirectory, SimfilePack
 
+from simfile.dir import SimfileDirectory, SimfilePack
 from simfile.sm import SMSimfile
 from simfile.ssc import SSCSimfile
 
@@ -10,6 +11,7 @@ from simfile.ssc import SSCSimfile
 class TestSimfileDirectory(TestCase):
     def setUp(self):
         self.setUpPyfakefs()
+        self.fs.add_real_directory('testdata')
 
     def test_with_sm_and_ssc(self):
         dir = 'dir'
@@ -76,11 +78,23 @@ class TestSimfileDirectory(TestCase):
         self.assertIsNone(sd.sm_path)
         self.assertIsNone(sd.ssc_path)
         self.assertRaises(FileNotFoundError, sd.open)
+    
+    def test_with_filesystem(self):
+        zip_fs = ZipFS('testdata/testdata.zip')
+
+        sd = SimfileDirectory('Springtime', filesystem=zip_fs)
+        
+        self.assertIsNone(sd.sm_path)
+        self.assertEqual('Springtime/Springtime.ssc', sd.ssc_path)
+        
+        sim = sd.open()
+        self.assertEqual('Springtime', sim.title)
 
 
 class TestSimfilePack(TestCase):
     def setUp(self):
         self.setUpPyfakefs()
+        self.fs.add_real_directory('testdata')
     
     def make_pack(self, pack_dir):
         os.mkdir(pack_dir)
@@ -236,3 +250,30 @@ class TestSimfilePack(TestCase):
         # No banners left - we shouldn't return any of the other image paths
         sp = SimfilePack(pack_dir)
         self.assertIsNone(sp.banner())
+    
+    def test_with_filesystem(self):
+        zip_fs = ZipFS('testdata/testdata.zip')
+
+        sp = SimfilePack('/', filesystem=zip_fs)
+
+        self.assertEqual(
+            set(('/L9', '/nekonabe', '/Springtime')),
+            set(sp.simfile_dir_paths)
+        )
+
+        simfile_dirs = list(sp.simfile_dirs())
+        simfile_paths = set((sd.sm_path, sd.ssc_path) for sd in simfile_dirs)
+        self.assertEqual(
+            set((
+                ('/nekonabe/nekonabe.sm', None),
+                (None, '/L9/L9.ssc'),
+                (None, '/Springtime/Springtime.ssc'),
+            )),
+            simfile_paths,
+        )
+
+        simfiles = list(sp.simfiles())
+        self.assertEqual(
+            set(('L9', '猫鍋', 'Springtime')),
+            set(sim.title for sim in simfiles),
+        )
