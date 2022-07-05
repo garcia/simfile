@@ -92,7 +92,11 @@ class SimfileDirectory:
         """
         Get the file assets for this simfile.
         """
-        return Assets(self.simfile_dir, simfile=self.open())
+        return Assets(
+            self.simfile_dir,
+            simfile=self.open(),
+            filesystem=self.filesystem,
+        )
 
 
 class SimfilePack:
