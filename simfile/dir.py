@@ -62,6 +62,11 @@ class SimfileDirectory:
                         )
                     self.ssc_path = simfile_path
     
+    @property
+    def simfile_path(self):
+        """The SSC path if present, otherwise the SM path."""
+        return self.ssc_path or self.sm_path
+    
     def open(self, **kwargs) -> Simfile:
         """
         Open the simfile in this directory.
@@ -78,12 +83,11 @@ class SimfileDirectory:
                 "(try specifying it when creating the SimfileDirectory)"
             )
         
-        preferred_simfile = self.ssc_path or self.sm_path
-        if not preferred_simfile:
+        if not self.simfile_path:
             raise FileNotFoundError('no simfile in directory')
         
         return simfile.open(
-            preferred_simfile,
+            self.simfile_path,
             filesystem=self.filesystem,
             **kwargs
         )
