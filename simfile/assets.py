@@ -31,7 +31,10 @@ class AssetDefinition(NamedTuple):
 ASSET_DEFINITIONS: Mapping[str, AssetDefinition] = {
     "BANNER": AssetDefinition(
         extensions=extensions.IMAGE,
-        presets=["banner", " bn$"],
+        # NOTE: according to StepMania's source code, the end pattern should be
+        # " bn" with a space, not "bn". But it matches "bn.png" and I don't
+        # know why, so I'm changing it to reflect the observed behavior.
+        presets=["banner", "bn$"],
     ),
     "BACKGROUND": AssetDefinition(
         extensions=extensions.IMAGE,
