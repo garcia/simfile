@@ -21,7 +21,7 @@ class AssetDefinition(NamedTuple):
 
     def matches(self, path: str) -> bool:
         root, _ = os.path.splitext(path)
-        if any(re.search(preset, root) for preset in self.presets):
+        if any(re.search(preset, root.lower()) for preset in self.presets):
             return True
         if self.match_by_extension and extensions.match(path, *self.extensions):
             return True
@@ -139,6 +139,15 @@ class Assets:
                 filesystem=filesystem,
             ).open(**kwargs)
 
+    def _get_case_insensitive_path(self, path: str) -> Optional[str]:
+        containing_dir, filename = self._path.split(path)
+        filename_lower = filename.lower()
+
+        if self.filesystem.isdir(containing_dir):
+            for item in self.filesystem.listdir(containing_dir):
+                if item.lower() == filename_lower:
+                    return self._path.join(containing_dir, item)
+
     def _asset_property(self: "Assets", prop: str) -> Optional[str]:
         if prop in self._cache:
             return self._cache[prop]
@@ -146,8 +155,9 @@ class Assets:
         specified_path = self.simfile.get(prop)
         if specified_path:
             full_path = self._path.join(self.simfile_dir, specified_path)
-            if self.filesystem.isfile(full_path):
-                return self._cache_path(prop, specified_path)
+            case_insensitive_path = self._get_case_insensitive_path(full_path)
+            if case_insensitive_path:
+                return self._cache_path(prop, case_insensitive_path, absolute=True)
 
         asset_definition = ASSET_DEFINITIONS[prop]
         for file_in_simfile_dir in self._dirlist:
@@ -156,11 +166,16 @@ class Assets:
 
         return self._cache_path(prop, None)
 
-    def _cache_path(self, key: str, value: Optional[str]) -> Optional[str]:
+    def _cache_path(
+        self, key: str, value: Optional[str], *, absolute: bool = False
+    ) -> Optional[str]:
         if value is not None:
-            self._cache[key] = self._path.normpath(
-                self._path.join(self.simfile_dir, value),
-            )
+            if absolute:
+                self._cache[key] = self._path.normpath(value)
+            else:
+                self._cache[key] = self._path.normpath(
+                    self._path.join(self.simfile_dir, value),
+                )
         else:
             self._cache[key] = None
         return self._cache[key]

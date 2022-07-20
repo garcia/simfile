@@ -67,13 +67,13 @@ class TestAssets(TestCase):
         with open(sm_path, "w") as writer:
             sm_file.serialize(writer)
 
-        sd = Assets("dir")
+        assets = Assets("dir")
 
-        self.assertEqual(sm_file, sd.simfile)
+        self.assertEqual(sm_file, assets.simfile)
 
         for asset_name, asset_map in ASSET_PATHS.items():
             expected = os.path.join(dir, asset_map["predefined"])
-            accessor = asset_map["property"].fget(sd)
+            accessor = asset_map["property"].fget(assets)
             self.assertEqual(expected, accessor, f"wrong path for {asset_name}")
 
     def test_specified_assets(self):
@@ -90,11 +90,87 @@ class TestAssets(TestCase):
         with open(sm_path, "w") as writer:
             sm_file.serialize(writer)
 
-        sd = Assets("dir")
+        assets = Assets("dir")
 
-        self.assertEqual(sm_file, sd.simfile)
+        self.assertEqual(sm_file, assets.simfile)
 
         for asset_name, asset_map in ASSET_PATHS.items():
             expected = os.path.join(dir, asset_map["specified"])
-            accessor = asset_map["property"].fget(sd)
+            accessor = asset_map["property"].fget(assets)
             self.assertEqual(expected, accessor, f"wrong path for {asset_name}")
+
+    def test_case_insensitive_specified_asset(self):
+        dir = "dir"
+        os.mkdir(dir)
+
+        banner_path = os.path.join(dir, "file.png")
+        banner_spec = "File.PNG"
+        with open(banner_path, "w") as writer:
+            pass
+
+        sm_path = os.path.join(dir, "sm_file.sm")
+        sm_file = SMSimfile.blank()
+        sm_file.title = "SM"
+        sm_file.banner = banner_spec
+        with open(sm_path, "w") as writer:
+            sm_file.serialize(writer)
+
+        assets = Assets("dir")
+
+        self.assertEqual(sm_file, assets.simfile)
+        self.assertEqual(assets.banner, banner_path)
+
+    def test_case_insensitive_predefined_asset(self):
+        dir = "dir"
+        os.mkdir(dir)
+
+        banner_path = os.path.join(dir, "BN.PNG")
+        with open(banner_path, "w") as writer:
+            pass
+
+        sm_path = os.path.join(dir, "sm_file.sm")
+        sm_file = SMSimfile.blank()
+        sm_file.title = "SM"
+        with open(sm_path, "w") as writer:
+            sm_file.serialize(writer)
+
+        assets = Assets("dir")
+
+        self.assertEqual(sm_file, assets.simfile)
+        self.assertEqual(assets.banner, banner_path)
+
+    def test_nonexistent_specified_with_predefined_asset(self):
+        dir = "dir"
+        os.mkdir(dir)
+
+        banner_path = os.path.join(dir, "BN.PNG")
+        with open(banner_path, "w") as writer:
+            pass
+
+        sm_path = os.path.join(dir, "sm_file.sm")
+        sm_file = SMSimfile.blank()
+        sm_file.title = "SM"
+        sm_file.banner = "nonexistent.png"
+        with open(sm_path, "w") as writer:
+            sm_file.serialize(writer)
+
+        assets = Assets("dir")
+
+        self.assertEqual(sm_file, assets.simfile)
+        self.assertEqual(assets.banner, banner_path)
+
+    def test_nonexistent_directory_specified_asset(self):
+        dir = "dir"
+        os.mkdir(dir)
+
+        sm_path = os.path.join(dir, "sm_file.sm")
+        sm_file = SMSimfile.blank()
+        sm_file.title = "SM"
+        sm_file.banner = "elsewhere/nonexistent.png"
+        with open(sm_path, "w") as writer:
+            sm_file.serialize(writer)
+
+        assets = Assets("dir")
+
+        self.assertEqual(sm_file, assets.simfile)
+        self.assertIsNone(assets.banner)
