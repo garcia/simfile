@@ -10,6 +10,7 @@ docutils = "==0.16.0"
 Sphinx = "==3.2.1"
 twine = "*"
 mypy = "*"
+black = "*"
 
 [packages]
 msdparser = "~=2.0.0b4"
