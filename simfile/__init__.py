@@ -7,7 +7,7 @@ stray text between parameters. This behavior can be overridden by
 setting `strict` to False.
 """
 from contextlib import contextmanager
-from io import StringIO
+from io import StringIO, TextIOWrapper
 from itertools import tee
 from typing import Iterator, List, Optional, TextIO, Tuple, Union, cast
 
@@ -36,12 +36,12 @@ def _detect_ssc(
     file: Union[TextIO, Iterator[str]],
     strict: bool = True
 ) -> Tuple[Union[TextIO, Iterator[str]], bool]:
-    if isinstance(file, TextIO):
+    if isinstance(file, TextIOWrapper) or isinstance(file, TextIO):
         if type(file.name) is str:
-            _, _, suffix = file.name.rpartition('.')
-            if suffix == '.ssc':
+            _, _, suffix = file.name.lower().rpartition('.')
+            if suffix == 'ssc':
                 return (file, True)
-            elif suffix == '.sm':
+            elif suffix == 'sm':
                 return (file, False)
         parser = parse_msd(file=file, ignore_stray_text=not strict)
     else:

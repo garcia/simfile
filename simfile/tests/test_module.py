@@ -19,9 +19,30 @@ test_encoding_strings = {
     'cp949': '뛃낥',
 }
 
+
+class TestSimfileModuleWithRealFilesystem(TestCase):
+    """
+    These tests don't work with pyfakefs because FakeFileWrapper instances
+    aren't instances of TextIO
+    """
+    def test_load_blank_sm(self):
+        with open('testdata/blank/blank.sm', 'r') as reader:
+            sm = simfile.load(reader)
+        
+        self.assertIsInstance(sm, SMSimfile)
+    
+    def test_load_blank_ssc(self):
+        with open('testdata/blank/blank.ssc', 'r') as reader:
+            ssc = simfile.load(reader)
+        
+        self.assertIsInstance(ssc, SSCSimfile)
+
+
 class TestSimfileModule(TestCase):
     def setUp(self):
         self.setUpPyfakefs()
+        self.fs.add_real_directory('testdata')
+        
         with open('testing_simfile.sm', 'w') as writer:
             writer.write(test_sm.testing_simfile())
         with open('testing_simfile.ssc', 'w') as writer:
