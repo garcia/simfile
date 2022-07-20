@@ -24,11 +24,14 @@ CHART_TIMING_PROPERTIES = (
     SSCChart.labels,
 )
 
+
 def timing_source(simfile: Simfile, chart: Optional[Chart]) -> Union[Simfile, SSCChart]:
-    if (isinstance(simfile, SSCSimfile) and
-        isinstance(chart, SSCChart) and
-        float(simfile.version) >= SSC_VERSION_SPLIT_TIMING and
-        any(timing_prop.__get__(chart) for timing_prop in CHART_TIMING_PROPERTIES)):
+    if (
+        isinstance(simfile, SSCSimfile)
+        and isinstance(chart, SSCChart)
+        and float(simfile.version) >= SSC_VERSION_SPLIT_TIMING
+        and any(timing_prop.__get__(chart) for timing_prop in CHART_TIMING_PROPERTIES)
+    ):
         return chart
     else:
         return simfile

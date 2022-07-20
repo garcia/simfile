@@ -9,11 +9,16 @@ from .base import BaseChart, BaseCharts, BaseSimfile, MSD_ITERATOR
 from ._private.dedent import dedent_and_trim
 
 
-__all__ = ['SMChart', 'SMCharts', 'SMSimfile']
+__all__ = ["SMChart", "SMCharts", "SMSimfile"]
 
 
 SM_CHART_PROPERTIES = (
-    'STEPSTYPE', 'DESCRIPTION', 'DIFFICULTY', 'METER', 'RADARVALUES', 'NOTES',
+    "STEPSTYPE",
+    "DESCRIPTION",
+    "DIFFICULTY",
+    "METER",
+    "RADARVALUES",
+    "NOTES",
 )
 
 
@@ -25,16 +30,18 @@ class SMChart(BaseChart):
     as a fixed list of 6 properties, so this class prohibits adding or
     deleting keys from its backing OrderedDict.
     """
-    
+
     extradata: Optional[List[str]] = None
     """
     If the chart data contains more than 6 components, the extra
     components will be stored in this attribute.
     """
-    
+
     @classmethod
-    def blank(cls: Type['SMChart']) -> 'SMChart':
-        return SMChart.from_str(dedent_and_trim("""
+    def blank(cls: Type["SMChart"]) -> "SMChart":
+        return SMChart.from_str(
+            dedent_and_trim(
+                """
                  dance-single:
                  :
                  Beginner:
@@ -44,10 +51,12 @@ class SMChart(BaseChart):
             0000
             0000
             0000
-        """))
+        """
+            )
+        )
 
     @classmethod
-    def from_str(cls: Type['SMChart'], string: str) -> 'SMChart':
+    def from_str(cls: Type["SMChart"], string: str) -> "SMChart":
         """
         Parse the serialized MSD value components of a NOTES property.
 
@@ -66,9 +75,9 @@ class SMChart(BaseChart):
         instance = cls()
         instance._from_str(string)
         return instance
-    
+
     @classmethod
-    def from_msd(cls: Type['SMChart'], values: Sequence[str]) -> 'SMChart':
+    def from_msd(cls: Type["SMChart"], values: Sequence[str]) -> "SMChart":
         """
         Parse the MSD value components of a NOTES property.
 
@@ -82,67 +91,71 @@ class SMChart(BaseChart):
         instance = cls()
         instance._from_msd(values)
         return instance
-    
+
     def _from_str(self, string: str) -> None:
-        self._from_msd(string.split(':'))
-    
+        self._from_msd(string.split(":"))
+
     def _from_msd(self, values: Sequence[str]) -> None:
         if len(values) < len(SM_CHART_PROPERTIES):
             raise ValueError(
-                f'expected at least {len(SM_CHART_PROPERTIES)} '
-                f'chart components, got {len(values)}'
+                f"expected at least {len(SM_CHART_PROPERTIES)} "
+                f"chart components, got {len(values)}"
             )
-        
+
         for property, value in zip(SM_CHART_PROPERTIES, values):
             self[property] = value.strip()
-        
+
         if len(values) > len(SM_CHART_PROPERTIES):
-            self.extradata = list(values[len(SM_CHART_PROPERTIES):])
-    
+            self.extradata = list(values[len(SM_CHART_PROPERTIES) :])
+
     def _parse(self, parser: Iterator[MSDParameter]):
         param = next(parser)
-        if param.key.upper() != 'NOTES':
-            raise ValueError(f'expected a NOTES property, got {property}')
-        
+        if param.key.upper() != "NOTES":
+            raise ValueError(f"expected a NOTES property, got {property}")
+
         self._from_msd(param.components[1:])
 
     def serialize(self, file):
-        param = MSDParameter((
-            'NOTES',
-            f'\n     {self.stepstype}',
-            f'\n     {self.description}',
-            f'\n     {self.difficulty}',
-            f'\n     {self.meter}',
-            f'\n     {self.radarvalues}',
-            f'\n{self.notes}\n',
-            *(self.extradata or []),
-        ))
+        param = MSDParameter(
+            (
+                "NOTES",
+                f"\n     {self.stepstype}",
+                f"\n     {self.description}",
+                f"\n     {self.difficulty}",
+                f"\n     {self.meter}",
+                f"\n     {self.radarvalues}",
+                f"\n{self.notes}\n",
+                *(self.extradata or []),
+            )
+        )
         file.write(str(param))
 
     def __eq__(self, other):
-        return (type(self) is type(other) and
-                self.stepstype == other.stepstype and
-                self.description == other.description and
-                self.difficulty == other.difficulty and
-                self.meter == other.meter and
-                self.radarvalues == other.radarvalues and
-                self.notes == other.notes)
-    
+        return (
+            type(self) is type(other)
+            and self.stepstype == other.stepstype
+            and self.description == other.description
+            and self.difficulty == other.difficulty
+            and self.meter == other.meter
+            and self.radarvalues == other.radarvalues
+            and self.notes == other.notes
+        )
+
     # Prevent keys from being added or removed
-    
+
     def update(self, *args, **kwargs) -> None:
         """Raises NotImplementedError."""
         # This could be implemented, but I don't see a use case
         raise NotImplementedError
 
     def pop(self, property, default=None):
-        """Raises NotImplementedError.""" 
+        """Raises NotImplementedError."""
         raise NotImplementedError
-    
+
     def popitem(self, last=True):
         """Raises NotImplementedError."""
         raise NotImplementedError
-    
+
     def __getitem__(self, property):
         if property in SM_CHART_PROPERTIES:
             return getattr(self, property.lower())
@@ -174,7 +187,7 @@ class SMSimfile(BaseSimfile):
     """
 
     # "FREEZES" alias only supported by SM files
-    stops = item_property('STOPS', alias='FREEZES')
+    stops = item_property("STOPS", alias="FREEZES")
     """
     Specialized property for `STOPS` that supports `FREEZES` as an alias.
     """
@@ -183,16 +196,18 @@ class SMSimfile(BaseSimfile):
         self.charts = SMCharts()
         for param in parser:
             key = param.key.upper()
-            if key == 'NOTES':
+            if key == "NOTES":
                 self.charts.append(SMChart.from_msd(param.components[1:]))
             elif key in BaseSimfile.MULTI_VALUE_PROPERTIES:
-                self[key] = ':'.join(param.components[1:])
+                self[key] = ":".join(param.components[1:])
             else:
                 self[key] = param.value
-    
+
     @classmethod
-    def blank(cls: Type['SMSimfile']) -> 'SMSimfile':
-        return SMSimfile(string=dedent_and_trim("""
+    def blank(cls: Type["SMSimfile"]) -> "SMSimfile":
+        return SMSimfile(
+            string=dedent_and_trim(
+                """
             #TITLE:;
             #SUBTITLE:;
             #ARTIST:;
@@ -215,4 +230,6 @@ class SMSimfile(BaseSimfile):
             #BGCHANGES:;
             #KEYSOUNDS:;
             #ATTACKS:;
-        """))
+        """
+            )
+        )

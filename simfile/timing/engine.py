@@ -10,7 +10,9 @@ from simfile._private.generic import ListWithRepr
 
 
 __all__ = [
-    'SongTime', 'EventTag', 'TimingEngine', 
+    "SongTime",
+    "EventTag",
+    "TimingEngine",
 ]
 
 
@@ -18,13 +20,14 @@ class SongTime(float):
     """
     A floating-point time value, denoting a temporal position in a simfile.
     """
+
     def __repr__(self) -> str:
         """
         Pretty repr() for song times.
-        
+
         Includes the time to 3 decimal places.
         """
-        return f'{self:.3f}'
+        return f"{self:.3f}"
 
 
 class EventTag(IntEnum):
@@ -41,6 +44,7 @@ class EventTag(IntEnum):
     logic. These can be used to disambiguate the time at a given beat
     (for stops & delays) or the beat at a given time (for warps).
     """
+
     WARP = 0
     WARP_END = 1
     BPM = 2
@@ -83,17 +87,19 @@ class TimingState(NamedTuple):
         else:
             beats_until = beat - self.event.beat
             time_until = float(beats_until) * 60 / float(self.bpm)
-        
-        if self.event.tag in (EventTag.STOP, EventTag.DELAY) \
-            and event_tag in (EventTag.STOP_END, EventTag.DELAY_END):
+
+        if self.event.tag in (EventTag.STOP, EventTag.DELAY) and event_tag in (
+            EventTag.STOP_END,
+            EventTag.DELAY_END,
+        ):
             time_until += float(self.event.value)
-        
+
         return time_until
-    
+
     def beats_until(self, time: SongTime) -> Beat:
         if self.event.tag in (EventTag.STOP, EventTag.DELAY):
             return Beat(0)
-        
+
         time_elapsed = time - self.event.time
         beats_elapsed = time_elapsed / 60 * float(self.bpm)
 
@@ -101,11 +107,10 @@ class TimingState(NamedTuple):
 
 
 class TimingStateMachine(ListWithRepr[TimingState]):
-
     @property
     def last(self) -> TimingState:
         return cast(TimingState, self[-1])
-    
+
     def advance(self, event: TaggedEvent) -> None:
         # Update song time
         time_until = self.last.time_until(event.beat, event.tag)
@@ -115,24 +120,26 @@ class TimingStateMachine(ListWithRepr[TimingState]):
         bpm = self.last.bpm
         if event.tag == EventTag.BPM:
             bpm = event.value
-        
+
         # Update warp status
         warp = self.last.warp
         if event.tag == EventTag.WARP:
             warp = True
         elif event.tag == EventTag.WARP_END:
             warp = False
-        
-        self.append(TimingState(
-            event=TimedEvent(
-                beat=event.beat,
-                value=event.value,
-                tag=event.tag,
-                time=time,
-            ),
-            bpm=bpm,
-            warp=warp,
-        ))
+
+        self.append(
+            TimingState(
+                event=TimedEvent(
+                    beat=event.beat,
+                    value=event.value,
+                    tag=event.tag,
+                    time=time,
+                ),
+                bpm=bpm,
+                warp=warp,
+            )
+        )
 
 
 class TimingEngine:
@@ -144,6 +151,7 @@ class TimingEngine:
     from those calculated values for each :meth:`bpm_at` /
     :meth:`time_at` / :meth:`beat_at` call.
     """
+
     timing_data: TimingData
     _tagged_beats: MutableSequence[Tuple[Beat, EventTag]]
     _tagged_times: MutableSequence[Tuple[SongTime, EventTag]]
@@ -152,7 +160,7 @@ class TimingEngine:
     def __init__(self, timing_data: TimingData):
         self.timing_data = timing_data
         self._retime_events()
-    
+
     def _coalesce_warps(self) -> Iterable[Tuple[BeatValues, EventTag]]:
         """
         Coalesce the timing data's warps into WARP & WARP_END events.
@@ -185,29 +193,32 @@ class TimingEngine:
             else:
                 warp_starts.append(BeatValue(beat=warp.beat, value=zero))
                 warp_ends.append(BeatValue(beat=warp_end, value=zero))
-        
+
         return [
             (warp_starts, EventTag.WARP),
             (warp_ends, EventTag.WARP_END),
         ]
 
-    
     def _retime_events(self) -> None:
         # Set the private instance variables based on the timing data
         first_bpm: BeatValue = self.timing_data.bpms[0]
         if first_bpm.beat != 0:
-            raise ValueError('first BPM change should be on beat 0')
+            raise ValueError("first BPM change should be on beat 0")
 
-        self._state_machine = TimingStateMachine([TimingState(
-            event=TimedEvent(
-                beat=Beat(0),
-                value=first_bpm.value,
-                tag=EventTag.BPM,
-                time=SongTime(-self.timing_data.offset),
-            ),
-            bpm=first_bpm.value,
-            warp=False,
-        )])
+        self._state_machine = TimingStateMachine(
+            [
+                TimingState(
+                    event=TimedEvent(
+                        beat=Beat(0),
+                        value=first_bpm.value,
+                        tag=EventTag.BPM,
+                        time=SongTime(-self.timing_data.offset),
+                    ),
+                    bpm=first_bpm.value,
+                    warp=False,
+                )
+            ]
+        )
 
         events_with_tags: Iterable[Tuple[BeatValues, EventTag]] = [
             *self._coalesce_warps(),
@@ -218,24 +229,33 @@ class TimingEngine:
             (self.timing_data.stops, EventTag.STOP_END),
         ]
 
-        chronological_events: Iterable[TaggedEvent] = merge(*[
-            list(map(
-                lambda e: TaggedEvent(beat=e.beat, value=e.value, tag=tag),
-                events,
-            )) for (events, tag) in events_with_tags
-        ])
-        
+        chronological_events: Iterable[TaggedEvent] = merge(
+            *[
+                list(
+                    map(
+                        lambda e: TaggedEvent(beat=e.beat, value=e.value, tag=tag),
+                        events,
+                    )
+                )
+                for (events, tag) in events_with_tags
+            ]
+        )
+
         for tagged_event in chronological_events:
             self._state_machine.advance(tagged_event)
-        
-        self._tagged_beats = list(map(
-            lambda state: (state.event.beat, state.event.tag),
-            cast(List[TimingState], self._state_machine),
-        ))
-        self._tagged_times = list(map(
-            lambda state: (state.event.time, state.event.tag),
-            cast(List[TimingState], self._state_machine),
-        ))
+
+        self._tagged_beats = list(
+            map(
+                lambda state: (state.event.beat, state.event.tag),
+                cast(List[TimingState], self._state_machine),
+            )
+        )
+        self._tagged_times = list(
+            map(
+                lambda state: (state.event.time, state.event.tag),
+                cast(List[TimingState], self._state_machine),
+            )
+        )
 
     def bpm_at(self, beat: Beat) -> Decimal:
         """
@@ -247,12 +267,12 @@ class TimingEngine:
         """
         if beat < 0:
             return Decimal(self.timing_data.bpms[0].value)
-        
+
         tagged_beat = (beat, EventTag.BPM)
         prior_state_index = max(0, bisect(self._tagged_beats, tagged_beat) - 1)
         prior_state: TimingState = self._state_machine[prior_state_index]
         return prior_state.bpm
-    
+
     def hittable(self, beat: Beat) -> bool:
         """
         Determine if a note on the given beat would be hittable.
@@ -272,18 +292,16 @@ class TimingEngine:
 
         if not prior_state.warp:
             return True
-        
-        if prior_state.event.tag in (EventTag.STOP_END, EventTag.DELAY_END) \
-            and beat == prior_state.event.beat:
+
+        if (
+            prior_state.event.tag in (EventTag.STOP_END, EventTag.DELAY_END)
+            and beat == prior_state.event.beat
+        ):
             return True
-        
+
         return False
 
-    def time_at(
-        self,
-        beat: Beat,
-        event_tag: EventTag = EventTag.STOP
-    ) -> SongTime:
+    def time_at(self, beat: Beat, event_tag: EventTag = EventTag.STOP) -> SongTime:
         """
         Determine the song time at a given beat.
 
@@ -298,46 +316,43 @@ class TimingEngine:
           lower will return the time at which the delay is reached,
           whereas providing :data:`EventTag.DELAY_END` or later will
           return the time when the delay ends.
-        
+
         The default value of :data:`EventTag.STOP` effectively matches
         the time at which a note on the given beat must be hit
         (assuming such a note is :meth:`hittable`).
         """
         tagged_beat = (beat, event_tag)
-        
+
         # If the provided beat is negative, prior_state_index will be clamped
         # to index 0 (the initial BPM) which is not really the "prior state".
         # This works because the initial BPM applies to negative beats, and the
         # signed math works out correctly.
         prior_state_index = max(0, bisect(self._tagged_beats, tagged_beat) - 1)
         prior_state: TimingState = self._state_machine[prior_state_index]
-        
-        return SongTime(prior_state.event.time
-            + prior_state.time_until(beat, event_tag))
-    
-    def beat_at(
-        self,
-        time: SongTime,
-        event_tag: EventTag = EventTag.STOP
-    ) -> Beat:
+
+        return SongTime(
+            prior_state.event.time + prior_state.time_until(beat, event_tag)
+        )
+
+    def beat_at(self, time: SongTime, event_tag: EventTag = EventTag.STOP) -> Beat:
         """
         Determine the beat at a given time in the song.
 
         At most times, the `event_tag` parameter is inconsequential.
         The only time it matters is when the time lands exactly on a
         warp segment:
-        
+
         * Providing :data:`EventTag.WARP` will return the beat where
           the warp starts.
         * Providing :data:`EventTag.WARP_END` or later will return the
           beat where the warp ends (or is interrupted by a stop or
           delay).
-        
+
         Keep in mind that this situation is floating-point precise, so
         it's unlikely for the `event_tag` to ever make a difference.
         """
         tagged_time = (time, event_tag)
-        
+
         # Same caveat as `time_at`
         prior_state_index = max(0, bisect(self._tagged_times, tagged_time) - 1)
         prior_state: TimingState = self._state_machine[prior_state_index]

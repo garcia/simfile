@@ -11,20 +11,20 @@ class TestTimingEngine(unittest.TestCase):
         timing_data = testing_timing_data()
         engine = TimingEngine(timing_data)
         self.assertEqual(timing_data, engine.timing_data)
-    
+
     def test_bpm_at(self):
         timing_data = testing_timing_data()
         engine = TimingEngine(timing_data)
-        self.assertEqual(Decimal('120.000'), engine.bpm_at(Beat(-10000)))
-        self.assertEqual(Decimal('120.000'), engine.bpm_at(Beat(0)))
-        self.assertEqual(Decimal('120.000'), engine.bpm_at(Beat(1) - Beat.tick()))
-        self.assertEqual(Decimal('150.000'), engine.bpm_at(Beat(1)))
-        self.assertEqual(Decimal('150.000'), engine.bpm_at(Beat(2) - Beat.tick()))
-        self.assertEqual(Decimal('200.000'), engine.bpm_at(Beat(2)))
-        self.assertEqual(Decimal('200.000'), engine.bpm_at(Beat(3) - Beat.tick()))
-        self.assertEqual(Decimal('300.000'), engine.bpm_at(Beat(3)))
-        self.assertEqual(Decimal('300.000'), engine.bpm_at(Beat(10000)))
-    
+        self.assertEqual(Decimal("120.000"), engine.bpm_at(Beat(-10000)))
+        self.assertEqual(Decimal("120.000"), engine.bpm_at(Beat(0)))
+        self.assertEqual(Decimal("120.000"), engine.bpm_at(Beat(1) - Beat.tick()))
+        self.assertEqual(Decimal("150.000"), engine.bpm_at(Beat(1)))
+        self.assertEqual(Decimal("150.000"), engine.bpm_at(Beat(2) - Beat.tick()))
+        self.assertEqual(Decimal("200.000"), engine.bpm_at(Beat(2)))
+        self.assertEqual(Decimal("200.000"), engine.bpm_at(Beat(3) - Beat.tick()))
+        self.assertEqual(Decimal("300.000"), engine.bpm_at(Beat(3)))
+        self.assertEqual(Decimal("300.000"), engine.bpm_at(Beat(10000)))
+
     def test_time_at(self):
         timing_data = testing_timing_data()
         engine = TimingEngine(timing_data)
@@ -40,7 +40,7 @@ class TestTimingEngine(unittest.TestCase):
         self.assertAlmostEqual(1.813, engine.time_at(Beat(3) + Beat.tick()), places=3)
         self.assertAlmostEqual(2.009, engine.time_at(Beat(4)))
         self.assertAlmostEqual(201.209, engine.time_at(Beat(1000)))
-    
+
     def test_beat_at(self):
         timing_data = testing_timing_data()
         engine = TimingEngine(timing_data)
@@ -58,7 +58,7 @@ class TestTimingEngine(unittest.TestCase):
         self.assertEqual(Beat(3) + Beat.tick(), engine.beat_at(1.814))
         self.assertEqual(Beat(4), engine.beat_at(2.009))
         self.assertEqual(Beat(1000), engine.beat_at(201.209))
-    
+
     def test_time_at_with_delays_and_warps(self):
         timing_data = testing_timing_data_with_delays_and_warps()
         engine = TimingEngine(timing_data)
@@ -104,7 +104,7 @@ class TestTimingEngine(unittest.TestCase):
         self.assertEqual(6.0, engine.time_at(Beat(12.5)))
         self.assertEqual(6.0, engine.time_at(Beat(12.75)))
         self.assertEqual(6.125, engine.time_at(Beat(13)))
-    
+
     def test_beat_at_with_delays_and_warps(self):
         timing_data = testing_timing_data_with_delays_and_warps()
         engine = TimingEngine(timing_data)
@@ -141,7 +141,7 @@ class TestTimingEngine(unittest.TestCase):
         self.assertEqual(Beat(11.75), engine.beat_at(5.875))
         self.assertEqual(Beat(12.0), engine.beat_at(6.0, EventTag.WARP))
         self.assertEqual(Beat(12.75), engine.beat_at(6.0))
-    
+
     def test_hittable(self):
         timing_data = testing_timing_data_with_delays_and_warps()
         engine = TimingEngine(timing_data)

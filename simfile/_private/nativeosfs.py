@@ -9,6 +9,7 @@ from fs.info import Info
 from fs.mode import Mode
 from fs.osfs import OSFS
 
+
 class NativeOSFS(FS):
     """
     OS filesystem implementation that works with native system paths.
@@ -21,16 +22,17 @@ class NativeOSFS(FS):
     Note that this violates one of the contracts of the PyFilesystem API,
     namely that paths are *PyFileSystem paths*, which always use forward
     slash :code:`/` as separators.
-    
+
     Errata:
-    
+
     * No fsdecode / fsencode around system paths because I'm not sure if
       that would break `os` compatibility. My gut tells me it would.
     * Only read operations are implemented as that's all I personally need.
     """
+
     def __init__(self):
         super().__init__()
-    
+
     def _gettarget(self, sys_path: str) -> Optional[str]:
         if hasattr(os, "readlink"):
             try:
@@ -57,7 +59,10 @@ class NativeOSFS(FS):
                 _lstat = os.lstat(sys_path)
 
         info = {
-            "basic": {"name": os.path.basename(sys_path), "is_dir": stat.S_ISDIR(_stat.st_mode)}
+            "basic": {
+                "name": os.path.basename(sys_path),
+                "is_dir": stat.S_ISDIR(_stat.st_mode),
+            }
         }
         if "details" in namespaces:
             info["details"] = OSFS._make_details_from_stat(_stat)
@@ -81,7 +86,7 @@ class NativeOSFS(FS):
 
     def makedir(self, sys_path, permissions=None, recreate=False):
         raise NotImplementedError()
-    
+
     def open(
         self,
         *args,
@@ -89,12 +94,8 @@ class NativeOSFS(FS):
     ):
         return io.open(*args, **kwargs)
 
-    def openbin( # type: ignore
-        self,
-        sys_path: str,
-        mode: str = 'r',
-        buffering: int = -1,
-        **options
+    def openbin(  # type: ignore
+        self, sys_path: str, mode: str = "r", buffering: int = -1, **options
     ) -> BinaryIO:
         _mode = Mode(mode)
         _mode.validate_bin()

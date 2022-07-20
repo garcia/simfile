@@ -2,16 +2,31 @@ from collections import deque
 from enum import Enum
 from heapq import heappush, heappop
 from itertools import groupby
-from typing import Deque, Dict, Iterator, List, NamedTuple, FrozenSet, \
-    Optional, Sequence, Tuple, Union
+from typing import (
+    Deque,
+    Dict,
+    Iterator,
+    List,
+    NamedTuple,
+    FrozenSet,
+    Optional,
+    Sequence,
+    Tuple,
+    Union,
+)
 
 from . import Note, NoteType
 from ..timing import Beat
 
 
 __all__ = [
-    'NoteWithTail', 'GroupedNotes', 'SameBeatNotes', 'OrphanedNoteException',
-    'OrphanedNotes', 'group_notes', 'ungroup_notes',
+    "NoteWithTail",
+    "GroupedNotes",
+    "SameBeatNotes",
+    "OrphanedNoteException",
+    "OrphanedNotes",
+    "group_notes",
+    "ungroup_notes",
 ]
 
 
@@ -19,11 +34,12 @@ class NoteWithTail(NamedTuple):
     """
     A hold/roll head note with its corresponding tail note.
     """
+
     beat: Beat
     column: int
     note_type: NoteType
     tail_beat: Beat
-    
+
     player: int = 0
     """
     Only used in routine charts. The second player's note data will have
@@ -49,13 +65,14 @@ GroupedNotes = Sequence[_NoteMaybeWithTail]
 class SameBeatNotes(Enum):
     """
     Choices for :func:`group_notes`' `same_beat_notes` parameter.
-    
+
     When multiple notes land on the same beat...
 
     * `KEEP_SEPARATE`: each note is emitted separately
     * `JOIN_BY_NOTE_TYPE`: notes of the same type are emitted together
     * `JOIN_ALL`: all notes are emitted together
     """
+
     KEEP_SEPARATE = 1
     JOIN_BY_NOTE_TYPE = 2
     JOIN_ALL = 3
@@ -78,6 +95,7 @@ class OrphanedNotes(Enum):
     * `KEEP_ORPHAN`: emit the orphaned :class:`Note`
     * `DROP_ORPHAN`: do not emit the orphaned note
     """
+
     RAISE_EXCEPTION = 1
     KEEP_ORPHAN = 2
     DROP_ORPHAN = 3
@@ -118,19 +136,19 @@ def group_notes(
     """
     held_columns: Dict[int, Note] = {}
     buffer: Deque[_NoteMaybeWithTail] = deque()
-    
+
     def flush() -> Iterator[_NoteMaybeWithTail]:
         if buffer:
             yield from buffer
             buffer.clear()
-    
+
     def maybe_buffer(note) -> Iterator[_NoteMaybeWithTail]:
         if held_columns:
             buffer.append(note)
         else:
             yield from flush()
             yield note
-    
+
     def flush_until_held_note() -> Iterator[_NoteMaybeWithTail]:
         held_notes = held_columns.values()
         if held_notes:
@@ -138,7 +156,7 @@ def group_notes(
                 yield buffer.popleft()
         else:
             yield from flush()
-    
+
     def attach_tail(head: Note, tail: Note) -> None:
         h = buffer.index(head)
         buffer[h] = NoteWithTail(
@@ -149,18 +167,18 @@ def group_notes(
             player=head.player,
             keysound_index=head.keysound_index,
         )
-    
+
     def join_head_to_tail(
-        maybe_head: Optional[Note],
-        maybe_tail: Optional[Note]
+        maybe_head: Optional[Note], maybe_tail: Optional[Note]
     ) -> None:
         if not maybe_head:
             if orphaned_tail == OrphanedNotes.RAISE_EXCEPTION:
                 raise OrphanedNoteException(maybe_tail)
             elif orphaned_tail == OrphanedNotes.KEEP_ORPHAN:
-                if maybe_tail: buffer.append(maybe_tail)
+                if maybe_tail:
+                    buffer.append(maybe_tail)
             elif orphaned_tail == OrphanedNotes.DROP_ORPHAN:
-                pass # Do nothing and the tail won't be emitted
+                pass  # Do nothing and the tail won't be emitted
             return
         head: Note = maybe_head
 
@@ -168,7 +186,7 @@ def group_notes(
             if orphaned_head == OrphanedNotes.RAISE_EXCEPTION:
                 raise OrphanedNoteException(head)
             elif orphaned_head == OrphanedNotes.KEEP_ORPHAN:
-                pass # Do nothing and the head will be emitted as-is
+                pass  # Do nothing and the head will be emitted as-is
             elif orphaned_head == OrphanedNotes.DROP_ORPHAN:
                 buffer.remove(head)
             else:
@@ -177,9 +195,10 @@ def group_notes(
         tail: Note = maybe_tail
 
         attach_tail(head, tail)
-    
-    def join_heads_to_tails_(note_stream: Iterator[Note]) \
-        -> Iterator[_NoteMaybeWithTail]:
+
+    def join_heads_to_tails_(
+        note_stream: Iterator[Note],
+    ) -> Iterator[_NoteMaybeWithTail]:
         for note in note_stream:
             # In a well-formed chart, these two conditions should always be
             # equal, but we'll let `join_head_to_tail` decide how to handle
@@ -188,17 +207,17 @@ def group_notes(
                 head = held_columns.pop(note.column, None)
                 join_head_to_tail(head, note)
                 yield from flush_until_held_note()
-            
+
             if note.note_type in (NoteType.HOLD_HEAD, NoteType.ROLL_HEAD):
                 held_columns[note.column] = note
-            
+
             if note.note_type != NoteType.TAIL:
                 yield from maybe_buffer(note)
 
         # Clean up orphaned heads
         for head in held_columns.values():
             join_head_to_tail(head, None)
-        
+
         yield from flush()
 
     def add_row(row: List[_NoteMaybeWithTail]) -> Iterator[GroupedNotes]:
@@ -225,7 +244,7 @@ def group_notes(
         notes_maybe_with_tails = join_heads_to_tails_(notes)
     else:
         notes_maybe_with_tails = notes
-    
+
     for _, row in groupby(notes_maybe_with_tails, lambda note: note.beat):
         yield from add_row(list(row))
 
@@ -244,23 +263,23 @@ def ungroup_notes(
     `KEEP_ORPHAN` will yield the note (allowing the head and tail notes
     to become orphans) and `DROP_ORPHAN` will drop the note (preserving
     the link between the head and tail notes).
-    
+
     Note that this check only applies to heads and tails joined as a
     :class:`NoteAndTail`. If :func:`group_notes` was called without
     specifying `join_heads_to_tails`, specifying `orphaned_notes` here
     will have no effect. This mirrors how :func:`group_notes`'
     `orphaned_head` and `orphaned_tail` parameters behave.
     """
-    pending_tails: List[Note] = [] # heap
+    pending_tails: List[Note] = []  # heap
 
     def check_orphan(note: Note) -> Iterator[Note]:
         if note.column in (t.column for t in pending_tails):
             if orphaned_notes == OrphanedNotes.RAISE_EXCEPTION:
                 raise OrphanedNoteException(note)
             elif orphaned_notes == OrphanedNotes.KEEP_ORPHAN:
-                pass # Let the splitting note be yielded below
+                pass  # Let the splitting note be yielded below
             elif orphaned_notes == OrphanedNotes.DROP_ORPHAN:
-                return # Don't yield the splitting note
+                return  # Don't yield the splitting note
         yield note
 
     for row in grouped_notes:
@@ -268,28 +287,33 @@ def ungroup_notes(
             # Yield any pending tails that we've reached
             while pending_tails and pending_tails[0] < note:
                 yield heappop(pending_tails)
-            
+
             # Yield plain notes directly
             if isinstance(note, Note):
                 yield from check_orphan(note)
-            
+
             # Yield notes with tails as a head (now) and a tail (later)
             elif isinstance(note, NoteWithTail):
-                yield from check_orphan(Note(
-                    beat=note.beat,
-                    column=note.column,
-                    note_type=note.note_type,
-                    player=note.player,
-                    keysound_index=note.keysound_index,
-                ))
-                heappush(pending_tails, Note(
-                    beat=note.tail_beat,
-                    column=note.column,
-                    note_type=NoteType.TAIL,
-                    player=note.player,
-                    keysound_index=note.keysound_index,
-                ))
-    
+                yield from check_orphan(
+                    Note(
+                        beat=note.beat,
+                        column=note.column,
+                        note_type=note.note_type,
+                        player=note.player,
+                        keysound_index=note.keysound_index,
+                    )
+                )
+                heappush(
+                    pending_tails,
+                    Note(
+                        beat=note.tail_beat,
+                        column=note.column,
+                        note_type=NoteType.TAIL,
+                        player=note.player,
+                        keysound_index=note.keysound_index,
+                    ),
+                )
+
     # Yield any remaining pending tails
     while pending_tails:
         yield heappop(pending_tails)

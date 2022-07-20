@@ -1,15 +1,15 @@
 from typing import Optional
 
 
-SIMFILE = ('.ssc', '.sm')
+SIMFILE = (".ssc", ".sm")
 
-IMAGE = ('.png', '.jpg', '.jpeg', '.gif', '.bmp')
+IMAGE = (".png", ".jpg", ".jpeg", ".gif", ".bmp")
 """
 Incidentally in descending order of preference
 (SimfilePack.banner relies on this).
 """
 
-AUDIO = ('.mp3', '.oga', '.ogg', '.wav')
+AUDIO = (".mp3", ".oga", ".ogg", ".wav")
 
 
 def match(path: str, *extensions: str) -> Optional[str]:
@@ -19,5 +19,5 @@ def match(path: str, *extensions: str) -> Optional[str]:
     for extension in extensions:
         if lower_path.endswith(extension):
             return extension
-    
+
     return None

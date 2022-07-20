@@ -22,32 +22,37 @@ from .sm import SMSimfile
 from .types import Simfile
 
 
-__version__ = '2.1.0-beta.3'
+__version__ = "2.1.0-beta.3"
 __all__ = [
-    'load', 'loads', 'open', 'open_with_detected_encoding', 'opendir',
-    'openpack', 'CancelMutation', 'mutate',
+    "load",
+    "loads",
+    "open",
+    "open_with_detected_encoding",
+    "opendir",
+    "openpack",
+    "CancelMutation",
+    "mutate",
 ]
 
 
-ENCODINGS = ['utf-8', 'cp1252', 'cp932', 'cp949']
+ENCODINGS = ["utf-8", "cp1252", "cp932", "cp949"]
 
 
 def _detect_ssc(
-    file: Union[TextIO, Iterator[str]],
-    strict: bool = True
+    file: Union[TextIO, Iterator[str]], strict: bool = True
 ) -> Tuple[Union[TextIO, Iterator[str]], bool]:
     if isinstance(file, TextIOWrapper) or isinstance(file, TextIO):
         if type(file.name) is str:
-            _, _, suffix = file.name.lower().rpartition('.')
-            if suffix == 'ssc':
+            _, _, suffix = file.name.lower().rpartition(".")
+            if suffix == "ssc":
                 return (file, True)
-            elif suffix == 'sm':
+            elif suffix == "sm":
                 return (file, False)
         parser = parse_msd(file=file, ignore_stray_text=not strict)
     else:
-        file, peek_file = [StringIO(''.join(f)) for f in tee(file)]
+        file, peek_file = [StringIO("".join(f)) for f in tee(file)]
         parser = parse_msd(
-            string=''.join(peek_file),
+            string="".join(peek_file),
             ignore_stray_text=not strict,
         )
 
@@ -56,11 +61,11 @@ def _detect_ssc(
         first_param = next(parser)
     except StopIteration:
         return (file, False)
-    
+
     if isinstance(file, TextIO):
         file.seek(0)
 
-    return (file, first_param.key is not None and first_param.key.upper() == 'VERSION')
+    return (file, first_param.key is not None and first_param.key.upper() == "VERSION")
 
 
 def load(file: Union[TextIO, Iterator[str]], strict: bool = True) -> Simfile:
@@ -88,10 +93,7 @@ def loads(string: str, strict: bool = True) -> Simfile:
 
 
 def open(
-    filename: str,
-    strict: bool = True,
-    filesystem: FS = NativeOSFS(),
-    **kwargs
+    filename: str, strict: bool = True, filesystem: FS = NativeOSFS(), **kwargs
 ) -> Simfile:
     """
     Load a simfile by filename.
@@ -101,9 +103,9 @@ def open(
     :func:`open_with_detected_encoding`.
     """
     try_encodings = ENCODINGS
-    if 'encoding' in kwargs:
-        try_encodings = [kwargs.pop('encoding')]
-    
+    if "encoding" in kwargs:
+        try_encodings = [kwargs.pop("encoding")]
+
     return open_with_detected_encoding(
         filename,
         try_encodings=try_encodings,
@@ -139,21 +141,14 @@ def open_with_detected_encoding(
     to know the file's encoding. :func:`.open` and :func:`.mutate` both
     defer to this function to detect the encoding behind the scenes.
     """
-    if 'encoding' in kwargs:
-        raise TypeError(
-            "unexpected encoding argument - use try_encodings instead"
-        )
+    if "encoding" in kwargs:
+        raise TypeError("unexpected encoding argument - use try_encodings instead")
 
     exception: Optional[UnicodeDecodeError] = None
-    
+
     for encoding in try_encodings:
         try:
-            with filesystem.open(
-                filename,
-                'r',
-                encoding=encoding,
-                **kwargs
-            ) as file:
+            with filesystem.open(filename, "r", encoding=encoding, **kwargs) as file:
                 return (load(file, strict=strict), encoding)
         except UnicodeDecodeError as e:
             # Keep track of each encoding's exception
@@ -163,22 +158,20 @@ def open_with_detected_encoding(
             else:
                 exception = e
             continue
-    
+
     # If all encodings failed, raise the exception chain
     raise exception or UnicodeError
 
 
 def opendir(
-    simfile_dir: str,
-    filesystem: FS = NativeOSFS(),
-    **kwargs
+    simfile_dir: str, filesystem: FS = NativeOSFS(), **kwargs
 ) -> Tuple[Simfile, str]:
     """
     Open a simfile from its directory path; returns the simfile and its path.
 
     If both SSC and SM are present, SSC is preferred. Keyword arguments
     are passed down to :func:`simfile.open`.
-    
+
     If you need more flexibility (for example, if you need both the SM and
     SSC files), try using :class:`.SimfileDirectory`.
     """
@@ -186,14 +179,12 @@ def opendir(
         simfile_dir,
         filesystem=filesystem,
     )
-    
+
     return (sd.open(**kwargs), cast(str, sd.ssc_path or sd.sm_path))
 
 
 def openpack(
-    pack_dir: str,
-    filesystem: FS = NativeOSFS(),
-    **kwargs
+    pack_dir: str, filesystem: FS = NativeOSFS(), **kwargs
 ) -> Iterator[Tuple[Simfile, str]]:
     """
     Open a pack of simfiles from the pack's directory path;
@@ -203,7 +194,7 @@ def openpack(
     SSC file are included. Simfiles aren't guaranteed to appear in any
     particular order. If both SSC and SM are present, SSC is preferred.
     Keyword arguments are passed down to :func:`simfile.open`.
-    
+
     If you need more flexibility (for example, if you need the pack's
     banner or a :class:`.SimfileDirectory` for each simfile), try using
     :class:`.SimfilePack`.
@@ -257,9 +248,9 @@ def mutate(
     if backup_filename:
         if backup_filename in (input_filename, output_filename):
             raise ValueError(
-                'backup_filename must be distinct from input/output filenames'
+                "backup_filename must be distinct from input/output filenames"
             )
-    
+
     simfile, encoding = open_with_detected_encoding(
         input_filename,
         try_encodings=try_encodings,
@@ -269,32 +260,26 @@ def mutate(
     )
 
     # Preserve the original simfile contents if a backup file was requested
-    backup_data = str(simfile) if backup_filename else ''
+    backup_data = str(simfile) if backup_filename else ""
 
     try:
         yield simfile
     except CancelMutation:
-        return # Don't re-raise
+        return  # Don't re-raise
     except:
         raise
     else:
         # No exception was caught, so write the output file(s)
-        
+
         # Write backup file if requested
         if backup_filename:
             with filesystem.open(
-                backup_filename,
-                'w',
-                encoding=encoding,
-                **kwargs
+                backup_filename, "w", encoding=encoding, **kwargs
             ) as writer:
                 writer.write(backup_data)
-        
+
         # Write output file
         with filesystem.open(
-            output_filename or input_filename,
-            'w',
-            encoding=encoding,
-            **kwargs
+            output_filename or input_filename, "w", encoding=encoding, **kwargs
         ) as writer:
             simfile.serialize(cast(TextIO, writer))

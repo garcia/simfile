@@ -10,7 +10,7 @@ from ._private.dedent import dedent_and_trim
 from ._private.property import item_property
 
 
-__all__ = ['SSCChart', 'SSCCharts', 'SSCSimfile']
+__all__ = ["SSCChart", "SSCCharts", "SSCSimfile"]
 
 
 class SSCChart(BaseChart):
@@ -30,34 +30,31 @@ class SSCChart(BaseChart):
     * Timing data: `bpms`, `stops`, `delays`, `warps`,
       `labels`, `offset`, `displaybpm`
     """
-    chartname = item_property('CHARTNAME')
-    chartstyle = item_property('CHARTSTYLE')
-    credit = item_property('CREDIT')
-    music = item_property('MUSIC')
-    bpms = item_property('BPMS')
-    stops = item_property('STOPS')
-    delays = item_property('DELAYS')
-    timesignatures = item_property('TIMESIGNATURES')
-    tickcounts = item_property('TICKCOUNTS')
-    combos = item_property('COMBOS')
-    warps = item_property('WARPS')
-    speeds = item_property('SPEEDS')
-    scrolls = item_property('SCROLLS')
-    fakes = item_property('FAKES')
-    labels = item_property('LABELS')
-    attacks = item_property('ATTACKS')
-    offset = item_property('OFFSET')
-    displaybpm = item_property('DISPLAYBPM')
+
+    chartname = item_property("CHARTNAME")
+    chartstyle = item_property("CHARTSTYLE")
+    credit = item_property("CREDIT")
+    music = item_property("MUSIC")
+    bpms = item_property("BPMS")
+    stops = item_property("STOPS")
+    delays = item_property("DELAYS")
+    timesignatures = item_property("TIMESIGNATURES")
+    tickcounts = item_property("TICKCOUNTS")
+    combos = item_property("COMBOS")
+    warps = item_property("WARPS")
+    speeds = item_property("SPEEDS")
+    scrolls = item_property("SCROLLS")
+    fakes = item_property("FAKES")
+    labels = item_property("LABELS")
+    attacks = item_property("ATTACKS")
+    offset = item_property("OFFSET")
+    displaybpm = item_property("DISPLAYBPM")
 
     # "NOTES2" alias only supported by SSC files
-    notes = item_property('NOTES', alias='NOTES2')
+    notes = item_property("NOTES", alias="NOTES2")
 
     @classmethod
-    def from_str(
-        cls: Type['SSCChart'],
-        string: str,
-        strict: bool = True
-    ) -> 'SSCChart':
+    def from_str(cls: Type["SSCChart"], string: str, strict: bool = True) -> "SSCChart":
         """
         Parse a string containing MSD data into an SSC chart.
 
@@ -73,8 +70,9 @@ class SSCChart(BaseChart):
         return chart
 
     @classmethod
-    def blank(cls: Type['SSCChart']) -> 'SSCChart':
-        return cls.from_str("""
+    def blank(cls: Type["SSCChart"]) -> "SSCChart":
+        return cls.from_str(
+            """
             #NOTEDATA:;
             #CHARTNAME:;
             #STEPSTYPE:dance-single;
@@ -90,15 +88,16 @@ class SSCChart(BaseChart):
             0000
             0000
             ;
-        """)
-    
+        """
+        )
+
     def _parse(self, parser: MSD_ITERATOR) -> None:
         iterator = iter(parser)
-        
+
         param = next(iterator)
-        if param.key.upper() != 'NOTEDATA':
-            raise ValueError('expected NOTEDATA property first')
-        
+        if param.key.upper() != "NOTEDATA":
+            raise ValueError("expected NOTEDATA property first")
+
         for param in iterator:
             self[param.key] = param.value
             if param.value is self.notes:
@@ -106,16 +105,16 @@ class SSCChart(BaseChart):
 
     def serialize(self, file):
         file.write(f"{MSDParameter(('NOTEDATA', ''))}\n")
-        notes_key = 'NOTES'
+        notes_key = "NOTES"
         for (key, value) in self.items():
             # notes must always be the last property in a chart
             if value is self.notes:
                 notes_key = key
                 continue
             param = MSDParameter((key, value))
-            file.write(f'{param}\n')
+            file.write(f"{param}\n")
         notes_param = MSDParameter((notes_key, self[notes_key]))
-        file.write(f'{notes_param}\n\n')
+        file.write(f"{notes_param}\n\n")
 
 
 class SSCCharts(BaseCharts[SSCChart]):
@@ -131,33 +130,36 @@ class SSCSimfile(BaseSimfile):
     SSC implementation of :class:`~simfile.base.BaseSimfile`.
 
     Adds the following known properties:
-    
+
     * SSC version: `version`
     * Metadata: `origin`, `labels`, `musiclength`, `lastsecondhint`
     * File paths: `previewvid`, `jacket`, `cdimage`, `discimage`,
       `preview`
     * Gameplay events: `combos`, `speeds`, `scrolls`, `fakes`
     * Timing data: `warps`
-    """    
-    version = item_property('VERSION')
-    origin = item_property('ORIGIN')
-    previewvid = item_property('PREVIEWVID')
-    jacket = item_property('JACKET')
-    cdimage = item_property('CDIMAGE')
-    discimage = item_property('DISCIMAGE')
-    preview = item_property('PREVIEW')
-    musiclength = item_property('MUSICLENGTH')
-    lastsecondhint = item_property('LASTSECONDHINT')
-    warps = item_property('WARPS')
-    labels = item_property('LABELS')
-    combos = item_property('COMBOS')
-    speeds = item_property('SPEEDS')
-    scrolls = item_property('SCROLLS')
-    fakes = item_property('FAKES')
+    """
+
+    version = item_property("VERSION")
+    origin = item_property("ORIGIN")
+    previewvid = item_property("PREVIEWVID")
+    jacket = item_property("JACKET")
+    cdimage = item_property("CDIMAGE")
+    discimage = item_property("DISCIMAGE")
+    preview = item_property("PREVIEW")
+    musiclength = item_property("MUSICLENGTH")
+    lastsecondhint = item_property("LASTSECONDHINT")
+    warps = item_property("WARPS")
+    labels = item_property("LABELS")
+    combos = item_property("COMBOS")
+    speeds = item_property("SPEEDS")
+    scrolls = item_property("SCROLLS")
+    fakes = item_property("FAKES")
 
     @classmethod
-    def blank(cls: Type['SSCSimfile']) -> 'SSCSimfile':
-        return SSCSimfile(string=dedent_and_trim("""
+    def blank(cls: Type["SSCSimfile"]) -> "SSCSimfile":
+        return SSCSimfile(
+            string=dedent_and_trim(
+                """
             #VERSION:0.83;
             #TITLE:;
             #SUBTITLE:;
@@ -195,7 +197,9 @@ class SSCSimfile(BaseSimfile):
             #BGCHANGES:;
             #KEYSOUNDS:;
             #ATTACKS:;
-        """))
+        """
+            )
+        )
 
     def _parse(self, parser: MSD_ITERATOR):
         self.charts = SSCCharts()
@@ -203,10 +207,10 @@ class SSCSimfile(BaseSimfile):
         for param in parser:
             key = param.key.upper()
             if key not in BaseSimfile.MULTI_VALUE_PROPERTIES:
-                value: Optional[str] = ':'.join(param.components[1:])
+                value: Optional[str] = ":".join(param.components[1:])
             else:
                 value = param.value
-            if key == 'NOTEDATA':
+            if key == "NOTEDATA":
                 if partial_chart is not None:
                     self.charts.append(partial_chart)
                 partial_chart = SSCChart()

@@ -6,7 +6,7 @@ from typing import Union
 from .sm import *
 from .ssc import *
 
-__all__ = ['Simfile', 'Charts', 'Chart']
+__all__ = ["Simfile", "Charts", "Chart"]
 
 Simfile = Union[SSCSimfile, SMSimfile]
 """Union of :class:`.SSCSimfile` and :class:`.SMSimfile`."""

@@ -17,7 +17,7 @@ from ._private.property import item_property
 from ._private.serializable import Serializable
 
 
-__all__ = ['BaseChart', 'BaseCharts', 'BaseSimfile']
+__all__ = ["BaseChart", "BaseCharts", "BaseSimfile"]
 
 
 MSD_ITERATOR = Iterator[MSDParameter]
@@ -30,13 +30,14 @@ class BaseChart(OrderedDict, Serializable, metaclass=ABCMeta):
     All charts have the following known properties: `stepstype`,
     `description`, `difficulty`, `meter`, `radarvalues`, and `notes`.
     """
-    stepstype = item_property('STEPSTYPE')
-    description = item_property('DESCRIPTION')
-    difficulty = item_property('DIFFICULTY')
-    meter = item_property('METER')
-    radarvalues = item_property('RADARVALUES')
-    notes = item_property('NOTES')
-    
+
+    stepstype = item_property("STEPSTYPE")
+    description = item_property("DESCRIPTION")
+    difficulty = item_property("DIFFICULTY")
+    meter = item_property("METER")
+    radarvalues = item_property("RADARVALUES")
+    notes = item_property("NOTES")
+
     @abstractmethod
     def _parse(self, parser: MSD_ITERATOR):
         pass
@@ -47,30 +48,31 @@ class BaseChart(OrderedDict, Serializable, metaclass=ABCMeta):
         Generate a blank, valid chart populated with standard keys.
 
         This should approximately match blank charts produced by the
-        StepMania editor. 
+        StepMania editor.
         """
 
     def __repr__(self) -> str:
         """
         Pretty repr() for charts.
-        
+
         Includes the class name, stepstype, difficulty, and meter.
         """
         cls = self.__class__.__name__
-        return f'<{cls}: {self.stepstype} {self.difficulty} {self.meter}>'
+        return f"<{cls}: {self.stepstype} {self.difficulty} {self.meter}>"
 
 
 class BaseCharts(ListWithRepr[E], Serializable, metaclass=ABCMeta):
     """
     List containing all of a simfile's charts.
     """
+
     def __init__(self, data=None):
         super().__init__(data)
 
     def serialize(self, file: TextIO):
         for chart in self:
             chart.serialize(file)
-            file.write('\n')
+            file.write("\n")
 
 
 class BaseSimfile(OrderedDict, Serializable, metaclass=ABCMeta):
@@ -80,7 +82,7 @@ class BaseSimfile(OrderedDict, Serializable, metaclass=ABCMeta):
     Metadata is stored directly on the simfile object through a
     dict-like interface. Keys are unique (if there are duplicates, the
     last value wins) and converted to uppercase.
-    
+
     Additionally, properties recognized by the current stable version
     of StepMania are exposed through lower-case properties on the
     object for easy (and implicitly spell-checked) access. The
@@ -103,44 +105,48 @@ class BaseSimfile(OrderedDict, Serializable, metaclass=ABCMeta):
     finds any stray text between parameters. This behavior can be
     overridden by setting `strict` to False in the constructor.
     """
-    MULTI_VALUE_PROPERTIES = ('ATTACKS', 'DISPLAYBPM')
 
-    title = item_property('TITLE')
-    subtitle = item_property('SUBTITLE')
-    artist = item_property('ARTIST')
-    titletranslit = item_property('TITLETRANSLIT')
-    subtitletranslit = item_property('SUBTITLETRANSLIT')
-    artisttranslit = item_property('ARTISTTRANSLIT')
-    genre = item_property('GENRE')
-    credit = item_property('CREDIT')
-    banner = item_property('BANNER')
-    background = item_property('BACKGROUND')
-    lyricspath = item_property('LYRICSPATH')
-    cdtitle = item_property('CDTITLE')
-    music = item_property('MUSIC')
-    offset = item_property('OFFSET')
-    bpms = item_property('BPMS')
-    stops = item_property('STOPS')
-    delays = item_property('DELAYS')
-    timesignatures = item_property('TIMESIGNATURES')
-    tickcounts = item_property('TICKCOUNTS')
-    instrumenttrack = item_property('INSTRUMENTTRACK')
-    samplestart = item_property('SAMPLESTART')
-    samplelength = item_property('SAMPLELENGTH')
-    displaybpm = item_property('DISPLAYBPM')
-    selectable = item_property('SELECTABLE')
-    bgchanges = item_property('BGCHANGES', alias='ANIMATIONS')
-    fgchanges = item_property('FGCHANGES')
-    keysounds = item_property('KEYSOUNDS')
-    attacks = item_property('ATTACKS')
+    MULTI_VALUE_PROPERTIES = ("ATTACKS", "DISPLAYBPM")
+
+    title = item_property("TITLE")
+    subtitle = item_property("SUBTITLE")
+    artist = item_property("ARTIST")
+    titletranslit = item_property("TITLETRANSLIT")
+    subtitletranslit = item_property("SUBTITLETRANSLIT")
+    artisttranslit = item_property("ARTISTTRANSLIT")
+    genre = item_property("GENRE")
+    credit = item_property("CREDIT")
+    banner = item_property("BANNER")
+    background = item_property("BACKGROUND")
+    lyricspath = item_property("LYRICSPATH")
+    cdtitle = item_property("CDTITLE")
+    music = item_property("MUSIC")
+    offset = item_property("OFFSET")
+    bpms = item_property("BPMS")
+    stops = item_property("STOPS")
+    delays = item_property("DELAYS")
+    timesignatures = item_property("TIMESIGNATURES")
+    tickcounts = item_property("TICKCOUNTS")
+    instrumenttrack = item_property("INSTRUMENTTRACK")
+    samplestart = item_property("SAMPLESTART")
+    samplelength = item_property("SAMPLELENGTH")
+    displaybpm = item_property("DISPLAYBPM")
+    selectable = item_property("SELECTABLE")
+    bgchanges = item_property("BGCHANGES", alias="ANIMATIONS")
+    fgchanges = item_property("FGCHANGES")
+    keysounds = item_property("KEYSOUNDS")
+    attacks = item_property("ATTACKS")
 
     charts: BaseCharts
     """List of charts associated with this simfile."""
 
-    def __init__(self, *,
-                 file: Optional[Union[TextIO, Iterator[str]]] = None,
-                 string: Optional[str] = None,
-                 strict: bool = True):
+    def __init__(
+        self,
+        *,
+        file: Optional[Union[TextIO, Iterator[str]]] = None,
+        string: Optional[str] = None,
+        strict: bool = True,
+    ):
         # msdparser no longer supports Iterator[str] as a file-like object
         # but simfile does for backwards compatibility
         file_for_msdparser = None
@@ -148,36 +154,38 @@ class BaseSimfile(OrderedDict, Serializable, metaclass=ABCMeta):
             if isinstance(file, TextIO):
                 file_for_msdparser = file
             else:
-                file_for_msdparser = StringIO(''.join(file))
-        
+                file_for_msdparser = StringIO("".join(file))
+
         if file is not None or string is not None:
-            self._parse(parse_msd(
-                file=file_for_msdparser,
-                string=string,
-                ignore_stray_text=not strict,
-            ))
-    
+            self._parse(
+                parse_msd(
+                    file=file_for_msdparser,
+                    string=string,
+                    ignore_stray_text=not strict,
+                )
+            )
+
     @abstractmethod
     def _parse(self, parser: MSD_ITERATOR):
         pass
-    
+
     @abstractclassmethod
     def blank(cls):
         """
         Generate a blank, valid simfile populated with standard keys.
 
         This should approximately match the simfile produced by the
-        StepMania editor in a directory with no .sm or .ssc files. 
+        StepMania editor in a directory with no .sm or .ssc files.
         """
 
     def serialize(self, file: TextIO):
         for (key, value) in self.items():
             if key in BaseSimfile.MULTI_VALUE_PROPERTIES:
-                param = MSDParameter((key, *value.split(':')))
+                param = MSDParameter((key, *value.split(":")))
             else:
                 param = MSDParameter((key, value))
-            file.write(f'{param}\n')
-        file.write('\n')
+            file.write(f"{param}\n")
+        file.write("\n")
         self.charts.serialize(file)
 
     def __repr__(self) -> str:
@@ -186,12 +194,12 @@ class BaseSimfile(OrderedDict, Serializable, metaclass=ABCMeta):
 
         Includes the class name, title, and subtitle.
         """
-        rtn = '<' + self.__class__.__name__
+        rtn = "<" + self.__class__.__name__
         if self.title:
-            rtn += ': ' + self.title
+            rtn += ": " + self.title
             if self.subtitle:
-                rtn += ' ' + self.subtitle
-        return rtn + '>'
+                rtn += " " + self.subtitle
+        return rtn + ">"
 
     def __eq__(self, other):
         """
@@ -200,13 +208,14 @@ class BaseSimfile(OrderedDict, Serializable, metaclass=ABCMeta):
         Two simfiles are equal if they have the same type, parameters, and
         charts.
         """
-        return (type(self) is type(other) and
-                OrderedDict.__eq__(self, other) and
-                self.charts == other.charts)
-    
+        return (
+            type(self) is type(other)
+            and OrderedDict.__eq__(self, other)
+            and self.charts == other.charts
+        )
+
     def __ne__(self, other):
         """
         Test for inequality with another BaseSimfile.
         """
         return not self.__eq__(other)
-                

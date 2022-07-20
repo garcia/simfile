@@ -8,13 +8,17 @@ from ..types import Simfile
 
 
 __all__ = [
-    'StaticDisplayBPM', 'RangeDisplayBPM', 'RandomDisplayBPM', 'DisplayBPM',
-    'displaybpm',
+    "StaticDisplayBPM",
+    "RangeDisplayBPM",
+    "RandomDisplayBPM",
+    "DisplayBPM",
+    "displaybpm",
 ]
 
 
 class StaticDisplayBPM(NamedTuple):
     """A single BPM value."""
+
     value: Decimal
 
     @property
@@ -26,7 +30,7 @@ class StaticDisplayBPM(NamedTuple):
     def max(self) -> Decimal:
         """Returns the single BPM value."""
         return self.value
-    
+
     def __str__(self):
         """Returns the rounded BPM value as a string."""
         return str(round(self.value))
@@ -34,6 +38,7 @@ class StaticDisplayBPM(NamedTuple):
 
 class RangeDisplayBPM(NamedTuple):
     """A range of BPM values."""
+
     min: Decimal
     max: Decimal
 
@@ -46,19 +51,17 @@ class RandomDisplayBPM(NamedTuple):
     """
     Used by StepMania to obfuscate the displayed BPM with random numbers.
     """
+
     def __str__(self):
         """Returns an asterisk "*"."""
-        return '*'
+        return "*"
 
 
 DisplayBPM = Union[StaticDisplayBPM, RangeDisplayBPM, RandomDisplayBPM]
 """Union of the three DisplayBPM variants above."""
 
 
-def displaybpm(
-    simfile: Simfile,
-    ssc_chart: SSCChart = SSCChart()
-) -> DisplayBPM:
+def displaybpm(simfile: Simfile, ssc_chart: SSCChart = SSCChart()) -> DisplayBPM:
     """
     Get the display BPM from a simfile and optionally an SSC chart.
 
@@ -77,17 +80,17 @@ def displaybpm(
     timing fields, the chart will be used as the source of timing.
     """
     properties = timing_source(simfile, ssc_chart)
-    if 'DISPLAYBPM' in properties:
-        displaybpm_value = properties['DISPLAYBPM']
-        if displaybpm_value == '*':
+    if "DISPLAYBPM" in properties:
+        displaybpm_value = properties["DISPLAYBPM"]
+        if displaybpm_value == "*":
             return RandomDisplayBPM()
-        elif ':' in displaybpm_value:
-            min_bpm, _, max_bpm = displaybpm_value.partition(':')
+        elif ":" in displaybpm_value:
+            min_bpm, _, max_bpm = displaybpm_value.partition(":")
             return RangeDisplayBPM(min=Decimal(min_bpm), max=Decimal(max_bpm))
         else:
             return StaticDisplayBPM(value=Decimal(displaybpm_value))
     else:
-        bpms = [e.value for e in BeatValues.from_str(properties['BPMS'])]
+        bpms = [e.value for e in BeatValues.from_str(properties["BPMS"])]
         if len(bpms) == 1:
             return StaticDisplayBPM(bpms[0])
         else:

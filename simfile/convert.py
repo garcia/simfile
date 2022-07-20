@@ -13,19 +13,25 @@ from .types import Simfile, Chart
 
 
 __all__ = [
-    'PropertyType', 'InvalidPropertyBehavior', 'InvalidPropertyException',
-    'sm_to_ssc', 'ssc_to_sm',
+    "PropertyType",
+    "InvalidPropertyBehavior",
+    "InvalidPropertyException",
+    "sm_to_ssc",
+    "ssc_to_sm",
 ]
 
 
-DEFAULT_PROPERTIES: DefaultDict[str, str] = defaultdict(lambda: '', {
-    'TIMESIGNATURES': '0.000=4=4',
-    'TICKCOUNTS': '0.000=4',
-    'COMBOS': '0.000=1',
-    'SPEEDS': '0.000=1.000=0.000=0',
-    'SCROLLS': '0.000=1.000',
-    'LABELS': '0.000=Song Start',
-})
+DEFAULT_PROPERTIES: DefaultDict[str, str] = defaultdict(
+    lambda: "",
+    {
+        "TIMESIGNATURES": "0.000=4=4",
+        "TICKCOUNTS": "0.000=4",
+        "COMBOS": "0.000=1",
+        "SPEEDS": "0.000=1.000=0.000=0",
+        "SCROLLS": "0.000=1.000",
+        "LABELS": "0.000=Song Start",
+    },
+)
 
 
 class PropertyType(Enum):
@@ -35,6 +41,7 @@ class PropertyType(Enum):
     These roughly mirror the lists of known properties documented in
     :class:`.BaseSimfile` and :class:`.SSCSimfile`.
     """
+
     SSC_VERSION = 1
     """The SSC version tag."""
 
@@ -43,7 +50,7 @@ class PropertyType(Enum):
 
     FILE_PATH = 3
     """Properties that reference file paths (e.g. images)."""
-    
+
     GAMEPLAY_EVENT = 4
     """Properties that affect gameplay in some fashion."""
 
@@ -53,29 +60,52 @@ class PropertyType(Enum):
 
 INVALID_PROPERTIES: Dict[Type, Dict[PropertyType, List[str]]] = {
     SMSimfile: {
-        PropertyType.SSC_VERSION: ['VERSION'],
+        PropertyType.SSC_VERSION: ["VERSION"],
         PropertyType.METADATA: [
-            'ORIGIN', 'TIMESIGNATURES', 'LABELS', 'MUSICLENGTH',
-            'LASTSECONDHINT',
+            "ORIGIN",
+            "TIMESIGNATURES",
+            "LABELS",
+            "MUSICLENGTH",
+            "LASTSECONDHINT",
         ],
         PropertyType.FILE_PATH: [
-            'PREVIEWVID', 'JACKET', 'CDIMAGE', 'DISCIMAGE', 'PREVIEW',
+            "PREVIEWVID",
+            "JACKET",
+            "CDIMAGE",
+            "DISCIMAGE",
+            "PREVIEW",
         ],
         PropertyType.GAMEPLAY_EVENT: [
-            'COMBOS', 'SPEEDS', 'SCROLLS', 'FAKES',
+            "COMBOS",
+            "SPEEDS",
+            "SCROLLS",
+            "FAKES",
         ],
-        PropertyType.TIMING_DATA: ['WARPS'],
+        PropertyType.TIMING_DATA: ["WARPS"],
     },
     SMChart: {
         PropertyType.METADATA: [
-            'CHARTNAME', 'CHARTSTYLE', 'CREDIT', 'DISPLAYBPM',
-            'TIMESIGNATURES', 'LABELS',
+            "CHARTNAME",
+            "CHARTSTYLE",
+            "CREDIT",
+            "DISPLAYBPM",
+            "TIMESIGNATURES",
+            "LABELS",
         ],
         PropertyType.GAMEPLAY_EVENT: [
-            'TICKCOUNTS', 'COMBOS', 'SPEEDS', 'SCROLLS', 'FAKES', 'ATTACKS',
+            "TICKCOUNTS",
+            "COMBOS",
+            "SPEEDS",
+            "SCROLLS",
+            "FAKES",
+            "ATTACKS",
         ],
         PropertyType.TIMING_DATA: [
-            'OFFSET', 'BPMS', 'STOPS', 'DELAYS', 'WARPS',
+            "OFFSET",
+            "BPMS",
+            "STOPS",
+            "DELAYS",
+            "WARPS",
         ],
     },
     SSCSimfile: {},
@@ -87,6 +117,7 @@ class InvalidPropertyBehavior(Enum):
     """
     How to handle an invalid property during conversion.
     """
+
     COPY_ANYWAY = 1
     """Copy the property regardless of the destination type."""
 
@@ -124,26 +155,34 @@ INVALID_PROPERTY_BEHAVIORS: InvalidPropertyBehaviorMapping = {
 class InvalidPropertyException(Exception):
     """
     Raised by conversion functions if a property cannot be converted.
-    """ 
+    """
 
 
 _CONVERT_TYPE = TypeVar(
-    '_CONVERT_TYPE', SMSimfile, SSCSimfile, SMChart, SSCChart, Simfile, Chart,
+    "_CONVERT_TYPE",
+    SMSimfile,
+    SSCSimfile,
+    SMChart,
+    SSCChart,
+    Simfile,
+    Chart,
 )
-_CONVERT_SIMFILE = TypeVar('_CONVERT_SIMFILE', SMSimfile, SSCSimfile)
-_CONVERT_CHART = TypeVar('_CONVERT_CHART', SMChart, SSCChart)
+_CONVERT_SIMFILE = TypeVar("_CONVERT_SIMFILE", SMSimfile, SSCSimfile)
+_CONVERT_CHART = TypeVar("_CONVERT_CHART", SMChart, SSCChart)
 
 
 def _should_copy_property(
     property: str,
     value: str,
     invalid_properties: Dict[PropertyType, List[str]],
-    invalid_property_behaviors: InvalidPropertyBehaviorMapping
+    invalid_property_behaviors: InvalidPropertyBehaviorMapping,
 ) -> bool:
     for invalid_property, properties in invalid_properties.items():
         if property in properties:
-            behavior = invalid_property_behaviors.get(invalid_property) \
+            behavior = (
+                invalid_property_behaviors.get(invalid_property)
                 or INVALID_PROPERTY_BEHAVIORS[invalid_property]
+            )
             if behavior == InvalidPropertyBehavior.COPY_ANYWAY:
                 return True
             if behavior == InvalidPropertyBehavior.IGNORE:
@@ -177,7 +216,7 @@ def _copy_properties(
 def _convert_warps(source: Simfile, output: Simfile):
     """
     Stub method for warp conversion.
-    
+
     Currently raises :code:`NotImplementedError` if warp timing is found.
     """
     if isinstance(source, SMSimfile):
@@ -185,12 +224,16 @@ def _convert_warps(source: Simfile, output: Simfile):
         stops = BeatValues.from_str(source.stops)
         for beat_values in (bpms, stops):
             for _beat_value in beat_values:
-                beat_value: BeatValue = _beat_value # typing workaround
+                beat_value: BeatValue = _beat_value  # typing workaround
                 if beat_value.value < 0:
-                    raise NotImplementedError("Warp timing in SMSimfile can't be converted yet")
+                    raise NotImplementedError(
+                        "Warp timing in SMSimfile can't be converted yet"
+                    )
     elif isinstance(source, SSCSimfile):
         if len(BeatValues(source.warps)):
-            raise NotImplementedError("Warp timing in SSCSimfile can't be converted yet")
+            raise NotImplementedError(
+                "Warp timing in SSCSimfile can't be converted yet"
+            )
 
 
 def _convert(
@@ -199,21 +242,21 @@ def _convert(
     output_chart_type: Type[_CONVERT_CHART],
     simfile_template: Optional[_CONVERT_SIMFILE] = None,
     chart_template: Optional[_CONVERT_CHART] = None,
-    invalid_property_behaviors: InvalidPropertyBehaviorMapping = {}
+    invalid_property_behaviors: InvalidPropertyBehaviorMapping = {},
 ) -> _CONVERT_SIMFILE:
     output_simfile = deepcopy(simfile_template) or output_simfile_type.blank()
 
     _convert_warps(source=simfile, output=output_simfile)
-    
+
     _copy_properties(
         source=simfile,
         output=output_simfile,
         output_type=output_simfile_type,
         invalid_property_behaviors=invalid_property_behaviors,
     )
-    
+
     for _chart in simfile.charts:
-        chart: Chart = _chart # typing workaround
+        chart: Chart = _chart  # typing workaround
         output_chart = deepcopy(chart_template) or output_chart_type.blank()
         _copy_properties(
             source=chart,
@@ -222,7 +265,7 @@ def _convert(
             invalid_property_behaviors=invalid_property_behaviors,
         )
         output_simfile.charts.append(output_chart)
-    
+
     return cast(_CONVERT_SIMFILE, output_simfile)
 
 
@@ -257,7 +300,7 @@ def ssc_to_sm(
     simfile_template: Optional[SMSimfile] = None,
     chart_template: Optional[SMChart] = None,
     invalid_property_behaviors: InvalidPropertyBehaviorMapping = {},
-) -> SMSimfile: 
+) -> SMSimfile:
     """
     Convert an SSC simfile to an equivalent SM simfile.
 

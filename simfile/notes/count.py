@@ -5,8 +5,13 @@ from .group import GroupedNotes, SameBeatNotes, OrphanedNotes, group_notes
 
 
 __all__ = [
-    'count_grouped_notes', 'count_steps', 'count_jumps', 'count_mines',
-    'count_hands', 'count_holds', 'count_rolls',
+    "count_grouped_notes",
+    "count_steps",
+    "count_jumps",
+    "count_mines",
+    "count_hands",
+    "count_holds",
+    "count_rolls",
 ]
 
 
@@ -22,12 +27,14 @@ def count_grouped_notes(
     return sum(len(gn) >= same_beat_minimum for gn in grouped_notes_iterator)
 
 
-DEFAULT_NOTE_TYPES: FrozenSet[NoteType] = frozenset((
-    NoteType.TAP,
-    NoteType.HOLD_HEAD,
-    NoteType.ROLL_HEAD,
-    NoteType.LIFT,
-))
+DEFAULT_NOTE_TYPES: FrozenSet[NoteType] = frozenset(
+    (
+        NoteType.TAP,
+        NoteType.HOLD_HEAD,
+        NoteType.ROLL_HEAD,
+        NoteType.LIFT,
+    )
+)
 
 
 def count_steps(
@@ -43,7 +50,7 @@ def count_steps(
     The definition of "step count" varies by application; the default
     configuration tries to match StepMania's definition as closely as
     possible:
-    
+
     * Taps, holds, rolls, and lifts are eligible for counting.
     * Multiple inputs on the same beat are only counted once.
 
@@ -94,7 +101,7 @@ def count_hands(
     *,
     include_note_types: FrozenSet[NoteType] = DEFAULT_NOTE_TYPES,
     same_beat_notes: SameBeatNotes = SameBeatNotes.JOIN_ALL,
-    same_beat_minimum: int = 3
+    same_beat_minimum: int = 3,
 ) -> int:
     """
     Count the hands (3+ simultaneous notes) in a note stream.
@@ -116,7 +123,7 @@ def _count_holds_or_rolls(
     head: NoteType,
     *,
     orphaned_head: OrphanedNotes = OrphanedNotes.RAISE_EXCEPTION,
-    orphaned_tail: OrphanedNotes = OrphanedNotes.RAISE_EXCEPTION
+    orphaned_tail: OrphanedNotes = OrphanedNotes.RAISE_EXCEPTION,
 ) -> int:
     return count_grouped_notes(
         group_notes(
@@ -133,7 +140,7 @@ def count_holds(
     notes: Iterator[Note],
     *,
     orphaned_head: OrphanedNotes = OrphanedNotes.RAISE_EXCEPTION,
-    orphaned_tail: OrphanedNotes = OrphanedNotes.RAISE_EXCEPTION
+    orphaned_tail: OrphanedNotes = OrphanedNotes.RAISE_EXCEPTION,
 ) -> int:
     """
     Count the hold notes in a note stream.
@@ -155,7 +162,7 @@ def count_rolls(
     notes: Iterator[Note],
     *,
     orphaned_head: OrphanedNotes = OrphanedNotes.RAISE_EXCEPTION,
-    orphaned_tail: OrphanedNotes = OrphanedNotes.RAISE_EXCEPTION
+    orphaned_tail: OrphanedNotes = OrphanedNotes.RAISE_EXCEPTION,
 ) -> int:
     """
     Count the roll notes in a note stream.
