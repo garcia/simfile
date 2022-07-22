@@ -11,6 +11,7 @@ Sphinx = "==3.2.1"
 twine = "*"
 mypy = "*"
 black = "*"
+jinja2 = "<3.1"
 
 [packages]
 msdparser = "~=2.0.0b4"
