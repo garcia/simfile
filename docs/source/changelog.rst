@@ -3,6 +3,14 @@
 Changelog
 =========
 
+2.1.0-rc.1
+----------
+
+* The :data:`.DisplayBPM` classes now all expose the same four properties;
+  the ones that don't apply to a particular class return None.
+  This enables you to handle all three cases without having to import the
+  types for :code:`instanceof()` checks.
+
 2.1.0-beta.3
 ------------
 

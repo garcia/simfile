@@ -284,11 +284,24 @@ To get the displayed BPM, use the :func:`.displaybpm` function:
     >>> str(displayed_bpm)
     '182'
 
-The return value will be one of :class:`.StaticDisplayBPM`,
-:class:`.RangeDisplayBPM`, or :class:`.RandomDisplayBPM`. These classes offer
-different methods for fetching the BPM value(s), so if you're working with
-arbitrary simfiles, you'll want to handle each case separately using
-:code:`instanceof()` checks.
+The return value will be one of
+:class:`.StaticDisplayBPM`, :class:`.RangeDisplayBPM`, or :class:`.RandomDisplayBPM`.
+All of these classes implement four properties *(as of 2.1)*:
+
+* :attr:`~.StaticDisplayBPM.value` returns the single BPM value for the static case and None otherwise.
+* :attr:`~.RangeDisplayBPM.min` and :attr:`~.RangeDisplayBPM.max` return the lowest and highest BPM values
+  for both the static case and the range case (they will be equal for the static case).
+* :attr:`~.RangeDisplayBPM.range` returns a (min, max) tuple for the range case and None otherwise.
+
+Here's the same information in a table:
+
+============= ========================= ===== ==== ==== =========
+Displayed BPM Class                     value min  max  range
+============= ========================= ===== ==== ==== =========
+120           :class:`StaticDisplayBPM` 120   120  120  None
+60–240        :class:`RangeDisplayBPM`  None  60   240  (60, 240)
+*(random)*    :class:`RandomDisplayBPM` None  None None None
+============= ========================= ===== ==== ==== =========
 
 Much like :class:`.TimingData`, :func:`.displaybpm` accepts an optional chart
 parameter for SSC split timing.

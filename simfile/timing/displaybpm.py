@@ -1,5 +1,8 @@
-from decimal import Decimal
-from typing import NamedTuple, Union
+"""
+Function & cla
+"""
+from decimal import Decimal, InvalidOperation
+from typing import NamedTuple, Tuple, Union
 
 from . import BeatValues
 from ._private.timingsource import timing_source
@@ -20,6 +23,10 @@ class StaticDisplayBPM(NamedTuple):
     """A single BPM value."""
 
     value: Decimal
+    """
+    The single BPM value.
+    This property is None in the other DisplayBPM classes.
+    """
 
     @property
     def min(self) -> Decimal:
@@ -30,6 +37,10 @@ class StaticDisplayBPM(NamedTuple):
     def max(self) -> Decimal:
         """Returns the single BPM value."""
         return self.value
+
+    @property
+    def range(self) -> None:
+        return None
 
     def __str__(self):
         """Returns the rounded BPM value as a string."""
@@ -42,6 +53,18 @@ class RangeDisplayBPM(NamedTuple):
     min: Decimal
     max: Decimal
 
+    @property
+    def value(self) -> None:
+        return None
+
+    @property
+    def range(self) -> Tuple[Decimal, Decimal]:
+        """
+        (min, max) tuple.
+        This property is None in the other DisplayBPM classes.
+        """
+        return (self.min, self.max)
+
     def __str__(self):
         """Returns the rounded min and max values joined by a ":"."""
         return f"{round(self.min)}:{round(self.max)}"
@@ -52,13 +75,31 @@ class RandomDisplayBPM(NamedTuple):
     Used by StepMania to obfuscate the displayed BPM with random numbers.
     """
 
+    @property
+    def value(self) -> None:
+        return None
+
+    @property
+    def min(self) -> None:
+        return None
+
+    @property
+    def max(self) -> None:
+        return None
+
+    @property
+    def range(self) -> None:
+        return None
+
     def __str__(self):
         """Returns an asterisk "*"."""
         return "*"
 
 
 DisplayBPM = Union[StaticDisplayBPM, RangeDisplayBPM, RandomDisplayBPM]
-"""Union of the three DisplayBPM variants above."""
+"""
+Type union of :class:`StaticDisplayBPM`, :class:`RangeDisplayBPM`, and :class:`RandomDisplayBPM`.
+"""
 
 
 def displaybpm(simfile: Simfile, ssc_chart: SSCChart = SSCChart()) -> DisplayBPM:
@@ -82,16 +123,20 @@ def displaybpm(simfile: Simfile, ssc_chart: SSCChart = SSCChart()) -> DisplayBPM
     properties = timing_source(simfile, ssc_chart)
     if "DISPLAYBPM" in properties:
         displaybpm_value = properties["DISPLAYBPM"]
-        if displaybpm_value == "*":
-            return RandomDisplayBPM()
-        elif ":" in displaybpm_value:
-            min_bpm, _, max_bpm = displaybpm_value.partition(":")
-            return RangeDisplayBPM(min=Decimal(min_bpm), max=Decimal(max_bpm))
-        else:
-            return StaticDisplayBPM(value=Decimal(displaybpm_value))
+        try:
+            if displaybpm_value == "*":
+                return RandomDisplayBPM()
+            elif ":" in displaybpm_value:
+                min_bpm, _, max_bpm = displaybpm_value.partition(":")
+                return RangeDisplayBPM(min=Decimal(min_bpm), max=Decimal(max_bpm))
+            else:
+                return StaticDisplayBPM(value=Decimal(displaybpm_value))
+        except InvalidOperation:
+            # Ignore decimal errors and use the song BPM
+            pass
+
+    bpms = [e.value for e in BeatValues.from_str(properties["BPMS"])]
+    if len(bpms) == 1:
+        return StaticDisplayBPM(bpms[0])
     else:
-        bpms = [e.value for e in BeatValues.from_str(properties["BPMS"])]
-        if len(bpms) == 1:
-            return StaticDisplayBPM(bpms[0])
-        else:
-            return RangeDisplayBPM(min=min(bpms), max=max(bpms))
+        return RangeDisplayBPM(min=min(bpms), max=max(bpms))
