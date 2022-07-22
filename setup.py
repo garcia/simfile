@@ -1,14 +1,26 @@
+import os
 from setuptools import setup, find_packages
 
-from simfile.version import __version__
 
+def get_version():
+    initpath = os.path.join(os.path.dirname(__file__), "simfile/__init__.py")
+    with open(initpath) as initfile:
+        for line in initfile:
+            if line.startswith("__version__"):
+                delim = '"' if '"' in line else "'"
+                return line.split(delim)[1]
+        else:
+            raise RuntimeError("Unable to find version string.")
+
+
+version = get_version()
 
 with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
 
 setup(
     name="simfile",
-    version=__version__,
+    version=version,
     description="Modern simfile library for Python",
     long_description=long_description,
     long_description_content_type="text/markdown",
