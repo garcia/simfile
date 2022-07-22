@@ -20,10 +20,11 @@ from simfile.dir import SimfileDirectory, SimfilePack
 from .ssc import SSCSimfile
 from .sm import SMSimfile
 from .types import Simfile
+from .version import __version__
 
 
-__version__ = "2.1.0-beta.3"
 __all__ = [
+    "__version__",
     "load",
     "loads",
     "open",
