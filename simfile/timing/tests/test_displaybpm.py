@@ -35,7 +35,9 @@ class TestDisplayBPM(unittest.TestCase):
         springtime = simfile.open("testdata/Springtime/Springtime.ssc")
         springtime.displaybpm = "*"
         result = displaybpm(springtime)
-        self.assertEqual(RandomDisplayBPM(), result)
+        self.assertEqual(
+            RandomDisplayBPM(min=Decimal("181.685"), max=Decimal("181.685")), result
+        )
         self.assertEqual("*", str(result))
 
     def test_empty_value(self):
@@ -85,9 +87,10 @@ class TestRangeDisplayBPM(unittest.TestCase):
 class TestRandomDisplayBPM(unittest.TestCase):
     def test_properties(self):
         sm = SMSimfile.blank()
+        sm.bpms = "0=120,4=240"
         sm.displaybpm = "*"
         result = displaybpm(sm)
         self.assertIsNone(result.value)
-        self.assertIsNone(result.min)
-        self.assertIsNone(result.max)
+        self.assertEqual(Decimal(120), result.min)
+        self.assertEqual(Decimal(240), result.max)
         self.assertIsNone(result.range)
