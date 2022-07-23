@@ -7,7 +7,7 @@ from itertools import groupby
 from io import StringIO
 from math import gcd
 from simfile.base import BaseChart
-from typing import Iterator, List, NamedTuple, Optional, Tuple, Type, Union
+from typing import Iterable, Iterator, List, NamedTuple, Optional, Tuple, Type, Union
 
 from ..timing import Beat
 from ..types import Chart
@@ -145,7 +145,7 @@ class NoteData:
 
     @classmethod
     def from_notes(
-        cls: Type["NoteData"], notes: Iterator[Note], columns: int
+        cls: Type["NoteData"], notes: Iterable[Note], columns: int
     ) -> "NoteData":
         """
         Convert a stream of notes into note data.

@@ -29,7 +29,7 @@ def timing_source(simfile: Simfile, chart: Optional[Chart]) -> Union[Simfile, SS
     if (
         isinstance(simfile, SSCSimfile)
         and isinstance(chart, SSCChart)
-        and float(simfile.version) >= SSC_VERSION_SPLIT_TIMING
+        and float(simfile.version or "0") >= SSC_VERSION_SPLIT_TIMING
         and any(timing_prop.__get__(chart) for timing_prop in CHART_TIMING_PROPERTIES)
     ):
         return chart

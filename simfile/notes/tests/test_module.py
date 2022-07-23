@@ -93,13 +93,13 @@ class TestNoteData(unittest.TestCase):
         notedata = NoteData("1000\n0000\n0000\n0000\n")
 
         self.assertEqual(
-            [Note(beat=0, column=0, note_type=NoteType.TAP)],
+            [Note(beat=Beat(0), column=0, note_type=NoteType.TAP)],
             list(notedata),
         )
 
     def test_init_with_chart(self):
         chart = testing_chart()
-        notedata_str = NoteData(chart.notes)
+        notedata_str = NoteData(chart.notes)  # type: ignore
         notedata_chart = NoteData(chart)
 
         self.assertEqual(list(notedata_str), list(notedata_chart))
@@ -168,7 +168,7 @@ class TestNoteData(unittest.TestCase):
 
     def test_iter_handles_whitespace(self):
         chart = testing_chart()
-        chart.notes = indent(chart.notes, "     ")
+        chart.notes = indent(chart.notes, "     ")  # type: ignore
         notedata = NoteData(chart)
         first_3_notes = list(notedata)[:3]
 

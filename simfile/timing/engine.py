@@ -3,7 +3,7 @@ from decimal import Decimal
 from enum import IntEnum
 from functools import total_ordering
 from heapq import merge
-from typing import Iterable, List, MutableSequence, Tuple, NamedTuple, cast
+from typing import Iterable, List, MutableSequence, Tuple, NamedTuple, Union, cast
 
 from . import Beat, BeatValue, BeatValues, TimingData
 from simfile._private.generic import ListWithRepr
@@ -28,6 +28,9 @@ class SongTime(float):
         Includes the time to 3 decimal places.
         """
         return f"{self:.3f}"
+
+
+SongTimeOrFloat = Union[SongTime, float]
 
 
 class EventTag(IntEnum):
@@ -96,7 +99,7 @@ class TimingState(NamedTuple):
 
         return time_until
 
-    def beats_until(self, time: SongTime) -> Beat:
+    def beats_until(self, time: SongTimeOrFloat) -> Beat:
         if self.event.tag in (EventTag.STOP, EventTag.DELAY):
             return Beat(0)
 
@@ -334,7 +337,9 @@ class TimingEngine:
             prior_state.event.time + prior_state.time_until(beat, event_tag)
         )
 
-    def beat_at(self, time: SongTime, event_tag: EventTag = EventTag.STOP) -> Beat:
+    def beat_at(
+        self, time: SongTimeOrFloat, event_tag: EventTag = EventTag.STOP
+    ) -> Beat:
         """
         Determine the beat at a given time in the song.
 

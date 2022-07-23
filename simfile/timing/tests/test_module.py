@@ -2,6 +2,7 @@ from decimal import Decimal
 import unittest
 
 import simfile
+from simfile.ssc import SSCSimfile
 from .helpers import testing_timing_data
 from .. import *
 
@@ -133,7 +134,7 @@ class TestTimingData(unittest.TestCase):
         self.assertEqual(BeatValues.from_str(ssc.bpms), timing_data.bpms)
         self.assertEqual(BeatValues.from_str(ssc.stops), timing_data.stops)
         self.assertEqual(BeatValues(), timing_data.warps)
-        self.assertEqual(Decimal(ssc.offset), timing_data.offset)
+        self.assertEqual(Decimal(ssc.offset), timing_data.offset)  # type: ignore
 
     def test_constructor_with_ssc_chart_with_distinct_timing_data(self):
         ssc = simfile.open("testdata/Springtime/Springtime.ssc")
@@ -151,6 +152,7 @@ class TestTimingData(unittest.TestCase):
 
     def test_constructor_with_ssc_chart_but_too_old_version(self):
         ssc = simfile.open("testdata/Springtime/Springtime.ssc")
+        assert isinstance(ssc, SSCSimfile)
         ssc.version = "0.69"
         ssc_chart = next(
             filter(

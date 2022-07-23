@@ -12,13 +12,15 @@ class TestNoteCounter(unittest.TestCase):
         self.assertEqual(19, count)
 
     def test_count_steps_include_note_types(self):
-        count = count_steps(testing_notes(), include_note_types=set((NoteType.TAP,)))
+        count = count_steps(
+            testing_notes(), include_note_types=frozenset((NoteType.TAP,))
+        )
         self.assertEqual(15, count)
 
     def test_count_steps_same_beat_notes_join_by_note_type(self):
         count = count_steps(
             testing_notes(),
-            include_note_types=set((NoteType.MINE, NoteType.TAIL)),
+            include_note_types=frozenset((NoteType.MINE, NoteType.TAIL)),
             same_beat_notes=SameBeatNotes.JOIN_BY_NOTE_TYPE,
         )
         self.assertEqual(4, count)
@@ -26,7 +28,7 @@ class TestNoteCounter(unittest.TestCase):
     def test_count_steps_same_beat_notes_keep_separate(self):
         count = count_steps(
             testing_notes(),
-            include_note_types=set((NoteType.MINE, NoteType.TAIL)),
+            include_note_types=frozenset((NoteType.MINE, NoteType.TAIL)),
             same_beat_notes=SameBeatNotes.KEEP_SEPARATE,
         )
         self.assertEqual(7, count)

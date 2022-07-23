@@ -5,6 +5,7 @@ from itertools import groupby
 from typing import (
     Deque,
     Dict,
+    Iterable,
     Iterator,
     List,
     NamedTuple,
@@ -102,7 +103,7 @@ class OrphanedNotes(Enum):
 
 
 def group_notes(
-    notes: Iterator[Note],
+    notes: Iterable[Note],
     *,
     include_note_types: FrozenSet[NoteType] = frozenset(NoteType),
     same_beat_notes: SameBeatNotes = SameBeatNotes.KEEP_SEPARATE,
@@ -250,7 +251,7 @@ def group_notes(
 
 
 def ungroup_notes(
-    grouped_notes: Iterator[GroupedNotes],
+    grouped_notes: Iterable[GroupedNotes],
     *,
     orphaned_notes: OrphanedNotes = OrphanedNotes.RAISE_EXCEPTION
 ) -> Iterator[Note]:

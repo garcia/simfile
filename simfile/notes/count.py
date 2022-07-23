@@ -1,4 +1,4 @@
-from typing import FrozenSet, Iterator
+from typing import FrozenSet, Iterable, Iterator
 
 from . import Note, NoteType
 from .group import GroupedNotes, SameBeatNotes, OrphanedNotes, group_notes
@@ -16,7 +16,7 @@ __all__ = [
 
 
 def count_grouped_notes(
-    grouped_notes_iterator: Iterator[GroupedNotes],
+    grouped_notes_iterator: Iterable[GroupedNotes],
     same_beat_minimum: int = 1,
 ) -> int:
     """
@@ -38,7 +38,7 @@ DEFAULT_NOTE_TYPES: FrozenSet[NoteType] = frozenset(
 
 
 def count_steps(
-    notes: Iterator[Note],
+    notes: Iterable[Note],
     *,
     include_note_types: FrozenSet[NoteType] = DEFAULT_NOTE_TYPES,
     same_beat_notes: SameBeatNotes = SameBeatNotes.JOIN_ALL,
@@ -69,7 +69,7 @@ def count_steps(
 
 
 def count_jumps(
-    notes: Iterator[Note],
+    notes: Iterable[Note],
     *,
     include_note_types: FrozenSet[NoteType] = DEFAULT_NOTE_TYPES,
     same_beat_notes: SameBeatNotes = SameBeatNotes.JOIN_ALL,
@@ -89,7 +89,7 @@ def count_jumps(
     )
 
 
-def count_mines(notes: Iterator[Note]) -> int:
+def count_mines(notes: Iterable[Note]) -> int:
     """
     Count the mines in a note stream.
     """
@@ -97,7 +97,7 @@ def count_mines(notes: Iterator[Note]) -> int:
 
 
 def count_hands(
-    notes: Iterator[Note],
+    notes: Iterable[Note],
     *,
     include_note_types: FrozenSet[NoteType] = DEFAULT_NOTE_TYPES,
     same_beat_notes: SameBeatNotes = SameBeatNotes.JOIN_ALL,
@@ -119,7 +119,7 @@ def count_hands(
 
 
 def _count_holds_or_rolls(
-    notes: Iterator[Note],
+    notes: Iterable[Note],
     head: NoteType,
     *,
     orphaned_head: OrphanedNotes = OrphanedNotes.RAISE_EXCEPTION,
@@ -137,7 +137,7 @@ def _count_holds_or_rolls(
 
 
 def count_holds(
-    notes: Iterator[Note],
+    notes: Iterable[Note],
     *,
     orphaned_head: OrphanedNotes = OrphanedNotes.RAISE_EXCEPTION,
     orphaned_tail: OrphanedNotes = OrphanedNotes.RAISE_EXCEPTION,
@@ -159,7 +159,7 @@ def count_holds(
 
 
 def count_rolls(
-    notes: Iterator[Note],
+    notes: Iterable[Note],
     *,
     orphaned_head: OrphanedNotes = OrphanedNotes.RAISE_EXCEPTION,
     orphaned_tail: OrphanedNotes = OrphanedNotes.RAISE_EXCEPTION,
