@@ -75,16 +75,11 @@ class RandomDisplayBPM(NamedTuple):
     Used by StepMania to obfuscate the displayed BPM with random numbers.
     """
 
+    min: Decimal
+    max: Decimal
+
     @property
     def value(self) -> None:
-        return None
-
-    @property
-    def min(self) -> None:
-        return None
-
-    @property
-    def max(self) -> None:
         return None
 
     @property
@@ -100,6 +95,14 @@ DisplayBPM = Union[StaticDisplayBPM, RangeDisplayBPM, RandomDisplayBPM]
 """
 Type union of :class:`StaticDisplayBPM`, :class:`RangeDisplayBPM`, and :class:`RandomDisplayBPM`.
 """
+
+
+def _real_displaybpm(properties: Union[Simfile, SSCChart]) -> DisplayBPM:
+    bpms = [e.value for e in BeatValues.from_str(properties["BPMS"])]
+    if len(bpms) == 1:
+        return StaticDisplayBPM(bpms[0])
+    else:
+        return RangeDisplayBPM(min=min(bpms), max=max(bpms))
 
 
 def displaybpm(simfile: Simfile, ssc_chart: SSCChart = SSCChart()) -> DisplayBPM:
@@ -125,7 +128,8 @@ def displaybpm(simfile: Simfile, ssc_chart: SSCChart = SSCChart()) -> DisplayBPM
         displaybpm_value = properties["DISPLAYBPM"]
         try:
             if displaybpm_value == "*":
-                return RandomDisplayBPM()
+                real = _real_displaybpm(properties)
+                return RandomDisplayBPM(min=real.min, max=real.max)
             elif ":" in displaybpm_value:
                 min_bpm, _, max_bpm = displaybpm_value.partition(":")
                 return RangeDisplayBPM(min=Decimal(min_bpm), max=Decimal(max_bpm))
@@ -135,8 +139,4 @@ def displaybpm(simfile: Simfile, ssc_chart: SSCChart = SSCChart()) -> DisplayBPM
             # Ignore decimal errors and use the song BPM
             pass
 
-    bpms = [e.value for e in BeatValues.from_str(properties["BPMS"])]
-    if len(bpms) == 1:
-        return StaticDisplayBPM(bpms[0])
-    else:
-        return RangeDisplayBPM(min=min(bpms), max=max(bpms))
+    return _real_displaybpm(properties)

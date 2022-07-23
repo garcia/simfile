@@ -267,9 +267,15 @@ be ignored and the simfile's timing data will be used instead.
 Getting the displayed BPM
 -------------------------
 
-On StepMania's music selection screen, players can typically see the selected
-chart's BPM range - either a static value, a range of values, or an animation
-of random values (sometimes used to make "boss songs" look more intimidating).
+
+On StepMania's music selection screen,
+players can typically see the selected chart's BPM,
+whether static or a range of values.
+For most charts, this is inferred through its timing data,
+but the :code:`DISPLAYBPM` tag can be used to override this value.
+Additionally, the special :code:`DISPLAYBPM` value :code:`*`
+obfuscates the BPM on the song selection screen,
+typically with a flashing sequence of random numbers.
 
 To get the displayed BPM, use the :func:`.displaybpm` function:
 
@@ -278,30 +284,47 @@ To get the displayed BPM, use the :func:`.displaybpm` function:
     >>> import simfile
     >>> from simfile.timing.displaybpm import displaybpm
     >>> springtime = simfile.open('testdata/Springtime/Springtime.ssc')
-    >>> displayed_bpm = displaybpm(springtime)
-    >>> displayed_bpm
-    StaticDisplayBPM(value=Decimal('182'))
-    >>> str(displayed_bpm)
-    '182'
+    >>> disp = displaybpm(springtime)
+    >>> if disp.value:
+    ...     print(f"Static value: #{disp.value}")
+    ... elif disp.range:
+    ...     print(f"Range of values: #{disp.value[0]}-#{disp.value[1]}")
+    ... else:
+    ...     print(f"* (obfuscated BPM)")
+    ...
+    Static value: 182
 
 The return value will be one of
 :class:`.StaticDisplayBPM`, :class:`.RangeDisplayBPM`, or :class:`.RandomDisplayBPM`.
 All of these classes implement four properties *(as of 2.1)*:
 
-* :attr:`~.StaticDisplayBPM.value` returns the single BPM value for the static case and None otherwise.
-* :attr:`~.RangeDisplayBPM.min` and :attr:`~.RangeDisplayBPM.max` return the lowest and highest BPM values
-  for both the static case and the range case (they will be equal for the static case).
-* :attr:`~.RangeDisplayBPM.range` returns a (min, max) tuple for the range case and None otherwise.
+* :attr:`~.RangeDisplayBPM.min` and :attr:`~.RangeDisplayBPM.max`
+  return the lowest and highest BPM values,
+  ignoring any :code:`*`.
+* :attr:`~.StaticDisplayBPM.value`
+  returns the sole BPM value from :class:`.StaticDisplayBPM`;
+  the other classes return None.
+* :attr:`~.RangeDisplayBPM.range`
+  returns a (min, max) tuple from :class:`.RangeDisplayBPM`;
+  the other classes return None.
+
+.. note::
+
+    :attr:`~.RangeDisplayBPM.max` is the same BPM value
+    used by StepMania's "MMod" speed option
+    to calculate the player's scrolling speed.
 
 Here's the same information in a table:
 
-============= ========================= ===== ==== ==== =========
-Displayed BPM Class                     value min  max  range
-============= ========================= ===== ==== ==== =========
-120           :class:`StaticDisplayBPM` 120   120  120  None
-60–240        :class:`RangeDisplayBPM`  None  60   240  (60, 240)
-*(random)*    :class:`RandomDisplayBPM` None  None None None
-============= ========================= ===== ==== ==== =========
+========== ======================== ========================= ==== ==== ===== =========
+Actual BPM :code:`DISPLAYBPM` value Class                     min  max  value range
+========== ======================== ========================= ==== ==== ===== =========
+300                                 :class:`StaticDisplayBPM` 300  300  300   None
+12–300     :code:`300`              :class:`StaticDisplayBPM` 300  300  300   None
+12–300                              :class:`RangeDisplayBPM`  12   300  None  (12, 300)
+300        :code:`12:300`           :class:`RangeDisplayBPM`  12   300  None  (12, 300)
+12–300     :code:`*`                :class:`RandomDisplayBPM` 12   300  None  None
+========== ======================== ========================= ==== ==== ===== =========
 
 Much like :class:`.TimingData`, :func:`.displaybpm` accepts an optional chart
 parameter for SSC split timing.
