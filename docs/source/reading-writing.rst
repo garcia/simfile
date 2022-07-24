@@ -10,8 +10,8 @@ The top-level :mod:`simfile` module offers 3 convenience functions for loading
 simfiles from the filesystem, depending on what kind of filename you have:
 
 * :func:`simfile.open` takes a path to an SM or SSC file.
-* :func:`simfile.opendir` takes a path to a simfile directory.
-* :func:`simfile.openpack` takes a path to a simfile pack.
+* :func:`simfile.opendir` takes a path to a simfile directory. *(new in 2.1)*
+* :func:`simfile.openpack` takes a path to a simfile pack. *(new in 2.1)*
 
 .. doctest::
 

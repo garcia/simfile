@@ -264,9 +264,10 @@ This works regardless of whether the chart has split timing, or even whether
 the simfile is an SSC file; if the chart has no timing data of its own, it will
 be ignored and the simfile's timing data will be used instead.
 
+.. _displayed-bpm:
+
 Getting the displayed BPM
 -------------------------
-
 
 On StepMania's music selection screen,
 players can typically see the selected chart's BPM,
