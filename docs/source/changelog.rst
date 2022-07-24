@@ -29,7 +29,7 @@ New features
   the ones that don't apply to a particular class return None.
   This enables you to handle all three cases
   without having to import the types for ``instanceof`` checks.
-  Refer to :ref:`displayed-bpm` for more details.
+  Refer to :ref:`getting-the-displayed-bpm` for more details.
 
 Bugfixes
 ~~~~~~~~
