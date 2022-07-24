@@ -14,7 +14,7 @@ black = "*"
 jinja2 = "<3.1"
 
 [packages]
-msdparser = "~=2.0.0b4"
+msdparser = "~=2.0.0"
 pyfakefs = "~=4.5.6"
 fs = "~=2.4.15"
 
