@@ -287,9 +287,9 @@ To get the displayed BPM, use the :func:`.displaybpm` function:
     >>> springtime = simfile.open('testdata/Springtime/Springtime.ssc')
     >>> disp = displaybpm(springtime)
     >>> if disp.value:
-    ...     print(f"Static value: #{disp.value}")
+    ...     print(f"Static value: {disp.value}")
     ... elif disp.range:
-    ...     print(f"Range of values: #{disp.value[0]}-#{disp.value[1]}")
+    ...     print(f"Range of values: {disp.value[0]}-{disp.value[1]}")
     ... else:
     ...     print(f"* (obfuscated BPM)")
     ...
