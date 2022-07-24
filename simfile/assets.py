@@ -179,15 +179,3 @@ class Assets:
         else:
             self._cache[key] = None
         return self._cache[key]
-
-
-def open_with_assets(
-    filename: str, strict: bool = True, filesystem: FS = NativeOSFS(), **kwargs
-) -> Tuple[Simfile, Assets]:
-    path = FSPath(filesystem)
-    simfile_dir, _ = path.split(filename)
-
-    sim = simfile.open(filename, strict=strict, filesystem=filesystem)
-    assets = Assets(simfile_dir, simfile=sim, filesystem=filesystem)
-
-    return (sim, assets)
