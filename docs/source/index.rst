@@ -74,6 +74,7 @@ Further reading
    reading-writing
    known-properties
    timing-note-data
+   examples
    changelog
    migrating
 
