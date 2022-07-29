@@ -273,8 +273,8 @@ On StepMania's music selection screen,
 players can typically see the selected chart's BPM,
 whether static or a range of values.
 For most charts, this is inferred through its timing data,
-but the :code:`DISPLAYBPM` tag can be used to override this value.
-Additionally, the special :code:`DISPLAYBPM` value :code:`*`
+but the `DISPLAYBPM` tag can be used to override this value.
+Additionally, the special `DISPLAYBPM` value :code:`*`
 obfuscates the BPM on the song selection screen,
 typically with a flashing sequence of random numbers.
 
@@ -299,36 +299,37 @@ The return value will be one of
 :class:`.StaticDisplayBPM`, :class:`.RangeDisplayBPM`, or :class:`.RandomDisplayBPM`.
 All of these classes implement four properties *(as of 2.1)*:
 
+* :attr:`.StaticDisplayBPM.value` returns the single BPM value;
+  the other classes return None.
+* :attr:`.RangeDisplayBPM.range` returns a (min, max) tuple;
+  the other classes return None.
 * :attr:`~.RangeDisplayBPM.min` and :attr:`~.RangeDisplayBPM.max`
-  return the lowest and highest BPM values,
-  ignoring any :code:`*`.
-* :attr:`~.StaticDisplayBPM.value`
-  returns the sole BPM value from :class:`.StaticDisplayBPM`;
-  the other classes return None.
-* :attr:`~.RangeDisplayBPM.range`
-  returns a (min, max) tuple from :class:`.RangeDisplayBPM`;
-  the other classes return None.
-
-.. note::
-
-    :attr:`~.RangeDisplayBPM.max` is the same BPM value
-    used by StepMania's "MMod" speed option
-    to calculate the player's scrolling speed.
+  return the lowest and highest BPM values
+  for both :class:`.StaticDisplayBPM` and :class:`.RangeDisplayBPM`
+  (they will be equal for the static case).
 
 Here's the same information in a table:
 
-========== ======================== ========================= ==== ==== ===== =========
-Actual BPM :code:`DISPLAYBPM` value Class                     min  max  value range
-========== ======================== ========================= ==== ==== ===== =========
-300                                 :class:`StaticDisplayBPM` 300  300  300   None
-12–300     :code:`300`              :class:`StaticDisplayBPM` 300  300  300   None
-12–300                              :class:`RangeDisplayBPM`  12   300  None  (12, 300)
-300        :code:`12:300`           :class:`RangeDisplayBPM`  12   300  None  (12, 300)
-12–300     :code:`*`                :class:`RandomDisplayBPM` 12   300  None  None
-========== ======================== ========================= ==== ==== ===== =========
+========== ================== ========================= ==== ==== ===== ==========
+Actual BPM `DISPLAYBPM` value Class                     min  max  value range
+========== ================== ========================= ==== ==== ===== ==========
+300                           :class:`StaticDisplayBPM` 300  300  300   None
+12-300     :code:`300`        :class:`StaticDisplayBPM` 300  300  300   None
+12-300                        :class:`RangeDisplayBPM`  12   300  None  (12, 300)
+12-300     :code:`150:300`    :class:`RangeDisplayBPM`  150  300  None  (150, 300)
+12-300     :code:`*`          :class:`RandomDisplayBPM` None None None  None
+========== ================== ========================= ==== ==== ===== ==========
 
-Much like :class:`.TimingData`, :func:`.displaybpm` accepts an optional chart
-parameter for SSC split timing.
+Much like :class:`.TimingData`,
+:func:`.displaybpm` accepts an optional chart parameter
+for SSC split timing.
+
+.. warning::
+
+    It may be tempting to use :attr:`~.RangeDisplayBPM.max`
+    to calculate the scroll rate for MMod,
+    but this will be incorrect in some edge cases,
+    most notably songs with very high BPMs and no `DISPLAYBPM` specified.
 
 Converting song time to beats
 -----------------------------
