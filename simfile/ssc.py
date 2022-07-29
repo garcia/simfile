@@ -1,7 +1,7 @@
 """
 Simfile & chart classes for SSC files.
 """
-from typing import Optional, Type
+from typing import Optional, Sequence, Type
 
 from msdparser import parse_msd, MSDParameter
 
@@ -139,6 +139,8 @@ class SSCSimfile(BaseSimfile):
     * Timing data: `warps`
     """
 
+    _charts: SSCCharts
+
     version = item_property("VERSION")
     origin = item_property("ORIGIN")
     previewvid = item_property("PREVIEWVID")
@@ -220,3 +222,11 @@ class SSCSimfile(BaseSimfile):
                 self[key] = value
         if partial_chart is not None:
             self.charts.append(partial_chart)
+
+    @property
+    def charts(self) -> SSCCharts:
+        return self._charts
+
+    @charts.setter
+    def charts(self, charts: Sequence[SSCChart]):
+        self._charts = SSCCharts(charts)

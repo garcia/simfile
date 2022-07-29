@@ -186,6 +186,8 @@ class SMSimfile(BaseSimfile):
     SM implementation of :class:`~simfile.base.BaseSimfile`.
     """
 
+    _charts: SMCharts
+
     # "FREEZES" alias only supported by SM files
     stops = item_property("STOPS", alias="FREEZES")
     """
@@ -193,7 +195,7 @@ class SMSimfile(BaseSimfile):
     """
 
     def _parse(self, parser: MSD_ITERATOR):
-        self.charts = SMCharts()
+        self._charts = SMCharts()
         for param in parser:
             key = param.key.upper()
             if key == "NOTES":
@@ -233,3 +235,11 @@ class SMSimfile(BaseSimfile):
         """
             )
         )
+
+    @property
+    def charts(self) -> SMCharts:
+        return self._charts
+
+    @charts.setter
+    def charts(self, charts: Sequence[SMChart]):
+        self._charts = SMCharts(charts)

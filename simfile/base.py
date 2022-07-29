@@ -137,8 +137,12 @@ class BaseSimfile(OrderedDict, Serializable, metaclass=ABCMeta):
     keysounds = item_property("KEYSOUNDS")
     attacks = item_property("ATTACKS")
 
-    charts: BaseCharts
-    """List of charts associated with this simfile."""
+    @property
+    @abstractmethod
+    def charts(self) -> BaseCharts:
+        """
+        List of charts associated with this simfile.
+        """
 
     def __init__(
         self,
