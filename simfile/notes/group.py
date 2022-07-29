@@ -60,7 +60,10 @@ class NoteWithTail(NamedTuple):
 
 
 _NoteMaybeWithTail = Union[Note, NoteWithTail]
+
+
 GroupedNotes = Sequence[_NoteMaybeWithTail]
+"""A sequence of :class:`.Note` and possibly :class:`NoteWithTail` objects."""
 
 
 class SameBeatNotes(Enum):
