@@ -321,8 +321,9 @@ Actual BPM `DISPLAYBPM` value Class                     min  max  value range
 ========== ================== ========================= ==== ==== ===== ==========
 
 Much like :class:`.TimingData`,
-:func:`.displaybpm` accepts an optional chart parameter
-for SSC split timing.
+:func:`.displaybpm` accepts an optional chart parameter for SSC split timing.
+Also, setting *ignore_specified* to True will ignore any `DISPLAYBPM` property
+and always return the true BPM range.
 
 .. warning::
 

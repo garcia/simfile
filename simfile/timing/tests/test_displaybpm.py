@@ -59,6 +59,15 @@ class TestDisplayBPM(unittest.TestCase):
         result = displaybpm(sm)
         self.assertEqual(StaticDisplayBPM(Decimal(120)), result)
 
+    def test_ignore_specified(self):
+        springtime = simfile.open("testdata/Springtime/Springtime.ssc")
+        result = displaybpm(springtime, springtime.charts[0], ignore_specified=True)
+        self.assertEqual(
+            RangeDisplayBPM(min=Decimal("90.843"), max=Decimal("181.685")),
+            result,
+        )
+        self.assertEqual("91:182", str(result))
+
 
 class TestStaticDisplayBPM(unittest.TestCase):
     def test_properties(self):

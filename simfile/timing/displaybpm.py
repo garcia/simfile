@@ -2,7 +2,7 @@
 Function & cla
 """
 from decimal import Decimal, InvalidOperation
-from typing import NamedTuple, Tuple, Union
+from typing import NamedTuple, Optional, Tuple, Union
 
 from . import BeatValues
 from ._private.timingsource import timing_source
@@ -102,11 +102,16 @@ Type union of :class:`StaticDisplayBPM`, :class:`RangeDisplayBPM`, and :class:`R
 """
 
 
-def displaybpm(simfile: Simfile, ssc_chart: SSCChart = SSCChart()) -> DisplayBPM:
+def displaybpm(
+    simfile: Simfile,
+    ssc_chart: SSCChart = SSCChart(),
+    ignore_specified: Optional[bool] = False,
+) -> DisplayBPM:
     """
     Get the display BPM from a simfile and optionally an SSC chart.
 
-    If a DISPLAYBPM property is present, its value is used as follows:
+    If a DISPLAYBPM property is present (and `ignore_specified` isn't
+    set to True), its value is used as follows:
 
     * One number maps to :class:`StaticDisplayBPM`
     * Two ":"-separated numbers maps to :class:`RangeDisplayBPM`
@@ -121,7 +126,7 @@ def displaybpm(simfile: Simfile, ssc_chart: SSCChart = SSCChart()) -> DisplayBPM
     timing fields, the chart will be used as the source of timing.
     """
     properties = timing_source(simfile, ssc_chart)
-    if "DISPLAYBPM" in properties:
+    if "DISPLAYBPM" in properties and not ignore_specified:
         displaybpm_value = properties["DISPLAYBPM"]
         try:
             if displaybpm_value == "*":
