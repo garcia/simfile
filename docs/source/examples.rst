@@ -3,13 +3,128 @@
 Learn by example
 ================
 
-This page includes complete, ready-to-use scripts
-that automate repetitive tasks on simfile packs.
-They serve as canonical examples
-of correct & type-checked **simfile** library usage.
-You can also use them as a learning aid
-or a starting point for your own scripts.
+This page includes examples of varying length
+demonstrating correct & type-checked **simfile** library usage.
+You're free to use these recipes & scripts as-is,
+modify them to suit your needs,
+or simply use them as a learning aid.
 
+Recipes
+~~~~~~~
+
+This section includes short snippets of code
+that demonstrate basic library usage.
+These recipes are in the public domain.
+
+Get charts for one game mode
+----------------------------
+
+.. code:: python
+
+    from typing import Iterator
+    from simfile.types import Chart
+
+    # Imperative version
+    def charts_for_stepstype(charts, stepstype='dance-single') -> Iterator[Chart]:
+        for chart in charts:
+            if chart.stepstype == stepstype:
+                yield chart
+    
+    # One-liner version
+    def charts_for_stepstype(charts, stepstype='dance-single') -> Iterator[Chart]:
+        yield from filter(lambda chart: chart.stepstype == stepstype, charts)
+
+
+Get the hardest chart
+---------------------
+
+.. code:: python
+
+    from typing import Optional
+    from simfile.types import Chart
+
+    # Imperative version
+    def get_hardest_chart(charts) -> Optional[Chart]:
+        hardest_chart: Optional[Chart] = None
+        hardest_meter: Optional[int] = None
+        
+        for chart in charts:
+            # Remember to convert `meter` to an integer for comparisons
+            meter = int(chart.meter or '1')
+            if hardest_meter is None or meter > hardest_meter:
+                hardest_chart = chart
+                hardest_meter = meter
+        
+        return hardest_chart
+    
+    # One-liner version
+    def get_hardest_chart(charts) -> Optional[Chart]:
+        return max(
+            charts,
+            key=lambda chart: int(chart.meter or '1'),
+            default=None,
+        )
+
+Mirror a chart's notes
+----------------------
+
+.. code:: python
+
+    from typing import Iterator
+    from simfile.types import Chart
+    from simfile.notes import Note, NoteData
+
+    def mirror_note(note: Note, columns: int) -> Note:
+        # Make a new Note with all fields the same except for column
+        return note._replace(
+            # You could replace this expression with anything you want
+            column=columns - note.column - 1
+        )
+    
+    def mirror_notes(notedata: NoteData) -> Iterator[Note]:
+        columns = notedata.columns
+        for note in notedata:
+            yield mirror_note(note, columns)
+
+    def mirror_chart_in_place(chart: Chart) -> None:
+        notedata = NoteData(chart)
+        mirrored = NoteData.from_notes(
+            mirror_notes(notedata),
+            columns=notedata.columns,
+        )
+        # Assign str(NoteData) to Chart.notes to update the chart's notes
+        chart.notes = str(mirrored)
+
+Remove all but one chart from a simfile
+---------------------------------------
+
+.. code:: python
+
+    from typing import Optional
+    from simfile.types import Chart, Charts, Simfile
+
+    # When you have multiple parameters of the same type (str in this case),
+    # it's good practice to use a * pseudo-argument to require them to be named
+    def find_chart(charts: Charts, *, stepstype: str, difficulty: str) -> Optional[Chart]:
+        for chart in charts:
+            if chart.stepstype == stepstype and chart.difficulty == difficulty:
+                return chart
+
+    def remove_other_charts(sf: Simfile, *, stepstype='dance-single', difficulty='Challenge'):
+        the_chart = find_chart(sf.charts, stepstype=stepstype, difficulty=difficulty)
+        if the_chart:
+            # Replace the simfile's charts with a list of one
+            sf.charts = [the_chart]
+        else:
+            # You could alternatively raise an exception, pick a different chart,
+            # set sf.charts to an empty list, etc.
+            print(f"No {stepstype} {difficulty} chart found for {repr(sf)}")
+
+Full scripts
+~~~~~~~~~~~~
+
+This section includes complete, ready-to-use scripts
+that automate repetitive tasks on simfile packs.
 These scripts are licensed under the MIT License,
 the same license as the **simfile** library itself.
 
