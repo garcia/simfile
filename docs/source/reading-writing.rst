@@ -39,10 +39,10 @@ Plus two more that don't take filenames:
         with open('path/to/simfile.sm', 'r') as infile:
             sim = simfile.load(infile)
     
-    Consider writing ``simfile.open('path/to/simfile.sm')`` instead.
-    This is equivalent, but shorter and easier to remember.
-    It also lets **simfile** determine the filetype by extension,
-    rather than having to tee the file to look for a `VERSION` tag.
+    Consider writing ``sim = simfile.open('path/to/simfile.sm')`` instead.
+    This lets the library determine the correct encoding,
+    rather than defaulting to your system's preferred encoding.
+    It's also shorter and easier to remember.
 
 The type returned by functions like :func:`.open` and :func:`.load` is declared
 as :data:`.Simfile`. This is a union of the two concrete simfile

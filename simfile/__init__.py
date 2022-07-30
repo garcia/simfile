@@ -131,9 +131,9 @@ def open_with_detected_encoding(
     `try_encodings`.
 
     Keep in mind that no heuristics are performed to "guess" the
-    correct encoding - this method simply tries each encoding in order
+    correct encoding - this function simply tries each encoding in order
     until one succeeds. As such, non-UTF-8 files may successfully parse
-    as the wrong encoding, resulting in garbled text. If you intend to
+    as the wrong encoding, resulting in *mojibake*. If you intend to
     write the simfile back to disk, make sure to use the same encoding
     that was detected to preserve the true byte sequence.
 
@@ -167,7 +167,8 @@ def opendir(
     simfile_dir: str, filesystem: FS = NativeOSFS(), **kwargs
 ) -> Tuple[Simfile, str]:
     """
-    Open a simfile from its directory path; returns the simfile and its path.
+    Open a simfile from its directory path;
+    returns a (simfile, filename) tuple.
 
     If both SSC and SM are present, SSC is preferred. Keyword arguments
     are passed down to :func:`simfile.open`.

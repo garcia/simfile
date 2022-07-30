@@ -3,11 +3,16 @@
 What are simfiles?
 ==================
 
-Simfiles are how StepMania gameplay content is distributed. The word "simfile"
-can refer to the directory containing the song and the .sm or .ssc file (along
-with any graphics or other supplementary files), or the .sm or .ssc file
-itself. For the purpose of this documentation, we'll call the SM or SSC file
-the "simfile" and its folder the "simfile directory".
+Simfiles are the primary unit of game content
+for music game simulators like StepMania.
+These files contain song metadata and some number of charts
+(also known as "stepcharts" or "maps")
+that dictate the gameplay sequence.
+They are accompanied by a music file
+and often some graphic files like banners and backgrounds.
+
+StepMania primarily uses two simfile formats, SM and SSC.
+These are the two simfile formats supported by the **simfile** library.
 
 What's in a simfile?
 --------------------
@@ -40,40 +45,48 @@ typically written by humans to follow the rhythm of the song.
 Why do I need a library for this?
 ---------------------------------
 
-While the file format shown above seems simple (and indeed is), simfiles on the
-Internet vary greatly in formatting and data quality. For example:
+While the file format shown above seems simple,
+simfiles on the Internet vary greatly in formatting and data quality,
+and StepMania tries its hardest to support all of these files.
+As a result, there are numerous edge cases and undocumented features
+that complicate parsing of arbitrary simfiles.
+Here are some examples:
 
-* Not all simfiles are encoded in UTF-8.
-* Not all simfiles contain an `OFFSET` property.
-* Not all simfiles are valid MSD documents.
-* Not all simfiles containing holds have a 1:1 correspondence between head
-  notes to tail notes.
-* Not all SSC simfiles use the `NOTES` property (those with keysounds use a
-  separate `NOTES2` property).
-* Not all SSC simfiles that appear to contain split timing will have it be used
-  by StepMania.
+* Not all simfiles are encoded in UTF-8;
+  many older files from around the world use Windows code pages instead.
+  StepMania tries four encodings (UTF-8 followed by three code pages)
+  in order until one succeeds.
+  
+  - :func:`simfile.open` and related functions do the same.
 
-This library offers ways to handle all of these caveats and edge cases, either
-as an option or by default, depending on the context. Regarding the above
-examples:
+* Many simfiles, even modern ones,
+  contain formatting errors such as malformed comments and missing semicolons.
+  StepMania handles missing semicolons at the protocol level
+  and emits a warning for other formatting errors.
 
-* :func:`simfile.open` and related functions try each of the four encodings
-  supported by StepMania before throwing a :code:`UnicodeDecodeError`.
-  :func:`simfile.mutate` additionally preserves the encoding when writing the
-  simfile back to the disk.
-* :class:`.TimingData` defaults the offset to zero when it's missing from the
-  simfile.
-* :func:`simfile.open` and related functions accept a `strict` parameter that
-  can be set to False to ignore stray text during parsing.
-* :func:`.group_notes` accepts parameters that determine how to handle orphaned
-  head or tail notes.
-* :class:`.NoteData` will automatically read from and write to the correct SSC
-  field, whether `NOTES` or `NOTES2`.
-* :class:`.TimingData` will ignore split timing from SSC files with a version
-  lower than 0.70, the version at which StepMania considers timing data to have
-  been truly implemented. (Some older SSC files contain malformed split timing
-  data from when the format was in development; StepMania ignores it, so this
-  library does too.)
+  - :func:`simfile.open` and related functions offer a `strict` parameter
+    that can be set to ``False`` to ignore formatting errors.
+
+* Holds and rolls are expected to have corresponding tail notes;
+  a head note without a tail note (or vice-versa) is an error.
+  StepMania emits a warning and treats disconnected head notes as tap notes
+  (and discards orphaned tail notes).
+
+  - :func:`.group_notes` can do the same on an opt-in basis.
+
+* Some properties have legacy aliases, like `FREEZES` in place of `STOPS`.
+  Additionally, keysounded SSC charts use a `NOTES2` property for note data
+  instead of the usual `NOTES`.
+  StepMania looks for these aliases in the absence of the regular property name.
+
+  - Known properties on the :data:`.Simfile` and :data:`.Chart` classes do the same.
+
+* During development of the SSC format,
+  timing data on charts ("split timing") was an unstable experimental feature.
+  Modern versions of StepMania ignore timing data from these unstable versions
+  (prior to version 0.70).
+
+  - :class:`.TimingData` ignores SSC chart timing data from these older versions too.
 
 Even if you don't need the rich functionality of the supplementary modules and
 packages, the top-level :mod:`simfile` module and the :class:`.SMSimfile` and
