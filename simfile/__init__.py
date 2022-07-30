@@ -196,8 +196,7 @@ def openpack(
     Keyword arguments are passed down to :func:`simfile.open`.
 
     If you need more flexibility (for example, if you need the pack's
-    banner or a :class:`.SimfileDirectory` for each simfile), try using
-    :class:`.SimfilePack`.
+    banner, or both the SM and SSC files), try using :class:`.SimfilePack`.
     """
     sp = SimfilePack(pack_dir, filesystem=filesystem)
 

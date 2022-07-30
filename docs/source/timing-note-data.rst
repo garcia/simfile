@@ -322,8 +322,18 @@ Actual BPM `DISPLAYBPM` value Class                     min  max  value range
 
 Much like :class:`.TimingData`,
 :func:`.displaybpm` accepts an optional chart parameter for SSC split timing.
+
 Also, setting *ignore_specified* to True will ignore any `DISPLAYBPM` property
 and always return the true BPM range.
+If you want to get the real BPM hidden by :class:`RandomDisplayBPM`
+(while allowing numeric `DISPLAYBPM` values),
+you can do something like this:
+
+.. code:: python
+
+    disp = displaybpm(sf)
+    if not disp.max: # RandomDisplayBPM case
+        disp = displaybpm(sf, ignore_specified=True)
 
 .. warning::
 

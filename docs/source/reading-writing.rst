@@ -30,6 +30,20 @@ Plus two more that don't take filenames:
 * :func:`simfile.load` takes a file object.
 * :func:`simfile.loads` takes a string of simfile data.
 
+.. note::
+
+    If you're about to write this:
+
+    .. code:: python
+        
+        with open('path/to/simfile.sm', 'r') as infile:
+            sim = simfile.load(infile)
+    
+    Consider writing ``simfile.open('path/to/simfile.sm')`` instead.
+    This is equivalent, but shorter and easier to remember.
+    It also lets **simfile** determine the filetype by extension,
+    rather than having to tee the file to look for a `VERSION` tag.
+
 The type returned by functions like :func:`.open` and :func:`.load` is declared
 as :data:`.Simfile`. This is a union of the two concrete simfile
 types, :class:`.SMSimfile` and :class:`.SSCSimfile`:
@@ -85,6 +99,12 @@ simfile format. Many properties are shared between the SM and SSC formats, so
 you can use them without checking what kind of :data:`.Simfile` or
 :data:`.Chart` you have.
 
+All properties return a string value,
+or None if the property is missing.
+The possibility of None can be annoying in type-checked code,
+so you may want to write expressions like ``sf.title or ""``
+to guarantee a string.
+
 Attributes are great, but they can't cover *every* property found in every
 simfile in existence. When you need to deal with unknown properties, you can
 use any simfile or chart as a dictionary of uppercase property names (they all
@@ -120,9 +140,10 @@ extend :code:`OrderedDict` under the hood):
 Accessing charts
 ----------------
 
-Stepcharts don't follow the same key-value convention as other simfile
-properties; a simfile can have zero to many charts. The charts are stored in a
-list under the :attr:`~.BaseSimfile.charts` attribute:
+Charts are different from regular properties,
+because a simfile can have zero to many charts.
+The charts are stored in a list
+under the :attr:`~.BaseSimfile.charts` attribute:
 
 .. doctest::
 
@@ -133,8 +154,8 @@ list under the :attr:`~.BaseSimfile.charts` attribute:
     >>> springtime.charts[0]
     <SSCChart: dance-single Challenge 12>
 
-To find a particular chart, use a for-loop or Python's built-in :code:`filter`
-function:
+To find a particular chart, use a for-loop
+or Python's built-in :code:`filter` function:
 
 .. doctest::
 
@@ -152,12 +173,15 @@ and :code:`stepstype` which can be fetched via attributes, as well as a backing
 :code:`OrderedDict` which maps uppercase keys like :code:`'METER'` and
 :code:`'STEPSTYPE'` to the same string values.
 
-.. note::
+.. warning::
 
-    The keys of an :class:`~simfile.sm.SMChart` are **fixed** because SM charts
-    are encoded as a list of six properties. Of course, all six of these
-    properties are "known" and thus exposed through attributes, so it's rare to
-    need to use the underlying dictionary interface for this class.
+    Even the :attr:`~.BaseChart.meter` property is a string!
+    Some simfiles in the wild have a non-numeric meter due to manual editing;
+    it's up to client code to determine how to deal with this.
+
+    If you need to compare meters numerically,
+    you can use ``int(chart.meter)``,
+    or ``int(chart.meter or '1')`` to sate type-checkers like mypy.
 
 Editing simfile data
 --------------------
@@ -197,6 +221,11 @@ data, refer to :ref:`timing-note-data` for an overview of the available classes
     >>> # (...modify the note data...)
     >>> first_chart.notes = str(notedata)
 
+.. note::
+
+    The keys of an :class:`~simfile.sm.SMChart` are static;
+    they can't be added or removed,
+    but their values can be replaced.
 
 .. _writing-simfiles-to-disk:
 
