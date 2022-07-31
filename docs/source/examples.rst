@@ -40,30 +40,31 @@ Get the hardest chart
 
 .. code:: python
 
-    from typing import Optional
+    from typing import Optional, Sequence
     from simfile.types import Chart
 
     # Imperative version
     def get_hardest_chart(charts) -> Optional[Chart]:
         hardest_chart: Optional[Chart] = None
         hardest_meter: Optional[int] = None
-        
+
         for chart in charts:
             # Remember to convert `meter` to an integer for comparisons
-            meter = int(chart.meter or '1')
+            meter = int(chart.meter or "1")
             if hardest_meter is None or meter > hardest_meter:
                 hardest_chart = chart
                 hardest_meter = meter
-        
+
         return hardest_chart
-    
+
     # One-liner version
-    def get_hardest_chart(charts) -> Optional[Chart]:
+    def get_hardest_chart(charts: Sequence[Chart]) -> Optional[Chart]:
         return max(
             charts,
-            key=lambda chart: int(chart.meter or '1'),
+            key=lambda chart: int(chart.meter or "1"),
             default=None,
         )
+
 
 Mirror a chart's notes
 ----------------------
@@ -114,7 +115,7 @@ Remove all but one chart from a simfile
         the_chart = find_chart(sf.charts, stepstype=stepstype, difficulty=difficulty)
         if the_chart:
             # Replace the simfile's charts with a list of one
-            sf.charts = [the_chart]
+            sf.charts = [the_chart]  # type: ignore
         else:
             # You could alternatively raise an exception, pick a different chart,
             # set sf.charts to an empty list, etc.

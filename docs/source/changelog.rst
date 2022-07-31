@@ -28,7 +28,7 @@ New features
 * The :data:`.DisplayBPM` classes now all expose the same four properties;
   the ones that don't apply to a particular class return None.
   This enables you to handle all three cases
-  without having to import the types for ``instanceof`` checks.
+  without having to import the types for ``isinstance`` checks.
   Refer to :ref:`getting-the-displayed-bpm` for more details.
 
 Bugfixes
