@@ -281,7 +281,7 @@ def sm_to_ssc(
     `simfile_template` and `chart_template` can optionally be provided
     to define the initial simfile and chart prior to copying properties
     from the source object. If they are not provided,
-    :meth:`.SMSimfile.blank` and :meth:`.SMChart.blank` will supply the
+    :meth:`.SSCSimfile.blank` and :meth:`.SSCChart.blank` will supply the
     template objects.
     """
     return _convert(
@@ -307,7 +307,7 @@ def ssc_to_sm(
     `simfile_template` and `chart_template` can optionally be provided
     to define the initial simfile and chart prior to copying properties
     from the source object. If they are not provided,
-    :meth:`.SSCSimfile.blank` and :meth:`.SSCChart.blank` will supply
+    :meth:`.SMSimfile.blank` and :meth:`.SMChart.blank` will supply
     the template objects.
 
     Not all SSC properties are valid for SM simfiles, including some
