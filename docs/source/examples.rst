@@ -254,7 +254,7 @@ sort_by_difficulty.py
 
     This script finds the hardest chart of a given stepstype (dance-single by default)
     and puts its meter (difficulty number) between brackets at the start of the title
-    and translittitle.
+    and titletranslit.
 
     Usage examples:
 
