@@ -341,11 +341,11 @@ sort_by_difficulty.py
 
             if args.remove:
                 def remove_starting_brackets(current_text: str) -> str:
-                """
-                If current_text has a bracketed number at the start of the text, remove it and return it
-                Otherwise, return current_text unchanged. 
-                """
-                # Look for a number in brackets at the start of the text
+                    """
+                    If current_text has a bracketed number at the start of the text, remove it and return it
+                    Otherwise, return current_text unchanged. 
+                    """
+                    # Look for a number in brackets at the start of the text
                     if current_text.startswith("["):
                         open_bracket_index = current_text.find("[")
                         close_bracket_index = current_text.find("]")
