@@ -59,6 +59,21 @@ class TestSSCChart(unittest.TestCase):
         self.assertEqual("0.793,1.205,0.500,0.298,0.961", unit.radarvalues)
         self.assertEqual("\n\n0000\n0000\n0000\n0000\n", unit.notes)
 
+
+    def test_init_handles_multi_value_properties(self):
+        with_multi_value_properties = SSCSimfile(string='''
+            #VERSION:0.83;
+            #TITLE:Colons should be preserved below: but not here;
+            #DISPLAYBPM:60:240;
+            #ATTACKS:TIME=1.000:LEN=0.500:MODS=*5 -2.5 reverse;
+        ''')
+        self.assertEqual('Colons should be preserved below', with_multi_value_properties.title)
+        self.assertEqual('60:240', with_multi_value_properties.displaybpm)
+        self.assertEqual(
+            'TIME=1.000:LEN=0.500:MODS=*5 -2.5 reverse',
+            with_multi_value_properties.attacks,
+        )
+    
     def test_serialize(self):
         unit = SSCChart.from_str(testing_chart())
         expected = (
@@ -87,6 +102,23 @@ class TestSSCChart(unittest.TestCase):
         expected_substring = "#CHARTNAME:A\\:B\\;C\\//D\\\\E;\n"
 
         self.assertIn(expected_substring, str(unit))
+
+    def test_serialize_handles_multi_value_properties(self):
+        expected = SSCSimfile(string='''
+            #VERSION:0.83;
+            #TITLE:Colons should be preserved below;
+            #DISPLAYBPM:60:240;
+            #ATTACKS:TIME=1.000:LEN=0.500:MODS=*5 -2.5 reverse;
+        ''')
+
+        # None of the colons should be escaped
+        serialized = str(expected)
+        self.assertNotIn('\\', serialized)
+
+        deserialized = SSCSimfile(string=serialized)
+        self.assertEqual(expected.title, deserialized.title)
+        self.assertEqual(expected.displaybpm, deserialized.displaybpm)
+        self.assertEqual(expected.attacks, deserialized.attacks)
 
     def test_handles_notes2(self):
         with_notes = SSCChart.from_str(testing_chart())
