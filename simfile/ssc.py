@@ -99,20 +99,28 @@ class SSCChart(BaseChart):
             raise ValueError("expected NOTEDATA property first")
 
         for param in iterator:
-            self[param.key] = param.value
+            if param.key in BaseSimfile.MULTI_VALUE_PROPERTIES:
+                self[param.key] = ":".join(param.components[1:])
+            else:
+                self[param.key] = param.value
             if param.value is self.notes:
                 break
 
     def serialize(self, file):
         file.write(f"{MSDParameter(('NOTEDATA', ''))}\n")
         notes_key = "NOTES"
+
         for (key, value) in self.items():
-            # notes must always be the last property in a chart
+            # Either NOTES or NOTES2 must be the last chart property
             if value is self.notes:
                 notes_key = key
                 continue
-            param = MSDParameter((key, value))
+            if key in BaseSimfile.MULTI_VALUE_PROPERTIES:
+                param = MSDParameter((key, *value.split(":")))
+            else:
+                param = MSDParameter((key, value))
             file.write(f"{param}\n")
+
         notes_param = MSDParameter((notes_key, self[notes_key]))
         file.write(f"{notes_param}\n\n")
 
@@ -208,7 +216,7 @@ class SSCSimfile(BaseSimfile):
         partial_chart: Optional[SSCChart] = None
         for param in parser:
             key = param.key.upper()
-            if key not in BaseSimfile.MULTI_VALUE_PROPERTIES:
+            if key in BaseSimfile.MULTI_VALUE_PROPERTIES:
                 value: Optional[str] = ":".join(param.components[1:])
             else:
                 value = param.value

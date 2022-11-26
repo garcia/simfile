@@ -159,6 +159,20 @@ class TestSMSimfile(unittest.TestCase):
         self.assertEqual(with_bgchanges.bgchanges, with_animations.bgchanges)
         self.assertNotIn("BGCHANGES", with_animations)
         self.assertIn("ANIMATIONS", with_animations)
+    
+    def test_init_handles_multi_value_properties(self):
+        with_multi_value_properties = SMSimfile(string='''
+            #TITLE:Colons should be preserved below: but not here;
+            #DISPLAYBPM:60:240;
+            #ATTACKS:TIME=1.000:LEN=0.500:MODS=*5 -2.5 reverse;
+        ''')
+        self.assertEqual('Colons should be preserved below', with_multi_value_properties.title)
+        self.assertEqual('60:240', with_multi_value_properties.displaybpm)
+        self.assertEqual(
+            'TIME=1.000:LEN=0.500:MODS=*5 -2.5 reverse',
+            with_multi_value_properties.attacks,
+        )
+        
 
     def test_repr(self):
         unit = SMSimfile(string=testing_simfile())
@@ -198,3 +212,19 @@ class TestSMSimfile(unittest.TestCase):
 
         unit.charts = SMCharts()
         self.assertEqual(0, len(unit.charts))
+
+    def test_serialize_handles_multi_value_properties(self):
+        expected = SMSimfile(string='''
+            #TITLE:Colons should be preserved below;
+            #DISPLAYBPM:60:240;
+            #ATTACKS:TIME=1.000:LEN=0.500:MODS=*5 -2.5 reverse;
+        ''')
+        
+        # None of the colons should be escaped
+        serialized = str(expected)
+        self.assertNotIn('\\', serialized)
+        
+        deserialized = SMSimfile(string=serialized)
+        self.assertEqual(expected.title, deserialized.title)
+        self.assertEqual(expected.displaybpm, deserialized.displaybpm)
+        self.assertEqual(expected.attacks, deserialized.attacks)
