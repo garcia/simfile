@@ -3,6 +3,29 @@
 Changelog
 =========
 
+2.1.1
+-----
+
+Bugfixes
+~~~~~~~~
+
+Two bugs in **simfile** 2.1.0's SSC implementation broke multi-value properties,
+causing them to be truncated or mangled past the first value.
+This release fixes these issues:
+
+1. When opening an SSC file,
+   the `DISPLAYBPM` and `ATTACKS` properties of both simfiles and charts
+   no longer stop parsing at the first ``:``.
+   For `DISPLAYBPM`, this meant a BPM range of ``120:240``
+   would have been incorrectly parsed as a static BPM of ``120``.
+   `ATTACKS` were completely broken as they use colon as a separator.
+2. The aforementioned properties are now correctly serialized from :class:`.SSCChart`;
+   previously, they would have been escaped with backslashes.
+   This bug had the same effects described above,
+   but only affected manual assignment of multi-value properties
+   (e.g. ``chart.displaybpm = "120:240"``)
+   since the first bug shadowed this bug during deserialization.
+
 2.1.0
 -----
 
