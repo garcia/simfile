@@ -99,7 +99,10 @@ class SSCChart(BaseChart):
             raise ValueError("expected NOTEDATA property first")
 
         for param in iterator:
-            self[param.key] = param.value
+            if param.key in BaseSimfile.MULTI_VALUE_PROPERTIES:
+                self[param.key] = ":".join(param.components[1:])
+            else:
+                self[param.key] = param.value
             if param.value is self.notes:
                 break
 
