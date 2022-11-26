@@ -253,7 +253,8 @@ sort_by_difficulty.py
     so that they are sorted by difficulty in StepMania.
 
     This script finds the hardest chart of a given stepstype (dance-single by default)
-    and puts its meter (difficulty number) between brackets at the start of the title.
+    and puts its meter (difficulty number) between brackets at the start of the title
+    and titletranslit.
 
     Usage examples:
 
@@ -321,7 +322,7 @@ sort_by_difficulty.py
 
     def prefix_title_with_meter(simfile_path: str, args: SortByDifficultyArgs):
         """
-        Add (or remove) a numeric prefix to the simfile's title.
+        Add (or remove) a numeric prefix to the simfile's title and titletranslit.
 
         This saves the updated simfile to its original location
         and writes a backup copy with a ~ appended to the filename.
@@ -336,18 +337,27 @@ sort_by_difficulty.py
             # It's very unlikely for the title property to be blank or missing.
             # This is mostly to satisfy type-checkers.
             current_title = sf.title or ""
+            current_titletranslit = sf.titletranslit or ""
 
             if args.remove:
-                # Look for a number in brackets at the start of the title
-                if current_title.startswith("["):
-                    open_bracket_index = current_title.find("[")
-                    close_bracket_index = current_title.find("]")
-                    bracketed_text = current_title[
-                        open_bracket_index + 1 : close_bracket_index
-                    ]
-                    if bracketed_text.isnumeric():
-                        # Remove the bracketed number from the title
-                        sf.title = current_title[close_bracket_index + 1 :].lstrip(" ")
+                def remove_starting_brackets(current_text: str) -> str:
+                    """
+                    If current_text has a bracketed number at the start of the text, remove it and return it
+                    Otherwise, return current_text unchanged. 
+                    """
+                    # Look for a number in brackets at the start of the text
+                    if current_text.startswith("["):
+                        open_bracket_index = current_text.find("[")
+                        close_bracket_index = current_text.find("]")
+                        bracketed_text = current_text[
+                            open_bracket_index + 1 : close_bracket_index
+                        ]
+                        if bracketed_text.isnumeric():
+                            # Remove the bracketed number from the text
+                            return current_title[close_bracket_index + 1 :].lstrip(" ")
+                    return current_title
+                sf.title = remove_starting_brackets(sf.title)
+                sf.titletranslit = remove_starting_brackets(sf.titletranslit)
             else:
                 # Find the hardest chart (numerically) within a stepstype
                 # and use it to prefix the title
@@ -365,6 +375,7 @@ sort_by_difficulty.py
                 # Put the meter at the start of the title,
                 # filling in leading zeros per arguments
                 sf.title = f"[{meter.zfill(args.digits)}] {current_title}"
+                sf.titletranslit = f"[{meter.zfill(args.digits)}] {current_titletranslit}"
 
 
     def main(argv):
