@@ -39,11 +39,13 @@ class SimfileDirectory:
         simfile_dir: str,
         *,
         filesystem: FS = NativeOSFS(),
+        ignore_duplicate = False,
     ):
         self._path = FSPath(filesystem)
         self.simfile_dir = self._path.normpath(simfile_dir)
         self.filesystem = filesystem
         self._dirlist: List[str] = self.filesystem.listdir(simfile_dir)
+        self._ignore_duplicate = ignore_duplicate
 
         for simfile_item in self._dirlist:
             match = extensions.match(simfile_item, *extensions.SIMFILE)
@@ -51,12 +53,16 @@ class SimfileDirectory:
                 simfile_path = self._path.join(simfile_dir, simfile_item)
                 if match == ".sm":
                     if self.sm_path:
+                        if self._ignore_duplicate:
+                            continue
                         raise DuplicateSimfileError(
                             f"{repr(self.sm_path)}, {repr(simfile_path)}"
                         )
                     self.sm_path = simfile_path
                 elif match == ".ssc":
                     if self.ssc_path:
+                        if self._ignore_duplicate:
+                            continue
                         raise DuplicateSimfileError(
                             f"{repr(self.ssc_path)}, {repr(simfile_path)}"
                         )
@@ -116,11 +122,13 @@ class SimfilePack:
         pack_dir: str,
         *,
         filesystem: FS = NativeOSFS(),
+        ignore_duplicate: bool = False,
     ):
         self._path = FSPath(filesystem)
         self.pack_dir = self._path.normpath(pack_dir)
         self.filesystem = filesystem
         self.simfile_dir_paths = tuple(self._find_simfile_paths())
+        self._ignore_duplicate = ignore_duplicate
 
     def _find_simfile_paths(self) -> Iterator[str]:
         for pack_item in self.filesystem.listdir(self.pack_dir):
@@ -139,7 +147,7 @@ class SimfilePack:
         Iterator over the simfile directories in the pack.
         """
         for simfile_path in self.simfile_dir_paths:
-            yield SimfileDirectory(simfile_path, filesystem=self.filesystem)
+            yield SimfileDirectory(simfile_path, filesystem=self.filesystem, ignore_duplicate=self._ignore_duplicate)
 
     def simfiles(self, **kwargs) -> Iterator[Simfile]:
         """
