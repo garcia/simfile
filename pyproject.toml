@@ -1,0 +1,25 @@
+[tool.poetry]
+name = "simfile"
+version = "3.0.0-alpha.1"
+description = "Simfile parsing & editing library"
+authors = ["Ash Garcia <github@garcia.sh>"]
+license = "MIT"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.7"
+msdparser = "^2.0.0"
+pyfakefs = "==4.5.6"
+fs = "^2.4.16"
+
+[tool.poetry.group.dev.dependencies]
+sphinx-autoapi = "==1.8.1"
+sphinx-rtd-theme = "==0.5.2"
+docutils = "==0.16.0"
+Sphinx = "==3.2.1"
+twine = "^4.0.2"
+black = "==23.3.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
