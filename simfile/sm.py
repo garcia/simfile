@@ -2,10 +2,10 @@
 Simfile & chart classes for SM files.
 """
 from msdparser import MSDParameter
-from simfile._private.property import item_property
+from .base import _item_property
 from typing import Iterator, List, Optional, Sequence, Type
 
-from .base import BaseChart, BaseCharts, BaseSimfile, MSD_ITERATOR
+from .base import BaseChart, BaseCharts, BaseSimfile, MSDIterator
 from ._private.dedent import dedent_and_trim
 
 
@@ -166,7 +166,7 @@ class SMChart(BaseChart):
         if property.upper() not in SM_CHART_PROPERTIES:
             raise KeyError
         else:
-            return super().__setitem__(property, value)
+            return self._properties.__setitem__(property, value)
 
     def __delitem__(self, property: str) -> None:
         """Raises NotImplementedError."""
@@ -189,21 +189,21 @@ class SMSimfile(BaseSimfile):
     _charts: SMCharts
 
     # "FREEZES" alias only supported by SM files
-    stops = item_property("STOPS", alias="FREEZES")
+    stops = _item_property("STOPS", alias="FREEZES")
     """
     Specialized property for `STOPS` that supports `FREEZES` as an alias.
     """
 
-    def _parse(self, parser: MSD_ITERATOR):
+    def _parse(self, parser: MSDIterator):
         self._charts = SMCharts()
         for param in parser:
             key = param.key.upper()
             if key == "NOTES":
                 self.charts.append(SMChart.from_msd(param.components[1:]))
             elif key in BaseSimfile.MULTI_VALUE_PROPERTIES:
-                self[key] = ":".join(param.components[1:])
+                self._properties[key] = ":".join(param.components[1:])
             else:
-                self[key] = param.value
+                self._properties[key] = param.value or ""
 
     @classmethod
     def blank(cls: Type["SMSimfile"]) -> "SMSimfile":

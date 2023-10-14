@@ -3,7 +3,7 @@ from io import StringIO
 from typing import TextIO
 
 
-class Serializable(metaclass=ABCMeta):
+class MSDSerializable(metaclass=ABCMeta):
     @abstractmethod
     def serialize(self, file: TextIO) -> None:
         """

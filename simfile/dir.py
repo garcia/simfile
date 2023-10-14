@@ -114,7 +114,7 @@ class SimfilePack:
     particular order.
     """
 
-    simfile_dir_paths: Tuple[str]
+    simfile_dir_paths: Tuple[str, ...]
     """Absolute paths to the simfile directories in this pack."""
 
     def __init__(

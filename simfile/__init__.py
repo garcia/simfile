@@ -38,9 +38,9 @@ __all__ = [
 ENCODINGS = ["utf-8", "cp1252", "cp932", "cp949"]
 
 
-def _detect_ssc(
-    file: Union[TextIO, Iterator[str]], strict: bool = True
-) -> Tuple[Union[TextIO, Iterator[str]], bool]:
+def _detect_ssc(file: TextIO, strict: bool = True) -> Tuple[TextIO, bool]:
+    # TODO(ash): this branch is probably a remnant of `file` being allowed
+    # to be List[str], but I'm not sure how much of it is safe to remove
     if isinstance(file, TextIOWrapper) or isinstance(file, TextIO):
         if type(file.name) is str:
             _, _, suffix = file.name.lower().rpartition(".")
@@ -68,7 +68,7 @@ def _detect_ssc(
     return (file, first_param.key is not None and first_param.key.upper() == "VERSION")
 
 
-def load(file: Union[TextIO, Iterator[str]], strict: bool = True) -> Simfile:
+def load(file: TextIO, strict: bool = True) -> Simfile:
     """
     Load a text file object as a simfile.
 
@@ -149,7 +149,7 @@ def open_with_detected_encoding(
     for encoding in try_encodings:
         try:
             with filesystem.open(filename, "r", encoding=encoding, **kwargs) as file:
-                return (load(file, strict=strict), encoding)
+                return (load(cast(TextIO, file), strict=strict), encoding)
         except UnicodeDecodeError as e:
             # Keep track of each encoding's exception
             if exception:
