@@ -140,15 +140,15 @@ def count_holds(
     notes: Iterable[Note],
     *,
     orphaned_head: OrphanedNotes = OrphanedNotes.RAISE_EXCEPTION,
-    orphaned_tail: OrphanedNotes = OrphanedNotes.RAISE_EXCEPTION,
+    orphaned_tail: OrphanedNotes = OrphanedNotes.DROP_ORPHAN,
 ) -> int:
     """
     Count the hold notes in a note stream.
 
     By default, this method validates that hold heads connect to their
     corresponding tails. This validation can be turned off by setting
-    the `orphaned_head` and `orphaned_tail` arguments to `KEEP_ORPHAN`
-    or `DROP_ORPHAN`; see :class:`.OrphanedNotes` for more details.
+    the `orphaned_head` and `orphaned_tail` arguments; see
+    :class:`.OrphanedNotes` for more details.
     """
     return _count_holds_or_rolls(
         notes,
@@ -162,15 +162,15 @@ def count_rolls(
     notes: Iterable[Note],
     *,
     orphaned_head: OrphanedNotes = OrphanedNotes.RAISE_EXCEPTION,
-    orphaned_tail: OrphanedNotes = OrphanedNotes.RAISE_EXCEPTION,
+    orphaned_tail: OrphanedNotes = OrphanedNotes.DROP_ORPHAN,
 ) -> int:
     """
     Count the roll notes in a note stream.
 
     By default, this method validates that roll heads connect to their
     corresponding tails. This validation can be turned off by setting
-    the `orphaned_head` and `orphaned_tail` arguments to `KEEP_ORPHAN`
-    or `DROP_ORPHAN`; see :class:`.OrphanedNotes` for more details.
+    the `orphaned_head` and `orphaned_tail` arguments; see
+    :class:`.OrphanedNotes` for more details.
     """
     return _count_holds_or_rolls(
         notes,

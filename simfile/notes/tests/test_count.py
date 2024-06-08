@@ -40,3 +40,9 @@ class TestNoteCounter(unittest.TestCase):
     def test_count_steps_same_beat_minimum_3(self):
         count = count_steps(testing_notes(), same_beat_minimum=3)
         self.assertEqual(0, count)
+
+    def test_count_holds_and_rolls(self):
+        hold_count = count_holds(testing_notes())
+        roll_count = count_rolls(testing_notes())
+        self.assertEqual(1, hold_count)
+        self.assertEqual(2, roll_count)
