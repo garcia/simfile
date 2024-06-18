@@ -147,6 +147,7 @@ class BaseSimfile(MSDSerializable, OrderedDictForwarder, metaclass=ABCMeta):
     """
 
     _properties: "OrderedDict[str, str]"
+    _strict: bool
 
     MULTI_VALUE_PROPERTIES = ("ATTACKS", "DISPLAYBPM")
 
@@ -195,6 +196,7 @@ class BaseSimfile(MSDSerializable, OrderedDictForwarder, metaclass=ABCMeta):
         strict: bool = True,
     ):
         self._properties = OrderedDict()
+        self._strict = strict
 
         provided_inputs = [inp for inp in [file, string, tokens] if inp is not None]
         if len(provided_inputs) > 1:
