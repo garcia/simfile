@@ -177,6 +177,25 @@ class TestTimingData(unittest.TestCase):
             timing_data.bpms, BeatValues([BeatValue(Beat(0), Decimal("140.000"))])
         )
 
+    def test_extraneous_commas_strict(self):
+        sm = simfile.open("testdata/nekonabe/nekonabe.sm", strict=True)
+        sm.bpms = f"{sm.bpms},,64.000=280.000"
+        self.assertRaises(ValueError, TimingData, sm)
+
+    def test_extraneous_commas_non_strict(self):
+        sm = simfile.open("testdata/nekonabe/nekonabe.sm", strict=False)
+        sm.bpms = f"{sm.bpms},,64.000=280.000"
+        timing_data = TimingData(sm)
+        self.assertEqual(
+            timing_data.bpms,
+            BeatValues(
+                [
+                    BeatValue(Beat(0), Decimal("140.000")),
+                    BeatValue(Beat(64), Decimal("280.000")),
+                ]
+            ),
+        )
+
     def test_missing_offset_strict(self):
         sm = simfile.open("testdata/nekonabe/nekonabe.sm", strict=True)
         del sm["OFFSET"]
