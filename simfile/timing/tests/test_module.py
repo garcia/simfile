@@ -164,8 +164,13 @@ class TestTimingData(unittest.TestCase):
         self.assertEqual(BeatValues.from_str(ssc.bpms), timing_data.bpms)
         self.assertEqual(BeatValues.from_str(ssc.stops), timing_data.stops)
 
-    def test_handles_omitted_offset(self):
-        sm = simfile.open("testdata/nekonabe/nekonabe.sm")
+    def test_missing_offset_strict(self):
+        sm = simfile.open("testdata/nekonabe/nekonabe.sm", strict=True)
+        del sm["OFFSET"]
+        self.assertRaises(ValueError, TimingData, sm)
+
+    def test_missing_offset_non_strict(self):
+        sm = simfile.open("testdata/nekonabe/nekonabe.sm", strict=False)
         del sm["OFFSET"]
         timing_data = TimingData(sm)
         self.assertEqual(Decimal(0), timing_data.offset)

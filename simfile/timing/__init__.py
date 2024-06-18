@@ -1,12 +1,15 @@
 """
 Timing data classes, plus submodules that operate on timing data.
 """
+
 from decimal import Decimal
 from fractions import Fraction
 from numbers import Rational
+import re
 from typing import Any, Optional, Type, NamedTuple, Union
 
 from ._private.timingsource import timing_source
+from .._private.strictness import enforce_float_str, extract_float_str
 from simfile._private.generic import ListWithRepr
 from simfile.types import Simfile, Chart
 
@@ -159,20 +162,39 @@ class BeatValues(ListWithRepr[BeatValue]):
     """
 
     @classmethod
-    def from_str(cls: Type["BeatValues"], string: Optional[str]) -> "BeatValues":
+    def from_str(
+        cls: Type["BeatValues"], string: Optional[str], strict: bool = True
+    ) -> "BeatValues":
         """
-        Parse the MSD value component of a timing data list.
+        Parse the MSD value component of a timing data list:
 
-        Specifically, `BPMS`, `STOPS`, `DELAYS`, and `WARPS` are
-        the timing data lists whose values can be parsed by this
-        method.
+        ```
+        #BPMS:0.000=128.000,64.000=140.000;
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        ```
+
+        The timing data lists supported by this class include
+        `BPMS`, `STOPS`, `DELAYS`, and `WARPS`.
         """
         instance = cls()
 
         if string and string.strip():
             for row in string.split(","):
-                beat, value = row.strip().split("=")
-                instance.append(BeatValue(Beat.from_str(beat), Decimal(value)))
+                row_split = [s.strip() for s in row.split("=")]
+                if len(row_split) != 2:
+                    if strict:
+                        raise ValueError("Beat/value pair must have exactly one '='")
+                    continue
+
+                beat_str, value_str = [extract_float_str(s) for s in row_split]
+
+                if strict:
+                    if beat_str != row_split[0]:
+                        raise ValueError("Junk data in beat: %r", row_split[0])
+                    if value_str != row_split[1]:
+                        raise ValueError("Junk data in value: %r", row_split[1])
+
+                instance.append(BeatValue(Beat.from_str(beat_str), Decimal(value_str)))
 
         return instance
 
@@ -207,9 +229,19 @@ class TimingData:
 
     def __init__(self, simfile: Simfile, chart: Optional[Chart] = None):
         simfile_or_chart = timing_source(simfile, chart)
-        self.bpms = BeatValues.from_str(simfile_or_chart.bpms)
-        self.stops = BeatValues.from_str(simfile_or_chart.stops)
-        self.delays = BeatValues.from_str(simfile_or_chart.delays)
+        self.bpms = BeatValues.from_str(simfile_or_chart.bpms, strict=simfile._strict)
+        self.stops = BeatValues.from_str(simfile_or_chart.stops, strict=simfile._strict)
+        self.delays = BeatValues.from_str(
+            simfile_or_chart.delays, strict=simfile._strict
+        )
         # SMSimfile has no warps property, so fall back to key access
-        self.warps = BeatValues.from_str(simfile_or_chart.get("WARPS"))
-        self.offset = Decimal(simfile_or_chart.offset or 0)
+        self.warps = BeatValues.from_str(
+            simfile_or_chart.get("WARPS"), strict=simfile._strict
+        )
+        self.offset = Decimal(
+            enforce_float_str(
+                (simfile_or_chart.offset or "").strip(),
+                strict=simfile._strict,
+                error_message="Invalid offset",
+            )
+        )
