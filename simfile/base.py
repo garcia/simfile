@@ -5,15 +5,16 @@ This module should ideally never need to be used directly, but its
 documentation may be useful for understanding the similarities between
 the SM and SSC formats.
 """
+
 from abc import ABCMeta, abstractmethod
 from collections import OrderedDict
 from io import StringIO
-from typing import Iterable, Iterator, Optional, TextIO, Tuple, Type, Union
+from typing import Iterable, Iterator, Optional, TextIO, Tuple, Type, TypeVar, Union
 
 from msdparser import parse_msd, MSDParameter
 from msdparser.lexer import MSDToken
 
-from ._private.generic import E, ListWithRepr
+from ._private.generic import ListWithRepr
 from ._private.ordered_dict_forwarder import OrderedDictForwarder
 from ._private.msd_serializable import MSDSerializable
 
@@ -101,7 +102,10 @@ class BaseChart(MSDSerializable, OrderedDictForwarder, metaclass=ABCMeta):
         return type(self) is type(other) and self._properties == other._properties
 
 
-class BaseCharts(ListWithRepr[E], MSDSerializable, metaclass=ABCMeta):
+C = TypeVar("C", bound=BaseChart)
+
+
+class BaseCharts(ListWithRepr[C], MSDSerializable, metaclass=ABCMeta):
     """
     List containing all of a simfile's charts.
     """
@@ -229,7 +233,7 @@ class BaseSimfile(MSDSerializable, OrderedDictForwarder, metaclass=ABCMeta):
         """
 
     def serialize(self, file: TextIO):
-        for (key, value) in self._properties.items():
+        for key, value in self._properties.items():
             if key in BaseSimfile.MULTI_VALUE_PROPERTIES:
                 param = MSDParameter((key, *value.split(":")))
             else:

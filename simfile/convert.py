@@ -1,10 +1,13 @@
 """
 Functions for converting SM to SSC simfiles and vice-versa.
 """
+
 from collections import defaultdict
 from copy import deepcopy
 from enum import Enum
 from typing import DefaultDict, Dict, List, Optional, Type, TypeVar, cast
+
+from simfile._private.generic import ListWithRepr
 
 from .sm import SMChart, SMSimfile
 from .ssc import SSCChart, SSCSimfile
@@ -223,14 +226,13 @@ def _convert_warps(source: Simfile, output: Simfile):
         bpms = BeatValues.from_str(source.bpms)
         stops = BeatValues.from_str(source.stops)
         for beat_values in (bpms, stops):
-            for _beat_value in beat_values:
-                beat_value: BeatValue = _beat_value  # typing workaround
+            for beat_value in beat_values:
                 if beat_value.value < 0:
                     raise NotImplementedError(
                         "Warp timing in SMSimfile can't be converted yet"
                     )
     elif isinstance(source, SSCSimfile):
-        if len(BeatValues(source.warps)):
+        if len(BeatValues.from_str(source.warps)):
             raise NotImplementedError(
                 "Warp timing in SSCSimfile can't be converted yet"
             )
@@ -255,8 +257,7 @@ def _convert(
         invalid_property_behaviors=invalid_property_behaviors,
     )
 
-    for _chart in simfile.charts:
-        chart: Chart = _chart  # typing workaround
+    for chart in simfile.charts:
         output_chart = deepcopy(chart_template) or output_chart_type.blank()
         _copy_properties(
             source=chart,
@@ -264,7 +265,7 @@ def _convert(
             output_type=output_chart_type,
             invalid_property_behaviors=invalid_property_behaviors,
         )
-        output_simfile.charts.append(output_chart)
+        output_simfile.charts.append(output_chart)  # type: ignore
 
     return cast(_CONVERT_SIMFILE, output_simfile)
 

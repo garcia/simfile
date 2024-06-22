@@ -1,7 +1,9 @@
 from decimal import Decimal
+from typing import cast
 import unittest
 
 from simfile.sm import SMSimfile
+from simfile.ssc import SSCSimfile
 
 from ..displaybpm import *
 import simfile
@@ -9,19 +11,25 @@ import simfile
 
 class TestDisplayBPM(unittest.TestCase):
     def test_static_value(self):
-        springtime = simfile.open("testdata/Springtime/Springtime.ssc")
+        springtime = cast(
+            SSCSimfile, simfile.open("testdata/Springtime/Springtime.ssc")
+        )
         result = displaybpm(springtime)
         self.assertEqual(StaticDisplayBPM(value=Decimal("182")), result)
         self.assertEqual("182", str(result))
 
     def test_ssc_chart_and_static_value(self):
-        springtime = simfile.open("testdata/Springtime/Springtime.ssc")
+        springtime = cast(
+            SSCSimfile, simfile.open("testdata/Springtime/Springtime.ssc")
+        )
         result = displaybpm(springtime, springtime.charts[0])
         self.assertEqual(StaticDisplayBPM(value=Decimal("182")), result)
         self.assertEqual("182", str(result))
 
     def test_range_value(self):
-        springtime = simfile.open("testdata/Springtime/Springtime.ssc")
+        springtime = cast(
+            SSCSimfile, simfile.open("testdata/Springtime/Springtime.ssc")
+        )
         del springtime["DISPLAYBPM"]
         del springtime.charts[0]["DISPLAYBPM"]
         result = displaybpm(springtime, springtime.charts[0])
@@ -60,7 +68,9 @@ class TestDisplayBPM(unittest.TestCase):
         self.assertEqual(StaticDisplayBPM(Decimal(120)), result)
 
     def test_ignore_specified(self):
-        springtime = simfile.open("testdata/Springtime/Springtime.ssc")
+        springtime = cast(
+            SSCSimfile, simfile.open("testdata/Springtime/Springtime.ssc")
+        )
         result = displaybpm(springtime, springtime.charts[0], ignore_specified=True)
         self.assertEqual(
             RangeDisplayBPM(min=Decimal("90.843"), max=Decimal("181.685")),
