@@ -1,6 +1,7 @@
 """
 Simfile & chart classes for SSC files.
 """
+
 from typing import Optional, Sequence, Type
 
 from msdparser import parse_msd, MSDParameter
@@ -9,7 +10,7 @@ from .base import BaseChart, BaseCharts, BaseSimfile, MSDIterator, _item_propert
 from ._private.dedent import dedent_and_trim
 
 
-__all__ = ["SSCChart", "SSCCharts", "SSCSimfile"]
+__all__ = ["SSCChart", "AttachedSSCChart", "SSCCharts", "SSCSimfile"]
 
 
 class SSCChart(BaseChart):
@@ -109,7 +110,7 @@ class SSCChart(BaseChart):
         file.write(f"{MSDParameter(('NOTEDATA', ''))}\n")
         notes_key = "NOTES"
 
-        for (key, value) in self._properties.items():
+        for key, value in self._properties.items():
             # Either NOTES or NOTES2 must be the last chart property
             if value is self.notes:
                 notes_key = key
@@ -122,6 +123,24 @@ class SSCChart(BaseChart):
 
         notes_param = MSDParameter((notes_key, self._properties[notes_key]))
         file.write(f"{notes_param}\n\n")
+
+    def _attach(self, simfile: "SSCSimfile") -> "AttachedSSCChart":
+        attached = AttachedSSCChart(simfile=simfile)
+        attached._properties = self._properties.copy()
+        return attached
+
+
+class AttachedSSCChart(SSCChart):
+    _simfile: "SSCSimfile"
+
+    def __init__(self, simfile: "SSCSimfile"):
+        super().__init__()
+        self._simfile = simfile
+
+    def detach(self) -> SSCChart:
+        detached = SSCChart()
+        detached._properties = self._properties.copy()
+        return detached
 
 
 class SSCCharts(BaseCharts[SSCChart]):

@@ -1,6 +1,7 @@
 """
 Simfile & chart classes for SM files.
 """
+
 from msdparser import MSDParameter
 from .base import _item_property
 from typing import Iterator, List, Optional, Sequence, Type
@@ -9,7 +10,7 @@ from .base import BaseChart, BaseCharts, BaseSimfile, MSDIterator
 from ._private.dedent import dedent_and_trim
 
 
-__all__ = ["SMChart", "SMCharts", "SMSimfile"]
+__all__ = ["SMChart", "AttachedSMChart", "SMCharts", "SMSimfile"]
 
 
 SM_CHART_PROPERTIES = (
@@ -171,6 +172,19 @@ class SMChart(BaseChart):
     def __delitem__(self, property: str) -> None:
         """Raises NotImplementedError."""
         raise NotImplementedError
+
+
+class AttachedSMChart(SMChart):
+    _simfile: "SMSimfile"
+
+    def __init__(self, simfile: "SMSimfile"):
+        super().__init__()
+        self._simfile = simfile
+
+    def detach(self) -> SMChart:
+        detached = SMChart()
+        detached._properties = self._properties.copy()
+        return detached
 
 
 class SMCharts(BaseCharts[SMChart]):

@@ -1,6 +1,7 @@
 """
 Union types for simfile & chart classes.
 """
+
 from typing import Union
 
 from .sm import *
@@ -18,3 +19,5 @@ Charts = Union[SSCCharts, SMCharts]
 
 Chart = Union[SSCChart, SMChart]
 """Union of :class:`.SSCChart` and :class:`.SMChart`."""
+
+AttachedChart = Union[AttachedSMChart, AttachedSSCChart]
