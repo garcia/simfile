@@ -42,12 +42,14 @@ class EventTag(IntEnum):
     stops in order to correctly time notes on a beat with both a delay
     and a stop.
 
-    Warps, delays, and stops have a corresponding "end" type that
+    Warps, delays, stops, and fakes have a corresponding "end" type that
     :class:`TimingEngine` uses to simplify the beat/time conversion
     logic. These can be used to disambiguate the time at a given beat
     (for stops & delays) or the beat at a given time (for warps).
     """
 
+    FAKE = -2
+    FAKE_END = -1
     WARP = 0
     WARP_END = 1
     BPM = 2
@@ -83,6 +85,7 @@ class TimingState(NamedTuple):
     event: TimedEvent
     bpm: Decimal
     warp: bool
+    fake: bool
 
     def time_until(self, beat: Beat, event_tag: EventTag) -> float:
         if self.warp:
@@ -131,6 +134,13 @@ class TimingStateMachine(ListWithRepr[TimingState]):
         elif event.tag == EventTag.WARP_END:
             warp = False
 
+        # Update fake status
+        fake = self.last.fake
+        if event.tag == EventTag.FAKE:
+            fake = True
+        elif event.tag == EventTag.FAKE_END:
+            fake = False
+
         self.append(
             TimingState(
                 event=TimedEvent(
@@ -141,6 +151,7 @@ class TimingStateMachine(ListWithRepr[TimingState]):
                 ),
                 bpm=bpm,
                 warp=warp,
+                fake=fake,
             )
         )
 
@@ -157,47 +168,56 @@ class TimingEngine:
 
     timing_data: TimingData
     _tagged_beats: MutableSequence[Tuple[Beat, EventTag]]
-    _tagged_times: MutableSequence[Tuple[SongTime, EventTag]]
+    _tagged_times: MutableSequence[Tuple[SongTime, Beat, EventTag]]
     _state_machine: TimingStateMachine
 
     def __init__(self, timing_data: TimingData):
         self.timing_data = timing_data
         self._retime_events()
 
-    def _coalesce_warps(self) -> Iterable[Tuple[BeatValues, EventTag]]:
+    def _coalesce_fakes_and_warps(self) -> Iterable[Tuple[BeatValues, EventTag]]:
         """
-        Coalesce the timing data's warps into WARP & WARP_END events.
+        Coalesce the timing data's fakes and warps into
+        FAKE, FAKE_END, WARP, and WARP_END events.
 
-        StepMania allows warps to intersect. This is almost certainly
-        unintended, but it means the most defensive option for this
-        library is to handle intersecting warps the same way. This
-        method keeps track of the warp state and ensures that the
-        resulting sequences of events perfectly alternate between WARP
-        and WARP_END events, combining any intersecting warps into
-        singular warp segments.
+        StepMania allows fakes & warps to intersect. This is almost
+        certainly unintended, but it means the most defensive option for
+        this library is to handle intersecting warps the same way. This
+        method keeps track of the fake & warp state and ensures that the
+        resulting sequences of events perfectly alternate between start
+        and end events, combining any intersections by eliding overshadowed
+        end/start pairs.
         """
         zero = Decimal(0)
-        warp_starts = BeatValues()
-        warp_ends = BeatValues()
-        for warp_ in self.timing_data.warps:
-            warp: BeatValue = warp_
-            warp_end = warp.beat + Beat(warp.value)
-            if warp_starts:
-                last_warp_end: Beat = warp_ends[-1].beat
-                if warp.beat <= last_warp_end:
-                    if warp_end > last_warp_end:
-                        warp_ends[-1] = BeatValue(
-                            beat=warp_end,
-                            value=Decimal(0),
-                        )
+
+        def coalesce_event(beat_values) -> Tuple[BeatValues, BeatValues]:
+            event_starts = BeatValues()
+            event_ends = BeatValues()
+            for event in beat_values:
+                event_end = event.beat + Beat(event.value)
+                if event_starts:
+                    last_event_end: Beat = event_ends[-1].beat
+                    if event.beat <= last_event_end:
+                        if event_end > last_event_end:
+                            event_ends[-1] = BeatValue(
+                                beat=event_end,
+                                value=zero,
+                            )
+                    else:
+                        event_starts.append(BeatValue(beat=event.beat, value=zero))
+                        event_ends.append(BeatValue(beat=event_end, value=zero))
                 else:
-                    warp_starts.append(BeatValue(beat=warp.beat, value=zero))
-                    warp_ends.append(BeatValue(beat=warp_end, value=zero))
-            else:
-                warp_starts.append(BeatValue(beat=warp.beat, value=zero))
-                warp_ends.append(BeatValue(beat=warp_end, value=zero))
+                    event_starts.append(BeatValue(beat=event.beat, value=zero))
+                    event_ends.append(BeatValue(beat=event_end, value=zero))
+
+            return (event_starts, event_ends)
+
+        fake_starts, fake_ends = coalesce_event(self.timing_data.fakes)
+        warp_starts, warp_ends = coalesce_event(self.timing_data.warps)
 
         return [
+            (fake_starts, EventTag.FAKE),
+            (fake_ends, EventTag.FAKE_END),
             (warp_starts, EventTag.WARP),
             (warp_ends, EventTag.WARP_END),
         ]
@@ -219,12 +239,13 @@ class TimingEngine:
                     ),
                     bpm=first_bpm.value,
                     warp=False,
+                    fake=False,
                 )
             ]
         )
 
         events_with_tags: Iterable[Tuple[BeatValues, EventTag]] = [
-            *self._coalesce_warps(),
+            *self._coalesce_fakes_and_warps(),
             (cast(BeatValues, self.timing_data.bpms[1:]), EventTag.BPM),
             (self.timing_data.delays, EventTag.DELAY),
             (self.timing_data.delays, EventTag.DELAY_END),
@@ -250,13 +271,13 @@ class TimingEngine:
         self._tagged_beats = list(
             map(
                 lambda state: (state.event.beat, state.event.tag),
-                cast(List[TimingState], self._state_machine),
+                self._state_machine,
             )
         )
         self._tagged_times = list(
             map(
-                lambda state: (state.event.time, state.event.tag),
-                cast(List[TimingState], self._state_machine),
+                lambda state: (state.event.time, state.event.beat, state.event.tag),
+                self._state_machine,
             )
         )
 
@@ -292,6 +313,9 @@ class TimingEngine:
         tagged_beat = (beat, EventTag.STOP_END)
         prior_state_index = max(0, bisect(self._tagged_beats, tagged_beat) - 1)
         prior_state: TimingState = self._state_machine[prior_state_index]
+
+        if prior_state.fake:
+            return False
 
         if not prior_state.warp:
             return True
@@ -338,7 +362,9 @@ class TimingEngine:
         )
 
     def beat_at(
-        self, time: SongTimeOrFloat, event_tag: EventTag = EventTag.STOP
+        self,
+        time: SongTimeOrFloat,
+        event_tag: EventTag = EventTag.STOP,
     ) -> Beat:
         """
         Determine the beat at a given time in the song.
@@ -356,10 +382,33 @@ class TimingEngine:
         Keep in mind that this situation is floating-point precise, so
         it's unlikely for the `event_tag` to ever make a difference.
         """
-        tagged_time = (time, event_tag)
+        # Event tags can be out-of-order within a given instant of time,
+        # so the beat must be stored before the event tag
+        # to maintain natural ordering (and thus correct `bisect` behavior).
+        # But this also means we cannot target an event tag within a time
+        # directly through `bisect`, since we don't know the beat.
+        tagged_time = (time, Beat(-1), EventTag.FAKE)
+        bisect_index = bisect(self._tagged_times, tagged_time)
 
-        # Same caveat as `time_at`
-        prior_state_index = max(0, bisect(self._tagged_times, tagged_time) - 1)
+        if (
+            bisect_index < len(self._state_machine)
+            and self._state_machine[bisect_index].event.time == time
+        ):
+            # Hack: if multiple events happen at exactly the same time,
+            # the only reason why the beat would be different across events
+            # is when a warp ends at exactly that time. In this situation,
+            # take the first event at that time given EventTag.WARP or earlier,
+            # or the last event at that time given EventTag.WARP_END or later.
+            prior_state_index = bisect_index
+            if event_tag >= EventTag.WARP_END:
+                while (
+                    prior_state_index + 1 < len(self._state_machine)
+                    and self._state_machine[prior_state_index + 1].event.time == time
+                ):
+                    prior_state_index += 1
+        else:
+            prior_state_index = max(0, bisect_index - 1)
+
         prior_state: TimingState = self._state_machine[prior_state_index]
         prior_state_beat = prior_state.event.beat
 
