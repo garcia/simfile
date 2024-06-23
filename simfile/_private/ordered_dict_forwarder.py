@@ -1,4 +1,5 @@
 from collections import OrderedDict
+from typing import Union
 
 
 class OrderedDictForwarder:
@@ -19,8 +20,14 @@ class OrderedDictForwarder:
     def __iter__(self):
         return self._properties.__iter__()
 
-    def clear(self):
+    def clear_properties(self):
         return self._properties.clear()
+
+    def copy_properties(self):
+        return self._properties.copy()
+
+    def update_properties(self, other: Union[OrderedDict, "OrderedDictForwarder"]):
+        self._properties.update(other)
 
     def move_to_end(self, key, last=True):
         return self._properties.move_to_end(key, last)
@@ -34,5 +41,8 @@ class OrderedDictForwarder:
     def items(self):
         return self._properties.items()
 
-    def get(self, key):
+    def get(self, key: str):
         return self._properties.get(key)
+
+    def pop(self, key: str):
+        return self._properties.pop(key)
