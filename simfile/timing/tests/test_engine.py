@@ -60,7 +60,7 @@ class TestTimingEngine(unittest.TestCase):
         self.assertEqual(Beat(1000), engine.beat_at(201.209))
 
     def test_time_at_with_delays_and_warps(self):
-        timing_data = testing_timing_data_with_delays_and_warps()
+        timing_data = testing_timing_data_with_delays_warps_and_fakes()
         engine = TimingEngine(timing_data)
 
         self.assertEqual(0, engine.time_at(Beat(0)))
@@ -106,7 +106,7 @@ class TestTimingEngine(unittest.TestCase):
         self.assertEqual(6.125, engine.time_at(Beat(13)))
 
     def test_beat_at_with_delays_and_warps(self):
-        timing_data = testing_timing_data_with_delays_and_warps()
+        timing_data = testing_timing_data_with_delays_warps_and_fakes()
         engine = TimingEngine(timing_data)
 
         self.assertEqual(Beat(0), engine.beat_at(0))
@@ -143,7 +143,7 @@ class TestTimingEngine(unittest.TestCase):
         self.assertEqual(Beat(12.75), engine.beat_at(6.0))
 
     def test_hittable(self):
-        timing_data = testing_timing_data_with_delays_and_warps()
+        timing_data = testing_timing_data_with_delays_warps_and_fakes()
         engine = TimingEngine(timing_data)
 
         self.assertTrue(engine.hittable(Beat(0)))
@@ -182,4 +182,6 @@ class TestTimingEngine(unittest.TestCase):
         self.assertFalse(engine.hittable(Beat(12.25)))
         self.assertFalse(engine.hittable(Beat(12.5)))
         self.assertTrue(engine.hittable(Beat(12.75)))
-        self.assertTrue(engine.hittable(Beat(13)))
+        self.assertFalse(engine.hittable(Beat(13)))
+        self.assertFalse(engine.hittable(Beat(13.25)))
+        self.assertTrue(engine.hittable(Beat(13.5)))

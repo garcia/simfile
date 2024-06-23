@@ -17,7 +17,7 @@ def testing_timing_data():
     )
 
 
-def testing_timing_data_with_delays_and_warps():
+def testing_timing_data_with_delays_warps_and_fakes():
     # Test cases:
     # 1. delay
     # 2. warp
@@ -31,6 +31,7 @@ def testing_timing_data_with_delays_and_warps():
     # 10. consecutive warps
     # 11. partially overlapping warps
     # 12. warp inside warp
+    # 13. fake region
     return TimingData(
         SSCSimfile(
             string="#VERSION:0.83;\n"
@@ -58,5 +59,6 @@ def testing_timing_data_with_delays_and_warps():
             "11.250=0.500,\n"
             "12.000=0.750,\n"
             "12.250=0.250;\n"
+            "#FAKES:13.000=0.500;\n"
         )
     )
