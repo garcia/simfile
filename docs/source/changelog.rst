@@ -3,6 +3,38 @@
 Changelog
 =========
 
+3.0.0
+-----
+
+Breaking changes
+~~~~~~~~~~~~~~~~
+
+* :class:`.SMSimfile` and :class:`.SSCSimfile` no longer inherit `OrderedDict`;
+  instead, they have a private `OrderedDict` attribute
+  and forward common dictionary methods & operations to the `OrderedDict`.
+  These forwarded methods & operations are not comprehensive;
+  specifically:
+  * The `popitem`, `reversed`, and `setdefault` methods from `dict` are no longer supported.
+  * The `|` and `|=` operators are no longer supported.
+  * The `clear` and `copy` and `update` methods are exposed as
+    `clear_properties`, `copy_properties`, and `update_properties`
+    for clarity.
+  The following operations & methods are forwarded and should behave the same as before:
+  * `[key]` indexing & assignment (`__getitem__`, `__setitem__`, `__delitem__`)
+  * `len()` and iteration (`__len__`, `__iter__`)
+  * The `move_to_end` method from `OrderedDict`
+  * The `keys`, `values`, `items`, `get`, and `pop` methods from `dict`
+* :class:`.SMCharts` and :class:`.SSCCharts` are now lists of
+  :class:`.AttachedSMChart` and :class:`.AttachedSSCChart` objects, respectively.
+  An "attached" chart stores the simfile it came from under the `simfile` attribute.
+  Adding a detached :class:`.SMChart` or :class:`.SSCChart` object
+  to a :class:`.SMCharts` or :class:`.SSCCharts` list
+  will create an attached copy and add that to the list instead.
+* :func:`.group_notes`' `include_note_types` argument was removed.
+  Instead, use the built-in `filter` method
+  on an iterable of :class:`Note` or :class:`GroupedNotes` objects as appropriate.
+
+
 2.1.1
 -----
 
