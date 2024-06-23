@@ -108,25 +108,21 @@ class OrphanedNotes(Enum):
 def group_notes(
     notes: Iterable[Note],
     *,
-    include_note_types: FrozenSet[NoteType] = frozenset(NoteType),
     same_beat_notes: SameBeatNotes = SameBeatNotes.KEEP_SEPARATE,
     join_heads_to_tails: bool = False,
     orphaned_head: OrphanedNotes = OrphanedNotes.RAISE_EXCEPTION,
     orphaned_tail: OrphanedNotes = OrphanedNotes.RAISE_EXCEPTION
 ) -> Iterator[GroupedNotes]:
     """
-    Group notes that are often considered linked to one another.
+    Join certain notes together: either ones that occur on the same
+    beat ("jumps"), hold & roll heads to their tails, or both.
 
-    There are two kinds of connected notes: notes that occur on the
-    same beat ("jumps") and hold/roll notes with their corresponding
-    tails. Either or both of these connection types can be opted into
-    using the constructor parameters.
-
-    Generators produced by this class yield :class:`GroupedNotes`
-    objects, rather than :class:`Note` objects. These are sequences
-    that generally contain :class:`Note` and :class:`NoteWithTail`
-    objects, although the output may be more restrained depending on
-    the configuration.
+    This function yields :class:`GroupedNotes` objects, which are sequences
+    of :class:`Note` and :class:`NoteWithTail` objects.
+    :class:`GroupedNotes` objects may contain multiple items only if
+    `same_beat_notes` is set to `JOIN_BY_NOTE_TYPE` or `JOIN_ALL`; they may
+    contain :class:`NoteWithTail` objects only if `join_heads_to_tails` is
+    set to True.
 
     When `join_heads_to_tails` is set to True, tail notes are attached
     to their corresponding hold/roll heads as :class:`NoteWithTail`
@@ -201,7 +197,7 @@ def group_notes(
         attach_tail(head, tail)
 
     def join_heads_to_tails_(
-        note_stream: Iterator[Note],
+        note_stream: Iterable[Note],
     ) -> Iterator[_NoteMaybeWithTail]:
         for note in note_stream:
             # In a well-formed chart, these two conditions should always be
@@ -238,12 +234,7 @@ def group_notes(
                 joined_note_types.add(nt)
                 yield list(filter(lambda n: n.note_type == nt, row))
 
-    notes = filter(
-        lambda note: note.note_type in include_note_types,
-        notes,
-    )
-
-    notes_maybe_with_tails: Iterator[_NoteMaybeWithTail]
+    notes_maybe_with_tails: Iterable[_NoteMaybeWithTail]
     if join_heads_to_tails:
         notes_maybe_with_tails = join_heads_to_tails_(notes)
     else:

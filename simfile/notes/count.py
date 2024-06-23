@@ -60,8 +60,7 @@ def count_steps(
     """
     return count_grouped_notes(
         group_notes(
-            notes,
-            include_note_types=include_note_types,
+            filter(lambda note: note.note_type in include_note_types, notes),
             same_beat_notes=same_beat_notes,
         ),
         same_beat_minimum=same_beat_minimum,
@@ -126,12 +125,14 @@ def _count_holds_or_rolls(
     orphaned_tail: OrphanedNotes = OrphanedNotes.RAISE_EXCEPTION,
 ) -> int:
     return count_grouped_notes(
-        group_notes(
-            notes,
-            include_note_types=frozenset((head, NoteType.TAIL)),
-            join_heads_to_tails=True,
-            orphaned_head=orphaned_head,
-            orphaned_tail=orphaned_tail,
+        filter(
+            lambda singleton_group: singleton_group[0].note_type == head,
+            group_notes(
+                notes,
+                join_heads_to_tails=True,
+                orphaned_head=orphaned_head,
+                orphaned_tail=orphaned_tail,
+            ),
         ),
     )
 
