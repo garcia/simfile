@@ -225,6 +225,7 @@ class TimingData:
     stops: BeatValues
     delays: BeatValues
     warps: BeatValues
+    fakes: BeatValues
     offset: Decimal
 
     def __init__(self, simfile: Simfile, chart: Optional[Chart] = None):
@@ -234,9 +235,12 @@ class TimingData:
         self.delays = BeatValues.from_str(
             simfile_or_chart.delays, strict=simfile._strict
         )
-        # SMSimfile has no warps property, so fall back to key access
+        # SMSimfile doesn't have WARPS / FAKES, so fall back to key access
         self.warps = BeatValues.from_str(
             simfile_or_chart.get("WARPS"), strict=simfile._strict
+        )
+        self.fakes = BeatValues.from_str(
+            simfile_or_chart.get("FAKES"), strict=simfile._strict
         )
         self.offset = Decimal(
             enforce_float_str(
