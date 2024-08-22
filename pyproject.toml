@@ -10,7 +10,8 @@ readme = "README.md"
 python = "^3.8"
 msdparser = "^2.0.0"
 pyfakefs = "==4.5.6"
-fs = "^2.4.16"
+fs = {version = "^2.4.16", optional = true}
+pillow = {version = "^10.4.0", optional = true}
 
 [tool.poetry.group.dev.dependencies]
 sphinx-autoapi = "==1.8.1"
@@ -19,6 +20,11 @@ docutils = "==0.16.0"
 Sphinx = "==3.2.1"
 twine = "^4.0.2"
 black = "==23.3.0"
+
+[tool.poetry.extras]
+fs = ["fs"]
+assets = ["pillow"]
+all = ["fs", "pillow"]
 
 [build-system]
 requires = ["poetry-core"]

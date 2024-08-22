@@ -1,13 +1,11 @@
 from typing import Iterator, List, Optional, Tuple
 
-from fs.base import FS
-
 import simfile
 from .assets import Assets
 from .types import Simfile
 from simfile._private.path import FSPath
 from ._private import extensions
-from ._private.nativeosfs import NativeOSFS
+from ._private.fs import FS, NativeOSFS
 
 
 __all__ = ["DuplicateSimfileError", "SimfileDirectory", "SimfilePack"]
@@ -39,7 +37,7 @@ class SimfileDirectory:
         simfile_dir: str,
         *,
         filesystem: FS = NativeOSFS(),
-        ignore_duplicate = False,
+        ignore_duplicate=False,
     ):
         self._path = FSPath(filesystem)
         self.simfile_dir = self._path.normpath(simfile_dir)
@@ -147,7 +145,11 @@ class SimfilePack:
         Iterator over the simfile directories in the pack.
         """
         for simfile_path in self.simfile_dir_paths:
-            yield SimfileDirectory(simfile_path, filesystem=self.filesystem, ignore_duplicate=self._ignore_duplicate)
+            yield SimfileDirectory(
+                simfile_path,
+                filesystem=self.filesystem,
+                ignore_duplicate=self._ignore_duplicate,
+            )
 
     def simfiles(self, **kwargs) -> Iterator[Simfile]:
         """

@@ -2,12 +2,10 @@ import os
 import re
 from typing import Mapping, MutableMapping, NamedTuple, Optional, Sequence, Tuple
 
-from fs.base import FS
-
 import simfile
 from .types import Simfile
 from ._private import extensions
-from ._private.nativeosfs import NativeOSFS
+from ._private.fs import FS, NativeOSFS
 from ._private.path import FSPath
 
 

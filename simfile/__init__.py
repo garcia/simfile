@@ -6,15 +6,15 @@ default, the underlying parser will throw an exception if it finds any
 stray text between parameters. This behavior can be overridden by
 setting `strict` to False.
 """
+
 from contextlib import contextmanager
 from io import StringIO, TextIOWrapper
 from itertools import tee
 from typing import Iterator, List, Optional, TextIO, Tuple, Union, cast
 
-from fs.base import FS
 from msdparser import parse_msd
 
-from simfile._private.nativeosfs import NativeOSFS
+from simfile._private.fs import FS, NativeOSFS
 from simfile.dir import SimfileDirectory, SimfilePack
 
 from .ssc import SSCSimfile

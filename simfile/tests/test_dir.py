@@ -1,6 +1,11 @@
 import os
+from unittest import skipIf
 
-from fs.zipfs import ZipFS
+try:
+    from fs.zipfs import ZipFS
+except ImportError:
+    ZipFS = None
+
 from pyfakefs.fake_filesystem_unittest import TestCase  # type: ignore
 
 from simfile.dir import SimfileDirectory, SimfilePack
@@ -79,7 +84,9 @@ class TestSimfileDirectory(TestCase):
         self.assertIsNone(sd.ssc_path)
         self.assertRaises(FileNotFoundError, sd.open)
 
+    @skipIf(ZipFS is None, "fs module is not installed")
     def test_with_filesystem(self):
+        assert ZipFS
         zip_fs = ZipFS("testdata/testdata.zip")
 
         sd = SimfileDirectory("Springtime", filesystem=zip_fs)
@@ -255,7 +262,9 @@ class TestSimfilePack(TestCase):
         sp = SimfilePack(pack_dir)
         self.assertIsNone(sp.banner())
 
+    @skipIf(ZipFS is None, "fs module is not installed")
     def test_with_filesystem(self):
+        assert ZipFS
         zip_fs = ZipFS("testdata/testdata.zip")
 
         sp = SimfilePack("/", filesystem=zip_fs)
