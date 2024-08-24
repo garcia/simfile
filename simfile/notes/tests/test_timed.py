@@ -87,21 +87,21 @@ class TestTimeNotes(unittest.TestCase):
         )
         self.assertFalse(timed_notes[0].hittable)
 
-        self.assertAlmostEqual(4.000, timed_notes[1].time)
+        self.assertAlmostEqual(4.250, timed_notes[1].time)
         self.assertEqual(
             Note(beat=Beat(18, 4), column=2, note_type=NoteType.TAP),
             timed_notes[1].note,
         )
         self.assertFalse(timed_notes[1].hittable)
 
-        self.assertAlmostEqual(4.000, timed_notes[2].time)
+        self.assertAlmostEqual(4.500, timed_notes[2].time)
         self.assertEqual(
             Note(beat=Beat(20, 4), column=1, note_type=NoteType.HOLD_HEAD),
             timed_notes[2].note,
         )
         self.assertFalse(timed_notes[2].hittable)
 
-        self.assertAlmostEqual(7.750, timed_notes[-1].time)
+        self.assertAlmostEqual(9.000, timed_notes[-1].time)
         self.assertEqual(
             Note(beat=Beat(48, 4), column=3, note_type=NoteType.TAIL),
             timed_notes[-1].note,
