@@ -30,7 +30,7 @@ import simfile
 
 project = "simfile"
 release = simfile.__version__
-copyright = "2022, Ash Garcia"
+copyright = "2024 Ash Garcia"
 author = "Ash Garcia"
 
 
@@ -70,7 +70,7 @@ html_static_path = ["_static"]
 html_css_files = ["css/custom.css"]
 
 autoapi_type = "python"
-autoapi_dirs = ["../../simfile"]
+autoapi_dirs = ["../../src/simfile"]
 autoapi_ignore = ["*tests*", "*_private*"]
 autoapi_options = [
     "members",

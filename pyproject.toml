@@ -29,4 +29,8 @@ all = ["fs", "pillow"]
 [tool.rye]
 dev-dependencies = [
     "pytest>=8.3.2",
+    "sphinx>=8.0.2",
+    "sphinx-rtd-theme~=3.0.0rc1",
+    "sphinx-autoapi>=3.2.1",
+    "black>=24.8.0",
 ]
