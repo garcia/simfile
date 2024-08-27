@@ -2,11 +2,10 @@ from decimal import Decimal
 from typing import cast
 import unittest
 
+import simfile
 from simfile.sm import SMSimfile
 from simfile.ssc import SSCSimfile
-
-from ..displaybpm import *
-import simfile
+from simfile.timing.displaybpm import *
 
 
 class TestDisplayBPM(unittest.TestCase):

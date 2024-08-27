@@ -2,8 +2,8 @@ import os
 
 from pyfakefs.fake_filesystem_unittest import TestCase  # type: ignore
 
-from ..sm import SMSimfile
-from ..assets import Assets
+from simfile.sm import SMSimfile
+from simfile.assets import Assets
 
 
 ASSET_PATHS = {

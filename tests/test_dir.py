@@ -6,7 +6,7 @@ try:
 except ImportError:
     ZipFS = None
 
-from pyfakefs.fake_filesystem_unittest import TestCase  # type: ignore
+from pyfakefs.fake_filesystem_unittest import TestCase
 
 from simfile.dir import SimfileDirectory, SimfilePack
 from simfile.sm import SMSimfile

@@ -1,5 +1,5 @@
 from simfile.notes import NoteData
-from ...sm import SMSimfile, SMChart
+from simfile.sm import SMSimfile, SMChart
 
 
 def testing_simfile():

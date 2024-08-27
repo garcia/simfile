@@ -2,9 +2,9 @@ from typing import cast
 import unittest
 
 import simfile
-from ..sm import SMSimfile
-from ..ssc import SSCSimfile
-from ..convert import *
+from simfile.sm import SMSimfile
+from simfile.ssc import SSCSimfile
+from simfile.convert import *
 
 
 class TestConvert(unittest.TestCase):

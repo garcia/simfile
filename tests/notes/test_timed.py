@@ -1,10 +1,10 @@
 from decimal import Decimal
 import unittest
 
+from simfile.notes import *
+from simfile.notes.timed import time_notes, TimedNote
+from simfile.timing import Beat, BeatValue, TimingData
 from .helpers import *
-from .. import *
-from ..timed import time_notes, TimedNote
-from ...timing import Beat, BeatValue, TimingData
 
 
 class TestTimeNotes(unittest.TestCase):

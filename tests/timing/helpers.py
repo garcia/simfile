@@ -1,4 +1,4 @@
-from .. import TimingData
+from simfile.timing import TimingData
 from simfile.ssc import SSCSimfile
 
 

@@ -1,8 +1,8 @@
 import unittest
 
-from .. import Note, NoteType, NoteData
-from ..group import *
-from ...timing import Beat
+from simfile.notes import Note, NoteType, NoteData
+from simfile.notes.group import *
+from simfile.timing import Beat
 
 
 def testing_valid_notes():

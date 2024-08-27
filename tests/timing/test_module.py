@@ -3,8 +3,8 @@ import unittest
 
 import simfile
 from simfile.ssc import SSCSimfile
+from simfile.timing import *
 from .helpers import testing_timing_data
-from .. import *
 
 
 class TestBeat(unittest.TestCase):

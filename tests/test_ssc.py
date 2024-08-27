@@ -1,7 +1,7 @@
 from copy import deepcopy
 import unittest
 
-from ..ssc import *
+from simfile.ssc import *
 
 
 def testing_chart():

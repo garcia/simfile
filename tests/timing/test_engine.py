@@ -1,9 +1,9 @@
 from decimal import Decimal
 import unittest
 
+from simfile.timing import *
+from simfile.timing.engine import *
 from .helpers import *
-from .. import *
-from ..engine import *
 
 
 class TestTimingEngine(unittest.TestCase):

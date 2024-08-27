@@ -1,9 +1,9 @@
 import unittest
 
 from .helpers import *
-from .. import *
-from ..group import SameBeatNotes
-from ..count import *
+from simfile.notes import *
+from simfile.notes.group import SameBeatNotes
+from simfile.notes.count import *
 
 
 class TestNoteCounter(unittest.TestCase):

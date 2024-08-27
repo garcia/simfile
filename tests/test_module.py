@@ -7,7 +7,7 @@ from pyfakefs.fake_filesystem_unittest import TestCase  # type: ignore
 import simfile
 from simfile.sm import SMSimfile
 from simfile.ssc import SSCSimfile
-from simfile.tests import test_sm, test_ssc
+from . import test_sm, test_ssc
 from simfile.types import Simfile
 
 test_encoding_strings = {
