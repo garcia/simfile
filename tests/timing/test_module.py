@@ -167,7 +167,7 @@ class TestTimingData(unittest.TestCase):
     def test_junk_data_strict(self):
         sm = simfile.open("testdata/nekonabe/nekonabe.sm", strict=True)
         sm.bpms = f"?{sm.bpms}"
-        self.assertRaises(ValueError, TimingData, sm)
+        self.assertRaisesRegex(ValueError, "Junk data in beat: .*", TimingData, sm)
 
     def test_junk_data_non_strict(self):
         sm = simfile.open("testdata/nekonabe/nekonabe.sm", strict=False)

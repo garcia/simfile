@@ -190,9 +190,9 @@ class BeatValues(ListWithRepr[BeatValue]):
 
                 if strict:
                     if beat_str != row_split[0]:
-                        raise ValueError("Junk data in beat: %r", row_split[0])
+                        raise ValueError(f"Junk data in beat: {repr(row_split[0])}")
                     if value_str != row_split[1]:
-                        raise ValueError("Junk data in value: %r", row_split[1])
+                        raise ValueError(f"Junk data in value: {repr(row_split[1])}")
 
                 instance.append(BeatValue(Beat.from_str(beat_str), Decimal(value_str)))
 
