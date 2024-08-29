@@ -224,29 +224,29 @@ class SMSimfile(BaseSimfile):
         return SMSimfile(
             string=dedent_and_trim(
                 """
-            #TITLE:;
-            #SUBTITLE:;
-            #ARTIST:;
-            #TITLETRANSLIT:;
-            #SUBTITLETRANSLIT:;
-            #ARTISTTRANSLIT:;
-            #GENRE:;
-            #CREDIT:;
-            #BANNER:;
-            #BACKGROUND:;
-            #LYRICSPATH:;
-            #CDTITLE:;
-            #MUSIC:;
-            #OFFSET:0.000000;
-            #SAMPLESTART:100.000000;
-            #SAMPLELENGTH:12.000000;
-            #SELECTABLE:YES;
-            #BPMS:0.000000=60.000000;
-            #STOPS:;
-            #BGCHANGES:;
-            #KEYSOUNDS:;
-            #ATTACKS:;
-        """
+                    #TITLE:;
+                    #SUBTITLE:;
+                    #ARTIST:;
+                    #TITLETRANSLIT:;
+                    #SUBTITLETRANSLIT:;
+                    #ARTISTTRANSLIT:;
+                    #GENRE:;
+                    #CREDIT:;
+                    #BANNER:;
+                    #BACKGROUND:;
+                    #LYRICSPATH:;
+                    #CDTITLE:;
+                    #MUSIC:;
+                    #OFFSET:0.000000;
+                    #SAMPLESTART:100.000000;
+                    #SAMPLELENGTH:12.000000;
+                    #SELECTABLE:YES;
+                    #BPMS:0.000000=60.000000;
+                    #STOPS:;
+                    #BGCHANGES:;
+                    #KEYSOUNDS:;
+                    #ATTACKS:;
+                """
             )
         )
 
