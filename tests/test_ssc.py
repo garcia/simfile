@@ -22,7 +22,8 @@ def testing_chart():
 0000
 0000
 ;
-    """
+
+"""
 
 
 def testing_charts():
