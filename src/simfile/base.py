@@ -214,7 +214,7 @@ class BaseSimfile(MSDSerializable, OrderedDictForwarder, metaclass=ABCMeta):
                     file=file,
                     string=string,
                     tokens=tokens,
-                    ignore_stray_text=not strict,
+                    strict=strict,
                 )
             )
 

@@ -48,12 +48,12 @@ def _detect_ssc(file: TextIO, strict: bool = True) -> Tuple[TextIO, bool]:
                 return (file, True)
             elif suffix == "sm":
                 return (file, False)
-        parser = parse_msd(file=file, ignore_stray_text=not strict)
+        parser = parse_msd(file=file, strict=strict)
     else:
         file, peek_file = [StringIO("".join(f)) for f in tee(file)]
         parser = parse_msd(
             string="".join(peek_file),
-            ignore_stray_text=not strict,
+            strict=strict,
         )
 
     # Check if the first property is an SSC version
@@ -111,7 +111,7 @@ def open(
         try_encodings=try_encodings,
         strict=strict,
         filesystem=filesystem,
-        **kwargs
+        **kwargs,
     )[0]
 
 
@@ -120,7 +120,7 @@ def open_with_detected_encoding(
     try_encodings: List[str] = ENCODINGS,
     strict: bool = True,
     filesystem: FS = NativeOSFS(),
-    **kwargs
+    **kwargs,
 ) -> Tuple[Simfile, str]:
     """
     Load a simfile by filename; returns the simfile and detected encoding.
@@ -221,7 +221,7 @@ def mutate(
     try_encodings: List[str] = ENCODINGS,
     strict: bool = True,
     filesystem: FS = NativeOSFS(),
-    **kwargs
+    **kwargs,
 ) -> Iterator[Simfile]:
     """
     Context manager that loads & saves a simfile by filename.
@@ -256,7 +256,7 @@ def mutate(
         try_encodings=try_encodings,
         strict=strict,
         filesystem=filesystem,
-        **kwargs
+        **kwargs,
     )
 
     # Preserve the original simfile contents if a backup file was requested

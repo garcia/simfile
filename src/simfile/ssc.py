@@ -66,7 +66,7 @@ class SSCChart(BaseChart):
         overridden by setting `strict` to False.
         """
         chart = SSCChart()
-        chart._parse(parse_msd(string=string, ignore_stray_text=not strict))
+        chart._parse(parse_msd(string=string, strict=strict))
         return chart
 
     @classmethod
