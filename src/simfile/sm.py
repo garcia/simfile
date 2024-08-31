@@ -3,10 +3,11 @@ Simfile & chart classes for SM files.
 """
 
 from msdparser import MSDParameter
-from .base import _item_property
 from typing import Iterator, List, Optional, Sequence, Type
 
-from .base import BaseChart, BaseCharts, BaseSimfile, MSDIterator
+from simfile._private.ordered_dict_forwarder import Property
+
+from .base import BaseChart, BaseCharts, BaseObject, BaseSimfile, MSDIterator
 from ._private.dedent import dedent_and_trim
 
 
@@ -167,7 +168,7 @@ class SMChart(BaseChart):
         if property.upper() not in SM_CHART_PROPERTIES:
             raise KeyError
         else:
-            return self._properties.__setitem__(property, value)
+            BaseObject.__setitem__(self, property, value)
 
     def __delitem__(self, property: str) -> None:
         """Raises NotImplementedError."""
@@ -203,7 +204,7 @@ class SMSimfile(BaseSimfile):
     _charts: SMCharts
 
     # "FREEZES" alias only supported by SM files
-    stops = _item_property("STOPS", alias="FREEZES")
+    stops = BaseObject._item_property("STOPS", alias="FREEZES")
     """
     Specialized property for `STOPS` that supports `FREEZES` as an alias.
     """
@@ -211,13 +212,18 @@ class SMSimfile(BaseSimfile):
     def _parse(self, parser: MSDIterator):
         self._charts = SMCharts()
         for param in parser:
-            key = param.key.upper()
-            if key == "NOTES":
+            upper_key = param.key.upper()
+            if upper_key == "NOTES":
                 self.charts.append(SMChart.from_msd(param.components[1:]))
-            elif key in BaseSimfile.MULTI_VALUE_PROPERTIES:
-                self._properties[key] = ":".join(param.components[1:])
+            elif upper_key in BaseSimfile.MULTI_VALUE_PROPERTIES:
+                self._properties[upper_key] = Property(
+                    value=":".join(param.components[1:]),
+                    msd_parameter=param,
+                )
             else:
-                self._properties[key] = param.value or ""
+                self._properties[upper_key] = Property(
+                    value=param.value, msd_parameter=param
+                )
 
     @classmethod
     def blank(cls: Type["SMSimfile"]) -> "SMSimfile":

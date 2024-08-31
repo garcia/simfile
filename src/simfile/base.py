@@ -15,7 +15,11 @@ from msdparser import parse_msd, MSDParameter
 from msdparser.lexer import MSDToken
 
 from ._private.generic import ListWithRepr
-from ._private.ordered_dict_forwarder import OrderedDictForwarder
+from ._private.ordered_dict_forwarder import (
+    OrderedDictForwarder,
+    OrderedDictPropertyForwarder,
+    Property,
+)
 from ._private.msd_serializable import MSDSerializable
 
 
@@ -25,31 +29,57 @@ __all__ = ["BaseChart", "BaseCharts", "BaseSimfile"]
 MSDIterator = Iterator[MSDParameter]
 
 
-def _item_property(name, alias=None):
+class BaseObject(MSDSerializable, OrderedDictPropertyForwarder, metaclass=ABCMeta):
+    @staticmethod
+    def _item_property(name: str, alias: Optional[str] = None):
 
-    # Decide whether to use the property's alias instead of its primary name
-    def _name_or_alias(self):
-        if name not in self and alias and alias in self:
-            return alias
-        else:
-            return name
+        # Decide whether to use the property's alias instead of its primary name
+        def _name_or_alias(self):
+            if name not in self and alias and alias in self:
+                return alias
+            else:
+                return name.upper()
 
-    @property
-    def item_property(self: OrderedDictForwarder) -> Optional[str]:
-        return self._properties.get(_name_or_alias(self))
+        @property
+        def item_property(self: OrderedDictPropertyForwarder) -> Optional[str]:
+            property = self._properties.get(_name_or_alias(self))
+            return property.value if property else None
 
-    @item_property.setter
-    def item_property(self: OrderedDictForwarder, value: str) -> None:
-        self._properties[_name_or_alias(self)] = value
+        @item_property.setter
+        def item_property(self: OrderedDictPropertyForwarder, value: str) -> None:
+            key = _name_or_alias(self)
+            if not key in self._properties:
+                default_msd_parameter = self._default_property.msd_parameter
+                self._properties[key] = Property(
+                    value=value,
+                    msd_parameter=MSDParameter(
+                        components=(key, value),
+                        comments=default_msd_parameter.comments,
+                        preamble=default_msd_parameter.preamble,
+                        suffix=default_msd_parameter.suffix,
+                    ),
+                )
+            self._properties[key].value = value
 
-    @item_property.deleter
-    def item_property(self: OrderedDictForwarder) -> None:
-        del self._properties[_name_or_alias(self)]
+        @item_property.deleter
+        def item_property(self: OrderedDictPropertyForwarder) -> None:
+            del self._properties[_name_or_alias(self)]
 
-    return item_property
+        return item_property
+
+    def __eq__(self, other):
+        """
+        Test for equality with another BaseChart.
+
+        Two charts are equal if they have the same type and properties.
+        """
+        return type(self) is type(other) and all(
+            a[0] == b[0] and a[1].value == b[1].value
+            for a, b in zip(self._properties.items(), other._properties.items())
+        )
 
 
-class BaseChart(MSDSerializable, OrderedDictForwarder, metaclass=ABCMeta):
+class BaseChart(BaseObject, metaclass=ABCMeta):
     """
     One chart from a simfile.
 
@@ -57,17 +87,19 @@ class BaseChart(MSDSerializable, OrderedDictForwarder, metaclass=ABCMeta):
     `description`, `difficulty`, `meter`, `radarvalues`, and `notes`.
     """
 
-    _properties: "OrderedDict[str, str]"
+    _properties: "OrderedDict[str, Property]"
+    _default_property: Property
 
-    stepstype = _item_property("STEPSTYPE")
-    description = _item_property("DESCRIPTION")
-    difficulty = _item_property("DIFFICULTY")
-    meter = _item_property("METER")
-    radarvalues = _item_property("RADARVALUES")
-    notes = _item_property("NOTES")
+    stepstype = BaseObject._item_property("STEPSTYPE")
+    description = BaseObject._item_property("DESCRIPTION")
+    difficulty = BaseObject._item_property("DIFFICULTY")
+    meter = BaseObject._item_property("METER")
+    radarvalues = BaseObject._item_property("RADARVALUES")
+    notes = BaseObject._item_property("NOTES")
 
     def __init__(self):
         self._properties = OrderedDict()
+        self._default_property = Property("", MSDParameter(("",), suffix=";\n"))
 
     @abstractmethod
     def _parse(self, parser: MSDIterator):
@@ -93,14 +125,6 @@ class BaseChart(MSDSerializable, OrderedDictForwarder, metaclass=ABCMeta):
         cls = self.__class__.__name__
         return f"<{cls}: {self.stepstype} {self.difficulty} {self.meter}>"
 
-    def __eq__(self, other):
-        """
-        Test for equality with another BaseChart.
-
-        Two charts are equal if they have the same type and properties.
-        """
-        return type(self) is type(other) and self._properties == other._properties
-
 
 C = TypeVar("C", bound=BaseChart)
 
@@ -119,7 +143,7 @@ class BaseCharts(ListWithRepr[C], MSDSerializable, metaclass=ABCMeta):
             file.write("\n")
 
 
-class BaseSimfile(MSDSerializable, OrderedDictForwarder, metaclass=ABCMeta):
+class BaseSimfile(BaseObject, metaclass=ABCMeta):
     """
     A simfile, including its metadata (e.g. song title) and charts.
 
@@ -150,39 +174,40 @@ class BaseSimfile(MSDSerializable, OrderedDictForwarder, metaclass=ABCMeta):
     overridden by setting `strict` to False in the constructor.
     """
 
-    _properties: "OrderedDict[str, str]"
+    _properties: "OrderedDict[str, Property]"
+    _default_property: Property
     _strict: bool
 
     MULTI_VALUE_PROPERTIES = ("ATTACKS", "DISPLAYBPM")
 
-    title = _item_property("TITLE")
-    subtitle = _item_property("SUBTITLE")
-    artist = _item_property("ARTIST")
-    titletranslit = _item_property("TITLETRANSLIT")
-    subtitletranslit = _item_property("SUBTITLETRANSLIT")
-    artisttranslit = _item_property("ARTISTTRANSLIT")
-    genre = _item_property("GENRE")
-    credit = _item_property("CREDIT")
-    banner = _item_property("BANNER")
-    background = _item_property("BACKGROUND")
-    lyricspath = _item_property("LYRICSPATH")
-    cdtitle = _item_property("CDTITLE")
-    music = _item_property("MUSIC")
-    offset = _item_property("OFFSET")
-    bpms = _item_property("BPMS")
-    stops = _item_property("STOPS")
-    delays = _item_property("DELAYS")
-    timesignatures = _item_property("TIMESIGNATURES")
-    tickcounts = _item_property("TICKCOUNTS")
-    instrumenttrack = _item_property("INSTRUMENTTRACK")
-    samplestart = _item_property("SAMPLESTART")
-    samplelength = _item_property("SAMPLELENGTH")
-    displaybpm = _item_property("DISPLAYBPM")
-    selectable = _item_property("SELECTABLE")
-    bgchanges = _item_property("BGCHANGES", alias="ANIMATIONS")
-    fgchanges = _item_property("FGCHANGES")
-    keysounds = _item_property("KEYSOUNDS")
-    attacks = _item_property("ATTACKS")
+    title = BaseObject._item_property("TITLE")
+    subtitle = BaseObject._item_property("SUBTITLE")
+    artist = BaseObject._item_property("ARTIST")
+    titletranslit = BaseObject._item_property("TITLETRANSLIT")
+    subtitletranslit = BaseObject._item_property("SUBTITLETRANSLIT")
+    artisttranslit = BaseObject._item_property("ARTISTTRANSLIT")
+    genre = BaseObject._item_property("GENRE")
+    credit = BaseObject._item_property("CREDIT")
+    banner = BaseObject._item_property("BANNER")
+    background = BaseObject._item_property("BACKGROUND")
+    lyricspath = BaseObject._item_property("LYRICSPATH")
+    cdtitle = BaseObject._item_property("CDTITLE")
+    music = BaseObject._item_property("MUSIC")
+    offset = BaseObject._item_property("OFFSET")
+    bpms = BaseObject._item_property("BPMS")
+    stops = BaseObject._item_property("STOPS")
+    delays = BaseObject._item_property("DELAYS")
+    timesignatures = BaseObject._item_property("TIMESIGNATURES")
+    tickcounts = BaseObject._item_property("TICKCOUNTS")
+    instrumenttrack = BaseObject._item_property("INSTRUMENTTRACK")
+    samplestart = BaseObject._item_property("SAMPLESTART")
+    samplelength = BaseObject._item_property("SAMPLELENGTH")
+    displaybpm = BaseObject._item_property("DISPLAYBPM")
+    selectable = BaseObject._item_property("SELECTABLE")
+    bgchanges = BaseObject._item_property("BGCHANGES", alias="ANIMATIONS")
+    fgchanges = BaseObject._item_property("FGCHANGES")
+    keysounds = BaseObject._item_property("KEYSOUNDS")
+    attacks = BaseObject._item_property("ATTACKS")
 
     @property
     @abstractmethod
@@ -200,6 +225,7 @@ class BaseSimfile(MSDSerializable, OrderedDictForwarder, metaclass=ABCMeta):
         strict: bool = True,
     ):
         self._properties = OrderedDict()
+        self._default_property = Property("", MSDParameter(("",)))
         self._strict = strict
 
         provided_inputs = [inp for inp in [file, string, tokens] if inp is not None]
@@ -235,9 +261,9 @@ class BaseSimfile(MSDSerializable, OrderedDictForwarder, metaclass=ABCMeta):
     def serialize(self, file: TextIO):
         for key, value in self._properties.items():
             if key in BaseSimfile.MULTI_VALUE_PROPERTIES:
-                param = MSDParameter((key, *value.split(":")))
+                param = MSDParameter((key, *value.value.split(":")))
             else:
-                param = MSDParameter((key, value))
+                param = MSDParameter((key, value.value))
             file.write(f"{param}\n")
         file.write("\n")
         self.charts.serialize(file)
@@ -262,11 +288,7 @@ class BaseSimfile(MSDSerializable, OrderedDictForwarder, metaclass=ABCMeta):
         Two simfiles are equal if they have the same type, parameters, and
         charts.
         """
-        return (
-            type(self) is type(other)
-            and self._properties == other._properties
-            and self.charts == other.charts
-        )
+        return BaseObject.__eq__(self, other) and self.charts == other.charts
 
     def __ne__(self, other):
         """

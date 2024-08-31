@@ -2,11 +2,14 @@
 Simfile & chart classes for SSC files.
 """
 
+from copy import deepcopy
 from typing import Optional, Sequence, Type
 
 from msdparser import parse_msd, MSDParameter
 
-from .base import BaseChart, BaseCharts, BaseSimfile, MSDIterator, _item_property
+from simfile._private.ordered_dict_forwarder import Property
+
+from .base import BaseChart, BaseCharts, BaseObject, BaseSimfile, MSDIterator
 from ._private.dedent import dedent_and_trim
 
 
@@ -31,27 +34,27 @@ class SSCChart(BaseChart):
       `labels`, `offset`, `displaybpm`
     """
 
-    chartname = _item_property("CHARTNAME")
-    chartstyle = _item_property("CHARTSTYLE")
-    credit = _item_property("CREDIT")
-    music = _item_property("MUSIC")
-    bpms = _item_property("BPMS")
-    stops = _item_property("STOPS")
-    delays = _item_property("DELAYS")
-    timesignatures = _item_property("TIMESIGNATURES")
-    tickcounts = _item_property("TICKCOUNTS")
-    combos = _item_property("COMBOS")
-    warps = _item_property("WARPS")
-    speeds = _item_property("SPEEDS")
-    scrolls = _item_property("SCROLLS")
-    fakes = _item_property("FAKES")
-    labels = _item_property("LABELS")
-    attacks = _item_property("ATTACKS")
-    offset = _item_property("OFFSET")
-    displaybpm = _item_property("DISPLAYBPM")
+    chartname = BaseObject._item_property("CHARTNAME")
+    chartstyle = BaseObject._item_property("CHARTSTYLE")
+    credit = BaseObject._item_property("CREDIT")
+    music = BaseObject._item_property("MUSIC")
+    bpms = BaseObject._item_property("BPMS")
+    stops = BaseObject._item_property("STOPS")
+    delays = BaseObject._item_property("DELAYS")
+    timesignatures = BaseObject._item_property("TIMESIGNATURES")
+    tickcounts = BaseObject._item_property("TICKCOUNTS")
+    combos = BaseObject._item_property("COMBOS")
+    warps = BaseObject._item_property("WARPS")
+    speeds = BaseObject._item_property("SPEEDS")
+    scrolls = BaseObject._item_property("SCROLLS")
+    fakes = BaseObject._item_property("FAKES")
+    labels = BaseObject._item_property("LABELS")
+    attacks = BaseObject._item_property("ATTACKS")
+    offset = BaseObject._item_property("OFFSET")
+    displaybpm = BaseObject._item_property("DISPLAYBPM")
 
     # "NOTES2" alias only supported by SSC files
-    notes = _item_property("NOTES", alias="NOTES2")
+    notes = BaseObject._item_property("NOTES", alias="NOTES2")
 
     @classmethod
     def from_str(cls: Type["SSCChart"], string: str, strict: bool = True) -> "SSCChart":
@@ -95,34 +98,66 @@ class SSCChart(BaseChart):
         iterator = iter(parser)
 
         param = next(iterator)
-        if param.key.upper() != "NOTEDATA":
+        upper_key = param.key.upper()
+        if upper_key != "NOTEDATA":
             raise ValueError("expected NOTEDATA property first")
 
         for param in iterator:
-            if param.key in BaseSimfile.MULTI_VALUE_PROPERTIES:
-                self._properties[param.key] = ":".join(param.components[1:])
+            upper_key = param.key.upper()
+            if upper_key in BaseSimfile.MULTI_VALUE_PROPERTIES:
+                self._properties[upper_key] = Property(
+                    value=":".join(param.components[1:]),
+                    msd_parameter=param,
+                )
             else:
-                self._properties[param.key] = param.value or ""
+                self._properties[upper_key] = Property(
+                    value=param.value, msd_parameter=param
+                )
             if param.value is self.notes:
                 break
 
     def serialize(self, file):
-        file.write(f"{MSDParameter(('NOTEDATA', ''))}\n")
+        notedata_param = deepcopy(self._default_property).msd_parameter
+        notedata_param.components = ("NOTEDATA", "")
+        notedata_param.serialize(file, exact=True)
+
         notes_key = "NOTES"
 
-        for key, value in self._properties.items():
+        for upper_key, value in self._properties.items():
+            if value.msd_parameter.key.upper() == upper_key:
+                key = value.msd_parameter.key
+            else:
+                key = upper_key
+
             # Either NOTES or NOTES2 must be the last chart property
-            if value is self.notes:
+            if value.value is self.notes:
                 notes_key = key
                 continue
-            if key in BaseSimfile.MULTI_VALUE_PROPERTIES:
-                param = MSDParameter((key, *value.split(":")))
-            else:
-                param = MSDParameter((key, value))
-            file.write(f"{param}\n")
 
-        notes_param = MSDParameter((notes_key, self._properties[notes_key]))
-        file.write(f"{notes_param}\n\n")
+            if upper_key in BaseSimfile.MULTI_VALUE_PROPERTIES:
+                components = (key, *value.value.split(":"))
+            else:
+                components = (key, value.value)
+
+            param = MSDParameter(
+                components=components,
+                preamble=value.msd_parameter.preamble,
+                comments=value.msd_parameter.comments,
+                suffix=value.msd_parameter.suffix,
+            )
+
+            param.serialize(file, exact=True)
+
+        notes_property = self._properties.get(notes_key.upper())
+        if notes_property:
+            notes_param = MSDParameter(
+                components=(notes_key, notes_property.value),
+                preamble=notes_property.msd_parameter.preamble,
+                comments=notes_property.msd_parameter.comments,
+                suffix=notes_property.msd_parameter.suffix,
+            )
+
+            notes_param.serialize(file, exact=True)
 
     def _attach(self, simfile: "SSCSimfile") -> "AttachedSSCChart":
         attached = AttachedSSCChart(simfile=simfile)
@@ -167,21 +202,21 @@ class SSCSimfile(BaseSimfile):
 
     _charts: SSCCharts
 
-    version = _item_property("VERSION")
-    origin = _item_property("ORIGIN")
-    previewvid = _item_property("PREVIEWVID")
-    jacket = _item_property("JACKET")
-    cdimage = _item_property("CDIMAGE")
-    discimage = _item_property("DISCIMAGE")
-    preview = _item_property("PREVIEW")
-    musiclength = _item_property("MUSICLENGTH")
-    lastsecondhint = _item_property("LASTSECONDHINT")
-    warps = _item_property("WARPS")
-    labels = _item_property("LABELS")
-    combos = _item_property("COMBOS")
-    speeds = _item_property("SPEEDS")
-    scrolls = _item_property("SCROLLS")
-    fakes = _item_property("FAKES")
+    version = BaseObject._item_property("VERSION")
+    origin = BaseObject._item_property("ORIGIN")
+    previewvid = BaseObject._item_property("PREVIEWVID")
+    jacket = BaseObject._item_property("JACKET")
+    cdimage = BaseObject._item_property("CDIMAGE")
+    discimage = BaseObject._item_property("DISCIMAGE")
+    preview = BaseObject._item_property("PREVIEW")
+    musiclength = BaseObject._item_property("MUSICLENGTH")
+    lastsecondhint = BaseObject._item_property("LASTSECONDHINT")
+    warps = BaseObject._item_property("WARPS")
+    labels = BaseObject._item_property("LABELS")
+    combos = BaseObject._item_property("COMBOS")
+    speeds = BaseObject._item_property("SPEEDS")
+    scrolls = BaseObject._item_property("SCROLLS")
+    fakes = BaseObject._item_property("FAKES")
 
     @classmethod
     def blank(cls: Type["SSCSimfile"]) -> "SSCSimfile":
@@ -243,9 +278,11 @@ class SSCSimfile(BaseSimfile):
                     self.charts.append(partial_chart)
                 partial_chart = SSCChart()
             elif partial_chart is not None:
-                partial_chart._properties[key] = value or ""
+                partial_chart._properties[key] = Property(
+                    value=value or "", msd_parameter=param
+                )
             else:
-                self._properties[key] = value or ""
+                self._properties[key] = Property(value=value or "", msd_parameter=param)
         if partial_chart is not None:
             self.charts.append(partial_chart)
 
