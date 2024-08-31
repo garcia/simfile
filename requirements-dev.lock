@@ -3,7 +3,7 @@
 #
 # last locked with the following flags:
 #   pre: false
-#   features: ["fs"]
+#   features: []
 #   all-features: false
 #   with-sources: false
 #   generate-hashes: false
@@ -12,14 +12,12 @@
 -e file:.
 alabaster==1.0.0
     # via sphinx
-appdirs==1.4.4
-    # via fs
 astroid==3.3.2
     # via sphinx-autoapi
 babel==2.16.0
     # via sphinx
 black==24.8.0
-certifi==2024.7.4
+certifi==2024.8.30
     # via requests
 charset-normalizer==3.3.2
     # via requests
@@ -34,8 +32,6 @@ docutils==0.21.2
     # via sphinx-rtd-theme
 exceptiongroup==1.2.2
     # via pytest
-fs==2.4.16
-    # via simfile
 idna==3.8
     # via requests
 imagesize==1.4.1
@@ -47,7 +43,7 @@ jinja2==3.1.4
     # via sphinx-autoapi
 markupsafe==2.1.5
     # via jinja2
-msdparser==2.0.0
+msdparser==3.0.0a2
     # via simfile
 mypy-extensions==1.0.0
     # via black
@@ -70,17 +66,13 @@ pyyaml==6.0.2
     # via sphinx-autoapi
 requests==2.32.3
     # via sphinx
-setuptools==73.0.1
-    # via fs
-six==1.16.0
-    # via fs
 snowballstemmer==2.2.0
     # via sphinx
 sphinx==8.0.2
     # via sphinx-autoapi
     # via sphinx-rtd-theme
     # via sphinxcontrib-jquery
-sphinx-autoapi==3.2.1
+sphinx-autoapi==3.3.0
 sphinx-rtd-theme==3.0.0rc1
 sphinxcontrib-applehelp==2.0.0
     # via sphinx
