@@ -3,55 +3,107 @@
 Changelog
 =========
 
-3.0.0
------
+3.0.0a1
+-------
 
 Breaking changes
 ~~~~~~~~~~~~~~~~
 
-Features that are now optional
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. warning::
 
-* The `simfile.assets` submodule
-  now requires installing **simfile** with the `assets` extra.
-  You can do this by running `pip install simfile[assets]`
-  or, if using Poetry, `poetry add 'simfile[assets]'`.
-* The `filesystem` parameter of various functions & methods
-  now requires installing **simfile** with the `fs` extra.
-  You can do this by running `pip install simfile[fs]`
-  or, if using Poetry, `poetry add 'simfile[fs]'`.
-  * If you want to use both of these optional features,
-    include them both between the brackets with a comma separator,
-    like this: `simfile[assets,fs]`.
+    **simfile** 3.0 introduces some breaking changes
+    that you may need to update your code to handle:
+
+    **Strict parsing is now off by default**
+
+    Functions in the top-level module,
+    such as :func:`simfile.open`, :func:`simfile.load`, and :func:`simfile.mutate`,
+    now default to ``strict=False``.
+    If you want strict parse errors,
+    pass ``strict=True`` to restore the old behavior.
+    
+    **Features that are now optional**
+
+    The :mod:`simfile.assets` submodule
+    now requires installing **simfile** with the ``assets`` extra.
+    Run one of these commands to add it to your project::
+      
+      pip install 'simfile[assets]'  # or...
+      poetry add 'simfile[assets]'  # or...
+      rye add simfile --features assets
+        
+    The `filesystem` parameter of various functions & methods
+    now requires installing **simfile** with the ``fs`` extra.
+    Run one of these commands to add it to your project::
+
+      pip install 'simfile[fs]'  # or...
+      poetry add 'simfile[fs]'  # or...
+      rye add simfile --features fs
+      
+    If you want to use both of these optional features,
+    join them with a comma::
+
+      pip install 'simfile[assets,fs]'  # or...
+      poetry add 'simfile[assets,fs]'  # or...
+      rye add simfile --features assets,fs
+    
+    **Some dict operations no longer supported on simfiles & charts**
+
+    The :data:`.Simfile` and :data:`.Chart` classes (both SM and SSC)
+    no longer inherit OrderedDict;
+    instead, they have a private OrderedDict attribute
+    and forward common dictionary methods & operations to it.
+    
+    These operations that were previously inherited
+    by :data:`.Simfile` and :data:`.Chart`
+    are **not** forwarded:
+    
+    * The ``popitem``, ``reversed``, and ``setdefault`` methods from ``dict`` are no longer supported.
+    * The ``|`` and ``|=`` operators are no longer supported.
+    * The ``clear``, ``copy``, and ``update`` methods are exposed as
+      :meth:`~.clear_properties`, :meth:`~.copy_properties`, and :meth:`~.update_properties`
+      for clarity.
+    
+    These operations **are** forwarded and should behave the same as before:
+    
+    * ``[key]`` indexing & assignment
+    * ``len()`` and iteration
+    * The ``move_to_end`` method from ``OrderedDict``
+    * The ``keys``, ``values``, ``items``, ``get``, and ``pop`` methods from ``dict``
 
 Uncategorized
-^^^^^^^^^^^^^
+~~~~~~~~~~~~~
 
-* :class:`.SMSimfile` and :class:`.SSCSimfile` no longer inherit `OrderedDict`;
-  instead, they have a private `OrderedDict` attribute
-  and forward common dictionary methods & operations to the `OrderedDict`.
-  These forwarded methods & operations are not comprehensive;
-  specifically:
-  * The `popitem`, `reversed`, and `setdefault` methods from `dict` are no longer supported.
-  * The `|` and `|=` operators are no longer supported.
-  * The `clear`, `copy`, and `update` methods are exposed as
-    `clear_properties`, `copy_properties`, and `update_properties`
-    for clarity.
-  The following operations & methods are forwarded and should behave the same as before:
-  * `[key]` indexing & assignment (`__getitem__`, `__setitem__`, `__delitem__`)
-  * `len()` and iteration (`__len__`, `__iter__`)
-  * The `move_to_end` method from `OrderedDict`
-  * The `keys`, `values`, `items`, `get`, and `pop` methods from `dict`
-* :class:`.SMCharts` and :class:`.SSCCharts` are now lists of
-  :class:`.AttachedSMChart` and :class:`.AttachedSSCChart` objects, respectively.
+* The plural :class:`.SMCharts` and :class:`.SSCCharts` classes
+  are now lists of :class:`.AttachedSMChart` and :class:`.AttachedSSCChart` objects,
+  respectively.
   These are subclasses of :class:`.SMChart` and :class:`.SSCChart`
-  that store the simfile they came from under the `simfile` attribute.
-  * Adding a detached :class:`.SMChart` or :class:`.SSCChart` object
-    to a :class:`.SMCharts` or :class:`.SSCCharts` list
-    will create an attached copy and add that to the list instead.
+  that store the simfile they came from under the :attr:`~.simfile` attribute.
+  Adding a detached :class:`.SMChart` or :class:`.SSCChart` object
+  to a :class:`.SMCharts` or :class:`.SSCCharts` list
+  will create an attached copy and add that to the list instead.
 * :func:`.group_notes`' `include_note_types` argument was removed.
   Instead, use the built-in `filter` method
   on an iterable of :class:`Note` or :class:`GroupedNotes` objects as appropriate.
+
+New features
+~~~~~~~~~~~~
+
+
+Enhancements
+~~~~~~~~~~~~
+
+Deserializing and serializing a :data:`.Simfile` is now byte-for-byte symmetric.
+For example,
+if you open a simfile with :func:`simfile.mutate`
+and don't make any changes,
+the output file will exactly match the input file.
+This includes whitespace, comments, and any other ephemeral details.
+
+Bugfixes
+~~~~~~~~
+
+
 
 2.1.1
 -----
