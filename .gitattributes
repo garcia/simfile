@@ -4,4 +4,4 @@
 
 * text=auto
 # Preserve line endings for test file
-testdata/** -text
+testdata/** binary
