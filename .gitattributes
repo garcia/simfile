@@ -4,4 +4,4 @@
 
 * text=auto
 # Preserve line endings for test file
-testdata/spin_cycle/spin_cycle.ssc eol=lf
+testdata/** -text
