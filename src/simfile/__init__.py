@@ -68,7 +68,7 @@ def _detect_ssc(file: TextIO, strict: bool = True) -> Tuple[TextIO, bool]:
     return (file, first_param.key is not None and first_param.key.upper() == "VERSION")
 
 
-def load(file: TextIO, strict: bool = True) -> Simfile:
+def load(file: TextIO, strict: bool = True, errors: Optional[str] = None) -> Simfile:
     """
     Load a text file object as a simfile.
 
@@ -78,7 +78,7 @@ def load(file: TextIO, strict: bool = True) -> Simfile:
     the file is treated as an SSC simfile; otherwise, it's treated as
     an SM simfile.
     """
-    file, is_ssc = _detect_ssc(file)
+    file, is_ssc = _detect_ssc(file, strict=strict)
     if is_ssc:
         return SSCSimfile(file=file, strict=strict)
     else:
@@ -128,7 +128,9 @@ def open_with_detected_encoding(
     Tries decoding the simfile as UTF-8, CP1252 (English), CP932
     (Japanese), and CP949 (Korean), mirroring the encodings supported
     by StepMania. This list can be overridden by supplying
-    `try_encodings`.
+    `try_encodings`. If all encodings fail in non-strict parsing, the
+    simfile will instead be loaded using ASCII with surrogate escapes,
+    which should never fail.
 
     Keep in mind that no heuristics are performed to "guess" the
     correct encoding - this function simply tries each encoding in order
@@ -146,20 +148,35 @@ def open_with_detected_encoding(
 
     exception: Optional[UnicodeDecodeError] = None
 
+    # No newline conversion unless specified
+    newline = kwargs.pop("newline", "")
+
+    if not strict:
+        # In non-strict mode, use ASCII with surrogate escapes
+        # if all other encodings throw an exception
+        try_encodings = [*try_encodings, "ascii"]
+
     for encoding in try_encodings:
+        errors = (
+            "surrogateescape" if encoding == "ascii" else kwargs.pop("errors", None)
+        )
         try:
-            with filesystem.open(filename, "r", encoding=encoding, **kwargs) as file:
+            with filesystem.open(
+                filename,
+                "r",
+                encoding=encoding,
+                errors=errors,
+                newline=newline,
+                **kwargs,
+            ) as file:
                 return (load(cast(TextIO, file), strict=strict), encoding)
         except UnicodeDecodeError as e:
             # Keep track of each encoding's exception
             if exception:
                 e.__cause__ = exception
-                exception = e
-            else:
-                exception = e
-            continue
+            exception = e
 
-    # If all encodings failed, raise the exception chain
+    # All encodings failed to decode without errors; raise the exception chain
     raise exception or UnicodeError
 
 
@@ -270,16 +287,28 @@ def mutate(
         raise
     else:
         # No exception was caught, so write the output file(s)
+        errors = "surrogateescape" if encoding == "ascii" else kwargs.get("errors")
+        newline = kwargs.pop("newline", "")
 
         # Write backup file if requested
         if backup_filename:
             with filesystem.open(
-                backup_filename, "w", encoding=encoding, **kwargs
+                backup_filename,
+                "w",
+                encoding=encoding,
+                errors=errors,
+                newline=newline,
+                **kwargs,
             ) as writer:
                 writer.write(backup_data)
 
         # Write output file
         with filesystem.open(
-            output_filename or input_filename, "w", encoding=encoding, **kwargs
+            output_filename or input_filename,
+            "w",
+            encoding=encoding,
+            errors=errors,
+            newline=newline,
+            **kwargs,
         ) as writer:
             simfile.serialize(cast(TextIO, writer))

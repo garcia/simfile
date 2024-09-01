@@ -44,9 +44,9 @@ class TestSimfileModule(TestCase):
         self.setUpPyfakefs()
         self.fs.add_real_directory("testdata")
 
-        with open("testing_simfile.sm", "w") as writer:
+        with open("testing_simfile.sm", "w", newline="") as writer:
             writer.write(test_sm.testing_simfile())
-        with open("testing_simfile.ssc", "w") as writer:
+        with open("testing_simfile.ssc", "w", newline="") as writer:
             writer.write(test_ssc.testing_simfile())
         for encoding, artist in test_encoding_strings.items():
             with open(f"{encoding}.sm", "w", encoding=encoding) as writer:
@@ -106,6 +106,8 @@ class TestSimfileModule(TestCase):
         sm = simfile.open("testing_simfile.sm")
 
         self.assertIsInstance(sm, SMSimfile)
+        print(sm._properties)
+        print(SMSimfile(string=test_sm.testing_simfile())._properties)
         self.assertEqual(SMSimfile(string=test_sm.testing_simfile()), sm)
 
     def test_open_with_ssc_file(self):
@@ -120,8 +122,21 @@ class TestSimfileModule(TestCase):
                 sm = simfile.open(f"{encoding}.sm")
                 self.assertEqual(artist, sm.artist)
 
-    def test_open_with_invalid_file(self):
-        self.assertRaises(UnicodeDecodeError, simfile.open, "invalid.sm")
+    def test_open_with_invalid_file_and_strict_true(self):
+        self.assertRaises(UnicodeDecodeError, simfile.open, "invalid.sm", strict=True)
+
+    def test_open_with_invalid_file_and_strict_false(self):
+        sm_bytes = open("invalid.sm", "rb").read()
+        sm = simfile.open("invalid.sm", strict=False)
+        self.assertEqual("Song", sm.title)
+        self.assertEqual(sm_bytes, str(sm).encode("ascii", errors="surrogateescape"))
+
+        with open(
+            "output.tmp", "w", encoding="ascii", errors="surrogateescape", newline=""
+        ) as outfile:
+            sm.serialize(outfile)
+
+        self.assertEqual(sm_bytes, open("output.tmp", "rb").read())
 
     def test_open_with_stray_text(self):
         self.assertRaises(MSDParserError, simfile.open, "straytext.sm")
@@ -299,6 +314,22 @@ class TestSimfileModule(TestCase):
         backup_ssc = simfile.open("backup.ssc")
         self.assertEqual(original_title, backup_ssc.title)
 
+    def test_mutate_with_invalid_file_and_strict_true(self):
+        sm_bytes = open("invalid.sm", "rb").read()
+        self.assertRaises(
+            UnicodeDecodeError, simfile.mutate("invalid.sm", strict=True).__enter__
+        )
+
+    def test_mutate_with_invalid_file_and_strict_false(self):
+        sm_bytes = open("invalid.sm", "rb").read()
+        with simfile.mutate("invalid.sm", strict=False) as sm:
+            self.assertEqual("Song", sm.title)
+            self.assertEqual(
+                sm_bytes, str(sm).encode("ascii", errors="surrogateescape")
+            )
+
+        self.assertEqual(sm_bytes, open("invalid.sm", "rb").read())
+
     def test_mutate_with_invalid_backup_filename(self):
         backup_matches_input = simfile.mutate(
             "testing_simfile.ssc",
@@ -333,6 +364,7 @@ class TestSimfileModule(TestCase):
             "testdata/Backup/backup.ssc",
             "testdata/Y.E.A.H/Y.E.A.H.sm",
             "testdata/Y.E.A.H/Y.E.A.H.ssc",
+            "testdata/spin_cycle/spin_cycle.ssc",
         )
         output_filename = "testdata/output.tmp"
         for testfile in testfiles:
