@@ -313,16 +313,32 @@ class TestSimfileModule(TestCase):
         )
         self.assertRaises(ValueError, backup_matches_output.__enter__)
 
-    def test_mutate_with_stray_text(self):
+    def test_mutate_with_stray_text_and_strict_true(self):
         self.assertRaises(
             MSDParserError,
-            simfile.mutate("straytext.sm").__enter__,
+            simfile.mutate("straytext.sm", strict=True).__enter__,
         )
 
     def test_mutate_with_stray_text_and_strict_false(self):
         with simfile.mutate("straytext.sm", strict=False) as straytext:
             straytext.subtitle = "(Fixed)"
 
-        sm = simfile.open("straytext.sm")
+        sm = simfile.open("straytext.sm", strict=False)
 
         self.assertEqual("(Fixed)", sm.subtitle)
+
+    def test_mutate_exactness(self):
+        testfiles = (
+            "testdata/Backup/backup.sm",
+            "testdata/Backup/backup.ssc",
+            "testdata/Y.E.A.H/Y.E.A.H.sm",
+            "testdata/Y.E.A.H/Y.E.A.H.ssc",
+        )
+        output_filename = "testdata/output.tmp"
+        for testfile in testfiles:
+            with self.subTest(testfile=testfile):
+                with simfile.mutate(testfile, output_filename=output_filename) as mut:
+                    pass
+                original_contents = open(testfile).read()
+                output_contents = open(output_filename).read()
+                self.assertEqual(original_contents, output_contents)

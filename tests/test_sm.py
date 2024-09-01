@@ -1,26 +1,32 @@
 from copy import deepcopy
 import unittest
 
+from msdparser import MSDParameter, parse_msd
+
 from simfile.sm import *
 
 
-def testing_chart():
-    return (
-        "\n"
-        "     dance-single:\n"
-        "     Brackets:\n"
-        "     Edit:\n"
-        "     12:\n"
-        "     0.793,1.205,0.500,0.298,0.961:\n"
-        "0000\n"
-        "0000\n"
-        "0000\n"
-        "0000\n"
+def testing_chart(extradata=()) -> MSDParameter:
+    extradata_infix = (":" + ":".join(extradata)) if extradata else ""
+
+    return next(
+        parse_msd(
+            string="#NOTES:\n"
+            "     dance-single:\n"
+            "     Brackets:\n"
+            "     Edit:\n"
+            "     12:\n"
+            "     0.793,1.205,0.500,0.298,0.961:\n"
+            "0000\n"
+            "0000\n"
+            "0000\n"
+            "0000\n" + extradata_infix + ";\n"
+        )
     )
 
 
 def testing_charts():
-    variants = tuple(SMChart.from_str(testing_chart()) for _ in range(7))
+    variants = tuple(SMChart.from_msd_parameter(testing_chart()) for _ in range(7))
     variants[1].stepstype = "dance-double"
     variants[2].description = "Footswitches"
     variants[3].difficulty = "Challenge"
@@ -40,7 +46,7 @@ def testing_simfile():
 
 class TestSMChart(unittest.TestCase):
     def test_init_and_properties(self):
-        unit = SMChart.from_str(testing_chart())
+        unit = SMChart.from_msd_parameter(testing_chart())
 
         self.assertEqual("dance-single", unit.stepstype)
         self.assertEqual("Brackets", unit.description)
@@ -50,12 +56,13 @@ class TestSMChart(unittest.TestCase):
         self.assertEqual("0000\n0000\n0000\n0000", unit.notes)
 
     def test_serialize(self):
-        unit = SMChart.from_str(testing_chart())
+        chart_param = testing_chart()
+        unit = SMChart.from_msd_parameter(chart_param)
 
-        self.assertEqual(f"#NOTES:{testing_chart()};", str(unit))
+        self.assertEqual(chart_param.stringify(exact=True), str(unit))
 
     def test_serialize_with_escapes(self):
-        unit = SMChart.from_str(testing_chart())
+        unit = SMChart.from_msd_parameter(testing_chart())
         unit.description = "A;B//C\\D:E"
         expected_substring = "A\\;B\\//C\\\\D\\:E:\n"
 
@@ -81,23 +88,23 @@ class TestSMChart(unittest.TestCase):
         self.assertNotEqual(base, variants[6])
 
     def test_getitem(self):
-        unit = SMChart.from_str(testing_chart())
+        unit = SMChart.from_msd_parameter(testing_chart())
 
         self.assertEqual(unit["STEPSTYPE"], unit.stepstype)
         self.assertRaises(KeyError, unit.__getitem__, "stepstype")
 
     def test_repr(self):
-        unit = SMChart.from_str(testing_chart())
+        unit = SMChart.from_msd_parameter(testing_chart())
 
         self.assertEqual("<SMChart: dance-single Edit 12>", repr(unit))
 
     def test_preserves_extra_data(self):
-        extra_data = "extra:data"
-        chart_with_extra_data = testing_chart() + ":" + extra_data
-        unit = SMChart.from_str(chart_with_extra_data)
+        extradata = ["extra", "data"]
+        chart_with_extra_data = testing_chart(extradata=extradata)
+        unit = SMChart.from_msd_parameter(chart_with_extra_data)
 
-        self.assertEqual(["extra", "data"], unit.extradata)
-        self.assertTrue(str(unit).endswith(f":{extra_data};"))
+        self.assertEqual(extradata, unit.extradata)
+        self.assertTrue(str(unit).endswith(f":{':'.join(extradata)};\n"))
 
 
 class TestSMCharts(unittest.TestCase):
@@ -113,10 +120,10 @@ class TestSMCharts(unittest.TestCase):
 
         serialized = str(unit)
         self.assertTrue(serialized.startswith(str(testing_charts()[0])))
-        self.assertTrue(serialized.endswith(str(testing_charts()[-1]) + "\n"))
+        self.assertTrue(serialized.endswith(str(testing_charts()[-1])))
 
     def test_repr(self):
-        chart = SMChart.from_str(testing_chart())
+        chart = SMChart.from_msd_parameter(testing_chart())
         repr_chart = repr(chart)
         unit = SMCharts([chart])
 

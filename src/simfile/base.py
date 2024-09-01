@@ -140,7 +140,6 @@ class BaseCharts(ListWithRepr[C], MSDSerializable, metaclass=ABCMeta):
     def serialize(self, file: TextIO):
         for chart in self:
             chart.serialize(file)
-            file.write("\n")
 
 
 class BaseSimfile(BaseObject, metaclass=ABCMeta):
@@ -225,7 +224,7 @@ class BaseSimfile(BaseObject, metaclass=ABCMeta):
         strict: bool = True,
     ):
         self._properties = OrderedDict()
-        self._default_property = Property("", MSDParameter(("",)))
+        self._default_property = Property("", MSDParameter(("",), suffix=";\n"))
         self._strict = strict
 
         provided_inputs = [inp for inp in [file, string, tokens] if inp is not None]
@@ -261,11 +260,17 @@ class BaseSimfile(BaseObject, metaclass=ABCMeta):
     def serialize(self, file: TextIO):
         for key, value in self._properties.items():
             if key in BaseSimfile.MULTI_VALUE_PROPERTIES:
-                param = MSDParameter((key, *value.value.split(":")))
+                components = (key, *value.value.split(":"))
             else:
-                param = MSDParameter((key, value.value))
-            file.write(f"{param}\n")
-        file.write("\n")
+                components = (key, value.value)
+            param = MSDParameter(
+                components,
+                preamble=value.msd_parameter.preamble,
+                comments=value.msd_parameter.comments,
+                suffix=value.msd_parameter.suffix,
+            )
+            param.serialize(file, exact=True)
+
         self.charts.serialize(file)
 
     def __repr__(self) -> str:

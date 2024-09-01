@@ -74,9 +74,7 @@ class SMChart(BaseChart):
             This is now a less efficient version of :func:`from_msd`, which
             interoperates better with ``msdparser`` version 2.0.
         """
-        instance = cls()
-        instance._from_str(string)
-        return instance
+        return SMChart.from_msd(string.split(":"))
 
     @classmethod
     def from_msd(cls: Type["SMChart"], values: Sequence[str]) -> "SMChart":
@@ -89,48 +87,104 @@ class SMChart(BaseChart):
 
         Raises :code:`ValueError` if the list contains fewer than six
         components.
+
+        .. deprecated:: 3.0
+            Use :func:`from_msd_parameter` instead. This method doesn't
+            preserve whitespace or comments.
+        """
+        return SMChart.from_msd_parameter(
+            MSDParameter(components=["NOTES"] + list(values), suffix=";\n\n")
+        )
+
+    @classmethod
+    def from_msd_parameter(cls: Type["SMChart"], param: MSDParameter) -> "SMChart":
+        """
+        Parse a NOTES parameter from an SM file.
+
+        The parameter should contain seven components, corresponding to
+        the "NOTES" key followed by the six base known properties
+        documented in :class:`.BaseChart`. Any additional components
+        will be stored in :data:`extradata`.
+
+        Raises :code:`ValueError` if the parameter contains <7 components.
         """
         instance = cls()
-        instance._from_msd(values)
+        instance._from_msd(param)
         return instance
 
-    def _from_str(self, string: str) -> None:
-        self._from_msd(string.split(":"))
-
-    def _from_msd(self, values: Sequence[str]) -> None:
-        if len(values) < len(SM_CHART_PROPERTIES):
+    def _from_msd(self, param: MSDParameter) -> None:
+        # Subtract 1 for the key component
+        if len(param.components) - 1 < len(SM_CHART_PROPERTIES):
             raise ValueError(
                 f"expected at least {len(SM_CHART_PROPERTIES)} "
-                f"chart components, got {len(values)}"
+                f"chart components, got {len(param.components)}"
             )
 
-        for property, value in zip(SM_CHART_PROPERTIES, values):
-            self[property] = value.strip()
+        # SMChart abuses the _properties OrderedDict to preserve whitespace
+        # for things that are technically not MSD parameters themselves.
+        # Here we store the input param under a NOTES pseudo-param.
+        self._properties["OUTER"] = Property(
+            "",  # unused
+            msd_parameter=MSDParameter(
+                # TODO: cache all the components, not just the key
+                # (we need this so we can determine if the comments should be removed)
+                components=(param.key,),
+                comments=param.comments,
+                preamble=param.preamble,
+                suffix=param.suffix,
+            ),
+        )
 
-        if len(values) > len(SM_CHART_PROPERTIES):
-            self.extradata = list(values[len(SM_CHART_PROPERTIES) :])
+        for property, value in zip(SM_CHART_PROPERTIES, param.components[1:]):
+            leading_ws = value[: len(value) - len(value.lstrip())]
+            trailing_ws = value[len(value.rstrip()) :]
+            # Here we store the whitespace around each component
+            # as pseudo-properties with a preamble & suffix.
+            self._properties[property] = Property(
+                value=value.strip(),
+                msd_parameter=MSDParameter(
+                    components=(value,),
+                    preamble=leading_ws,
+                    suffix=trailing_ws,
+                ),
+            )
+
+        if len(param.components) - 1 > len(SM_CHART_PROPERTIES):
+            self.extradata = list(param.components[len(SM_CHART_PROPERTIES) + 1 :])
 
     def _parse(self, parser: Iterator[MSDParameter]):
         param = next(parser)
         if param.key.upper() != "NOTES":
             raise ValueError(f"expected a NOTES property, got {property}")
 
-        self._from_msd(param.components[1:])
+        self._from_msd(param)
 
     def serialize(self, file):
-        param = MSDParameter(
-            (
-                "NOTES",
-                f"\n     {self.stepstype}",
-                f"\n     {self.description}",
-                f"\n     {self.difficulty}",
-                f"\n     {self.meter}",
-                f"\n     {self.radarvalues}",
-                f"\n{self.notes}\n",
-                *(self.extradata or []),
+        def serialize_field(property: Property):
+            return (
+                (property.msd_parameter.preamble or "")  # whitespace before field
+                + property.value
+                + property.msd_parameter.suffix  # whitespace after field
             )
+
+        # Pseudo-param for the whole NOTES parameter
+        # (Includes comments & actual ';' suffix)
+        notes_param = self._properties["OUTER"].msd_parameter
+
+        param = MSDParameter(
+            components=(
+                "NOTES",
+                *(
+                    serialize_field(self._properties[field])
+                    for field in SM_CHART_PROPERTIES
+                ),
+                *(self.extradata or ()),
+            ),
+            preamble=notes_param.preamble,
+            comments=notes_param.comments,
+            suffix=notes_param.suffix,
         )
-        file.write(str(param))
+        file.write(param.stringify(exact=True))
 
     def __eq__(self, other):
         return (
@@ -174,6 +228,14 @@ class SMChart(BaseChart):
         """Raises NotImplementedError."""
         raise NotImplementedError
 
+    # Prevent the pseudo "OUTER" item from leaking
+    def items(self) -> Sequence[tuple[str, str]]:
+        return [
+            (key, property.value)
+            for key, property in self._properties.items()
+            if key != "OUTER"
+        ]
+
 
 class AttachedSMChart(SMChart):
     _simfile: "SMSimfile"
@@ -214,7 +276,7 @@ class SMSimfile(BaseSimfile):
         for param in parser:
             upper_key = param.key.upper()
             if upper_key == "NOTES":
-                self.charts.append(SMChart.from_msd(param.components[1:]))
+                self.charts.append(SMChart.from_msd_parameter(param))
             elif upper_key in BaseSimfile.MULTI_VALUE_PROPERTIES:
                 self._properties[upper_key] = Property(
                     value=":".join(param.components[1:]),
