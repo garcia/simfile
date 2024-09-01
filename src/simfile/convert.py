@@ -88,6 +88,7 @@ INVALID_PROPERTIES: Dict[Type, Dict[PropertyType, List[str]]] = {
     },
     SMChart: {
         PropertyType.METADATA: [
+            "NOTEDATA",
             "CHARTNAME",
             "CHARTSTYLE",
             "CREDIT",

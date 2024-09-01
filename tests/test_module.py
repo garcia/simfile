@@ -366,11 +366,11 @@ class TestSimfileModule(TestCase):
             "testdata/Y.E.A.H/Y.E.A.H.ssc",
             "testdata/spin_cycle/spin_cycle.ssc",
         )
-        output_filename = "testdata/output.tmp"
+        output_filename = "output.tmp"
         for testfile in testfiles:
             with self.subTest(testfile=testfile):
                 with simfile.mutate(testfile, output_filename=output_filename) as mut:
                     pass
-                original_contents = open(testfile).read()
-                output_contents = open(output_filename).read()
+                original_contents = open(testfile, newline="").read()
+                output_contents = open(output_filename, newline="").read()
                 self.assertEqual(original_contents, output_contents)

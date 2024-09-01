@@ -149,6 +149,7 @@ class TestSSCChart(unittest.TestCase):
         # Move 'CREDIT' out of order in the note data
         unit.move_to_end("CREDIT")
         expected = (
+            "\n"
             "#NOTEDATA:;\n"
             "#CHARTNAME:Brackets;\n"
             "#STEPSTYPE:dance-single;\n"

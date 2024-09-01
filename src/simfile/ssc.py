@@ -96,14 +96,15 @@ class SSCChart(BaseChart):
 
     def _parse(self, parser: MSDIterator) -> None:
         iterator = iter(parser)
-
-        param = next(iterator)
-        upper_key = param.key.upper()
-        if upper_key != "NOTEDATA":
-            raise ValueError("expected NOTEDATA property first")
+        first_key = True
 
         for param in iterator:
             upper_key = param.key.upper()
+
+            if first_key and upper_key != "NOTEDATA":
+                raise ValueError("expected NOTEDATA property first")
+            first_key = False
+
             if upper_key in BaseSimfile.MULTI_VALUE_PROPERTIES:
                 self._properties[upper_key] = Property(
                     value=":".join(param.components[1:]),
@@ -113,17 +114,22 @@ class SSCChart(BaseChart):
                 self._properties[upper_key] = Property(
                     value=param.value, msd_parameter=param
                 )
+
             if param.value is self.notes:
                 break
 
     def serialize(self, file):
-        notedata_param = deepcopy(self._default_property).msd_parameter
-        notedata_param.components = ("NOTEDATA", "")
-        notedata_param.serialize(file, exact=True)
+        notedata_property = self._properties["NOTEDATA"] or deepcopy(
+            self._default_property
+        )
+        notedata_property.msd_parameter.serialize(file, exact=True)
 
         notes_key = "NOTES"
 
         for upper_key, value in self._properties.items():
+            if upper_key == "NOTEDATA":
+                continue
+
             if value.msd_parameter.key.upper() == upper_key:
                 key = value.msd_parameter.key
             else:
@@ -267,22 +273,29 @@ class SSCSimfile(BaseSimfile):
     def _parse(self, parser: MSDIterator):
         self.charts = SSCCharts()
         partial_chart: Optional[SSCChart] = None
+
         for param in parser:
-            key = param.key.upper()
-            if key in BaseSimfile.MULTI_VALUE_PROPERTIES:
+            upper_key = param.key.upper()
+
+            if upper_key in BaseSimfile.MULTI_VALUE_PROPERTIES:
                 value: Optional[str] = ":".join(param.components[1:])
             else:
                 value = param.value
-            if key == "NOTEDATA":
+
+            if upper_key == "NOTEDATA":
                 if partial_chart is not None:
                     self.charts.append(partial_chart)
                 partial_chart = SSCChart()
-            elif partial_chart is not None:
-                partial_chart._properties[key] = Property(
-                    value=value or "", msd_parameter=param
+
+            if partial_chart is not None:
+                partial_chart._properties[upper_key] = Property(
+                    value=value, msd_parameter=param
                 )
             else:
-                self._properties[key] = Property(value=value or "", msd_parameter=param)
+                self._properties[upper_key] = Property(
+                    value=value or "", msd_parameter=param
+                )
+
         if partial_chart is not None:
             self.charts.append(partial_chart)
 
