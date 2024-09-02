@@ -261,6 +261,8 @@ class BaseSimfile(BaseObject, metaclass=ABCMeta):
         for key, value in self._properties.items():
             if key in BaseSimfile.MULTI_VALUE_PROPERTIES:
                 components = (key, *value.value.split(":"))
+            elif len(value.msd_parameter.components) == 1 and not value.value:
+                components = (key,)
             else:
                 components = (key, value.value)
             param = MSDParameter(
