@@ -16,6 +16,8 @@ appdirs==1.4.4
     # via fs
 astroid==3.3.2
     # via sphinx-autoapi
+attrs==24.2.0
+    # via pytest-subtests
 babel==2.16.0
     # via sphinx
 black==24.8.0
@@ -66,6 +68,8 @@ pyfakefs==4.5.6
 pygments==2.18.0
     # via sphinx
 pytest==8.3.2
+    # via pytest-subtests
+pytest-subtests==0.13.1
 pyyaml==6.0.2
     # via sphinx-autoapi
 requests==2.32.3
