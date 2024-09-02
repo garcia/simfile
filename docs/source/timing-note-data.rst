@@ -289,7 +289,7 @@ To get the displayed BPM, use the :func:`.displaybpm` function:
     >>> if disp.value:
     ...     print(f"Static value: {disp.value}")
     ... elif disp.range:
-    ...     print(f"Range of values: {disp.value[0]}-{disp.value[1]}")
+    ...     print(f"Range of values: {disp.range[0]}-{disp.range[1]}")
     ... else:
     ...     print(f"* (obfuscated BPM)")
     ...
