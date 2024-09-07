@@ -2,13 +2,21 @@
 Simfile & chart classes for SM files.
 """
 
+from copy import deepcopy
+from typing import Iterable, Iterator, List, Optional, Sequence, Type
+
 from msdparser import MSDParameter
-from typing import Iterator, List, Optional, Sequence, Type
 
-from simfile._private.ordered_dict_forwarder import Property
-
-from .base import BaseChart, BaseCharts, BaseObject, BaseSimfile, MSDIterator
+from ._private.ordered_dict_forwarder import Property
 from ._private.dedent import dedent_and_trim
+from .base import (
+    BaseAttachedChart,
+    BaseChart,
+    BaseCharts,
+    BaseObject,
+    BaseSimfile,
+    MSDIterator,
+)
 
 
 __all__ = ["SMChart", "AttachedSMChart", "SMCharts", "SMSimfile"]
@@ -186,6 +194,12 @@ class SMChart(BaseChart):
         )
         file.write(param.stringify(exact=True))
 
+    def _attach(self, simfile: "SMSimfile") -> "AttachedSMChart":
+        attached = AttachedSMChart(simfile)
+        attached._default_property = deepcopy(self._default_property)
+        attached._properties = self._properties.copy()
+        return attached
+
     def __eq__(self, other):
         return (
             type(self) is type(other)
@@ -237,25 +251,25 @@ class SMChart(BaseChart):
         ]
 
 
-class AttachedSMChart(SMChart):
-    _simfile: "SMSimfile"
-
-    def __init__(self, simfile: "SMSimfile"):
-        super().__init__()
-        self._simfile = simfile
-
+class AttachedSMChart(SMChart, BaseAttachedChart):
     def detach(self) -> SMChart:
         detached = SMChart()
         detached._properties = self._properties.copy()
         return detached
 
 
-class SMCharts(BaseCharts[SMChart]):
+class SMCharts(BaseCharts[AttachedSMChart, SMChart, "SMSimfile"]):
     """
     SM implementation of :class:`~simfile.base.BaseCharts`.
 
     List elements are :class:`SMChart` instances.
     """
+
+    def append(self, chart: SMChart):
+        super().append(chart._attach(self._simfile))
+
+    def extend(self, iterable: Iterable[SMChart]) -> None:
+        return super().extend(chart._attach(self._simfile) for chart in iterable)
 
 
 class SMSimfile(BaseSimfile):
@@ -272,7 +286,7 @@ class SMSimfile(BaseSimfile):
     """
 
     def _parse(self, parser: MSDIterator):
-        self._charts = SMCharts()
+        self._charts = SMCharts(simfile=self)
         for param in parser:
             upper_key = param.key.upper()
             if upper_key == "NOTES":
@@ -324,4 +338,4 @@ class SMSimfile(BaseSimfile):
 
     @charts.setter
     def charts(self, charts: Sequence[SMChart]):
-        self._charts = SMCharts(charts)
+        self._charts = SMCharts(self, charts)

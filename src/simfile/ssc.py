@@ -3,13 +3,20 @@ Simfile & chart classes for SSC files.
 """
 
 from copy import deepcopy
-from typing import Optional, Sequence, Type
+from typing import Iterable, Iterator, Optional, Sequence, Type
 
 from msdparser import parse_msd, MSDParameter
 
 from simfile._private.ordered_dict_forwarder import Property
 
-from .base import BaseChart, BaseCharts, BaseObject, BaseSimfile, MSDIterator
+from .base import (
+    BaseAttachedChart,
+    BaseChart,
+    BaseCharts,
+    BaseObject,
+    BaseSimfile,
+    MSDIterator,
+)
 from ._private.dedent import dedent_and_trim
 
 
@@ -171,25 +178,25 @@ class SSCChart(BaseChart):
         return attached
 
 
-class AttachedSSCChart(SSCChart):
-    _simfile: "SSCSimfile"
-
-    def __init__(self, simfile: "SSCSimfile"):
-        super().__init__()
-        self._simfile = simfile
-
+class AttachedSSCChart(SSCChart, BaseAttachedChart[SSCChart, "SSCSimfile"]):
     def detach(self) -> SSCChart:
         detached = SSCChart()
         detached._properties = self._properties.copy()
         return detached
 
 
-class SSCCharts(BaseCharts[SSCChart]):
+class SSCCharts(BaseCharts[AttachedSSCChart, "SSCChart", "SSCSimfile"]):
     """
     SSC implementation of :class:`~simfile.base.BaseCharts`.
 
     List elements are :class:`SSCChart` instances.
     """
+
+    def append(self, chart: SSCChart):
+        super().append(chart._attach(self._simfile))
+
+    def extend(self, iterable: Iterable[SSCChart]) -> None:
+        return super().extend(chart._attach(self._simfile) for chart in iterable)
 
 
 class SSCSimfile(BaseSimfile):
@@ -271,7 +278,7 @@ class SSCSimfile(BaseSimfile):
         )
 
     def _parse(self, parser: MSDIterator):
-        self.charts = SSCCharts()
+        self.charts = SSCCharts(simfile=self)
         partial_chart: Optional[SSCChart] = None
 
         for param in parser:
@@ -305,4 +312,4 @@ class SSCSimfile(BaseSimfile):
 
     @charts.setter
     def charts(self, charts: Sequence[SSCChart]):
-        self._charts = SSCCharts(charts)
+        self._charts = SSCCharts(simfile=self, charts=charts)

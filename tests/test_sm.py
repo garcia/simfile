@@ -109,23 +109,26 @@ class TestSMChart(unittest.TestCase):
 
 class TestSMCharts(unittest.TestCase):
     def test_init_and_list_methods(self):
-        unit = SMCharts(testing_charts())
+        sim = SMSimfile()
+        unit = SMCharts(simfile=sim, charts=testing_charts())
 
         self.assertEqual(7, len(unit))
         for chart in unit:
             self.assertIsInstance(chart, SMChart)
 
     def test_serialize(self):
-        unit = SMCharts(testing_charts())
+        sim = SMSimfile()
+        unit = SMCharts(simfile=sim, charts=testing_charts())
 
         serialized = str(unit)
         self.assertTrue(serialized.startswith(str(testing_charts()[0])))
         self.assertTrue(serialized.endswith(str(testing_charts()[-1])))
 
     def test_repr(self):
+        sim = SMSimfile()
         chart = SMChart.from_msd_parameter(testing_chart())
-        repr_chart = repr(chart)
-        unit = SMCharts([chart])
+        unit = SMCharts(simfile=sim, charts=[chart])
+        repr_chart = repr(unit[0])
 
         self.assertEqual(f"SMCharts([{repr_chart}])", repr(unit))
 
@@ -220,7 +223,7 @@ class TestSMSimfile(unittest.TestCase):
         unit.charts = unit.charts[:3]
         self.assertEqual(3, len(unit.charts))
 
-        unit.charts = SMCharts()
+        unit.charts = SMCharts(simfile=unit)
         self.assertEqual(0, len(unit.charts))
 
     def test_serialize_handles_multi_value_properties(self):

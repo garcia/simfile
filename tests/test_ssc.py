@@ -199,21 +199,24 @@ class TestSSCChart(unittest.TestCase):
 
 class TestSSCCharts(unittest.TestCase):
     def test_init_and_list_methods(self):
-        unit = SSCCharts(testing_charts())
+        sim = SSCSimfile()
+        unit = SSCCharts(simfile=sim, charts=testing_charts())
 
         self.assertEqual(10, len(unit))
         for chart in unit:
             self.assertIsInstance(chart, SSCChart)
 
     def test_serialize(self):
-        unit = SSCCharts(testing_charts())
+        sim = SSCSimfile()
+        unit = SSCCharts(simfile=sim, charts=testing_charts())
 
         value = str(unit)
 
     def test_repr(self):
+        sim = SSCSimfile()
         chart = SSCChart.from_str(testing_chart())
-        repr_chart = repr(chart)
-        unit = SSCCharts([chart])
+        unit = SSCCharts(simfile=sim, charts=[chart])
+        repr_chart = repr(unit[0])
 
         self.assertEqual(f"SSCCharts([{repr_chart}])", repr(unit))
 
@@ -317,5 +320,5 @@ class TestSSCSimfile(unittest.TestCase):
         unit.charts = unit.charts[:3]
         self.assertEqual(3, len(unit.charts))
 
-        unit.charts = SSCCharts()
+        unit.charts = SSCCharts(simfile=unit)
         self.assertEqual(0, len(unit.charts))

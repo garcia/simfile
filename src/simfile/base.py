@@ -8,15 +8,21 @@ the SM and SSC formats.
 
 from abc import ABCMeta, abstractmethod
 from collections import OrderedDict
-from io import StringIO
-from typing import Iterable, Iterator, Optional, TextIO, Tuple, Type, TypeVar, Union
+from typing import (
+    Generic,
+    Iterable,
+    Iterator,
+    Optional,
+    TextIO,
+    Tuple,
+    TypeVar,
+)
 
 from msdparser import parse_msd, MSDParameter
 from msdparser.lexer import MSDToken
 
 from ._private.generic import ListWithRepr
 from ._private.ordered_dict_forwarder import (
-    OrderedDictForwarder,
     OrderedDictPropertyForwarder,
     Property,
 )
@@ -27,6 +33,9 @@ __all__ = ["BaseChart", "BaseCharts", "BaseSimfile"]
 
 
 MSDIterator = Iterator[MSDParameter]
+C = TypeVar("C", bound="BaseChart")
+AC = TypeVar("AC", bound="BaseAttachedChart")
+S = TypeVar("S", bound="BaseSimfile")
 
 
 class BaseObject(MSDSerializable, OrderedDictPropertyForwarder, metaclass=ABCMeta):
@@ -126,16 +135,28 @@ class BaseChart(BaseObject, metaclass=ABCMeta):
         return f"<{cls}: {self.stepstype} {self.difficulty} {self.meter}>"
 
 
-C = TypeVar("C", bound=BaseChart)
+class BaseAttachedChart(BaseChart, Generic[C, S], metaclass=ABCMeta):
+    _simfile: S
+
+    def __init__(self, simfile: S):
+        super().__init__()
+        self._simfile = simfile
+
+    @abstractmethod
+    def detach(self) -> C:
+        pass
 
 
-class BaseCharts(ListWithRepr[C], MSDSerializable, metaclass=ABCMeta):
+class BaseCharts(
+    ListWithRepr[AC], MSDSerializable, Generic[AC, C, S], metaclass=ABCMeta
+):
     """
     List containing all of a simfile's charts.
     """
 
-    def __init__(self, data=None):
-        super().__init__(data)
+    def __init__(self, simfile: S, charts: Optional[Iterable[C]] = None):
+        self._simfile = simfile
+        super().__init__(chart._attach(simfile) for chart in charts or [])  # type: ignore
 
     def serialize(self, file: TextIO):
         for chart in self:
