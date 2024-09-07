@@ -219,7 +219,10 @@ def openpack(
     sp = SimfilePack(pack_dir, filesystem=filesystem)
 
     yield from (
-        (simfile_dir.open(), cast(str, simfile_dir.ssc_path or simfile_dir.sm_path))
+        (
+            simfile_dir.open(**kwargs),
+            cast(str, simfile_dir.ssc_path or simfile_dir.sm_path),
+        )
         for simfile_dir in sp.simfile_dirs()
     )
 
