@@ -1,8 +1,11 @@
 from enum import Enum
 from typing import Iterator, NamedTuple
 
+from simfile.types import AttachedChart
+
 from . import Note, NoteData, NoteType
 from ..timing import TimingData
+from ..timing._private.timingsource import timing_source
 from ..timing.engine import SongTime, TimingEngine
 
 
@@ -35,3 +38,7 @@ def time_notes(
             note=note,
             hittable=hittable,
         )
+
+
+def time_chart(chart: AttachedChart) -> Iterator[TimedNote]:
+    return time_notes(note_data=NoteData(chart), timing_data=TimingData(chart))
