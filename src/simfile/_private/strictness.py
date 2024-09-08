@@ -1,5 +1,8 @@
 from decimal import Decimal
 import re
+from typing import Union
+
+from simfile.types import AttachedChart, Simfile
 
 
 FLOAT_EXPRESSION = re.compile(
@@ -32,3 +35,10 @@ def enforce_float_str(s: str, strict: bool, error_message: str) -> str:
     if strict and float_str != s:
         raise ValueError("%s: %r", error_message, s)
     return float_str
+
+
+def strictness(source: Union[Simfile, AttachedChart]):
+    if isinstance(source, Simfile):
+        return source._strict
+    else:
+        return source._simfile._strict

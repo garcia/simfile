@@ -1,7 +1,8 @@
 from typing import Optional, Union
 
-from simfile.ssc import SSCSimfile, SSCChart
-from simfile.types import Simfile, Chart
+from simfile.sm import SMChart
+from simfile.ssc import AttachedSSCChart, SSCSimfile, SSCChart
+from simfile.types import AttachedChart, Simfile, Chart
 
 
 # Fun fact: SSC versions are stored as floats internally
@@ -25,13 +26,16 @@ CHART_TIMING_PROPERTIES = (
 )
 
 
-def timing_source(simfile: Simfile, chart: Optional[Chart]) -> Union[Simfile, SSCChart]:
-    if (
-        isinstance(simfile, SSCSimfile)
-        and isinstance(chart, SSCChart)
-        and float(simfile.version or "0") >= SSC_VERSION_SPLIT_TIMING
-        and any(timing_prop.__get__(chart) for timing_prop in CHART_TIMING_PROPERTIES)
+def timing_source(
+    source: Union[Simfile, AttachedChart]
+) -> Union[Simfile, AttachedSSCChart]:
+    if isinstance(source, Simfile):
+        return source
+    elif (
+        isinstance(source, AttachedSSCChart)
+        and float(source._simfile.version or "0") >= SSC_VERSION_SPLIT_TIMING
+        and any(timing_prop.__get__(source) for timing_prop in CHART_TIMING_PROPERTIES)
     ):
-        return chart
+        return source
     else:
-        return simfile
+        return source._simfile

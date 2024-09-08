@@ -5,13 +5,12 @@ Timing data classes, plus submodules that operate on timing data.
 from decimal import Decimal
 from fractions import Fraction
 from numbers import Rational
-import re
 from typing import Any, Optional, Type, NamedTuple, Union
 
 from ._private.timingsource import timing_source
-from .._private.strictness import enforce_float_str, extract_float_str
+from .._private.strictness import enforce_float_str, extract_float_str, strictness
 from simfile._private.generic import ListWithRepr
-from simfile.types import Simfile, Chart
+from simfile.types import AttachedChart, Simfile, Chart
 
 
 __all__ = ["Beat", "BeatValue", "BeatValues", "TimingData"]
@@ -228,24 +227,19 @@ class TimingData:
     fakes: BeatValues
     offset: Decimal
 
-    def __init__(self, simfile: Simfile, chart: Optional[Chart] = None):
-        simfile_or_chart = timing_source(simfile, chart)
-        self.bpms = BeatValues.from_str(simfile_or_chart.bpms, strict=simfile._strict)
-        self.stops = BeatValues.from_str(simfile_or_chart.stops, strict=simfile._strict)
-        self.delays = BeatValues.from_str(
-            simfile_or_chart.delays, strict=simfile._strict
-        )
+    def __init__(self, source: Union[Simfile, AttachedChart]):
+        simfile_or_chart = timing_source(source)
+        strict = strictness(source)
+        self.bpms = BeatValues.from_str(simfile_or_chart.bpms, strict=strict)
+        self.stops = BeatValues.from_str(simfile_or_chart.stops, strict=strict)
+        self.delays = BeatValues.from_str(simfile_or_chart.delays, strict=strict)
         # SMSimfile doesn't have WARPS / FAKES, so fall back to key access
-        self.warps = BeatValues.from_str(
-            simfile_or_chart.get("WARPS"), strict=simfile._strict
-        )
-        self.fakes = BeatValues.from_str(
-            simfile_or_chart.get("FAKES"), strict=simfile._strict
-        )
+        self.warps = BeatValues.from_str(simfile_or_chart.get("WARPS"), strict=strict)
+        self.fakes = BeatValues.from_str(simfile_or_chart.get("FAKES"), strict=strict)
         self.offset = Decimal(
             enforce_float_str(
                 (simfile_or_chart.offset or "").strip(),
-                strict=simfile._strict,
+                strict=strict,
                 error_message="Invalid offset",
             )
         )

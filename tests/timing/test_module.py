@@ -124,13 +124,14 @@ class TestTimingData(unittest.TestCase):
 
     def test_constructor_with_ssc_chart_without_distinct_timing_data(self):
         ssc = simfile.open("testdata/Springtime/Springtime.ssc")
+        assert isinstance(ssc, SSCSimfile)
         ssc_chart = next(
             filter(
                 lambda c: c.stepstype == "pump-single" and c.difficulty == "Hard",
                 ssc.charts,
             )
         )
-        timing_data = TimingData(ssc, ssc_chart)
+        timing_data = TimingData(ssc_chart)
         self.assertEqual(BeatValues.from_str(ssc.bpms), timing_data.bpms)
         self.assertEqual(BeatValues.from_str(ssc.stops), timing_data.stops)
         self.assertEqual(BeatValues(), timing_data.warps)
@@ -138,17 +139,18 @@ class TestTimingData(unittest.TestCase):
 
     def test_constructor_with_ssc_chart_with_distinct_timing_data(self):
         ssc = simfile.open("testdata/Springtime/Springtime.ssc")
+        assert isinstance(ssc, SSCSimfile)
         ssc_chart = next(
             filter(
                 lambda c: c.stepstype == "pump-single" and c.difficulty == "Challenge",
                 ssc.charts,
             )
         )
-        timing_data = TimingData(ssc, ssc_chart)
-        self.assertEqual(BeatValues.from_str(ssc_chart["BPMS"]), timing_data.bpms)
-        self.assertEqual(BeatValues.from_str(ssc_chart["STOPS"]), timing_data.stops)
+        timing_data = TimingData(ssc_chart)
+        self.assertEqual(BeatValues.from_str(ssc_chart.bpms), timing_data.bpms)
+        self.assertEqual(BeatValues.from_str(ssc_chart.stops), timing_data.stops)
         self.assertEqual(BeatValues(), timing_data.warps)
-        self.assertEqual(Decimal(ssc_chart["OFFSET"]), timing_data.offset)
+        self.assertEqual(Decimal(ssc_chart.offset or ""), timing_data.offset)
 
     def test_constructor_with_ssc_chart_but_too_old_version(self):
         ssc = simfile.open("testdata/Springtime/Springtime.ssc")
@@ -160,7 +162,7 @@ class TestTimingData(unittest.TestCase):
                 ssc.charts,
             )
         )
-        timing_data = TimingData(ssc, ssc_chart)
+        timing_data = TimingData(ssc)
         self.assertEqual(BeatValues.from_str(ssc.bpms), timing_data.bpms)
         self.assertEqual(BeatValues.from_str(ssc.stops), timing_data.stops)
 

@@ -1,13 +1,14 @@
 """
 Function & cla
 """
+
 from decimal import Decimal, InvalidOperation
 from typing import NamedTuple, Optional, Tuple, Union
 
 from . import BeatValues
 from ._private.timingsource import timing_source
 from ..ssc import SSCChart
-from ..types import Simfile
+from ..types import AttachedChart, Simfile
 
 
 __all__ = [
@@ -103,8 +104,8 @@ Type union of :class:`StaticDisplayBPM`, :class:`RangeDisplayBPM`, and :class:`R
 
 
 def displaybpm(
-    simfile: Simfile,
-    ssc_chart: SSCChart = SSCChart(),
+    source: Union[Simfile, AttachedChart],
+    *,
     ignore_specified: Optional[bool] = False,
 ) -> DisplayBPM:
     """
@@ -125,9 +126,9 @@ def displaybpm(
     :class:`.SSCChart` are provided, and if the chart contains any
     timing fields, the chart will be used as the source of timing.
     """
-    properties = timing_source(simfile, ssc_chart)
+    properties = timing_source(source)
     if "DISPLAYBPM" in properties and not ignore_specified:
-        displaybpm_value = properties["DISPLAYBPM"]
+        displaybpm_value = properties.displaybpm or ""
         try:
             if displaybpm_value == "*":
                 return RandomDisplayBPM()

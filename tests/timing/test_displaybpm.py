@@ -21,7 +21,7 @@ class TestDisplayBPM(unittest.TestCase):
         springtime = cast(
             SSCSimfile, simfile.open("testdata/Springtime/Springtime.ssc")
         )
-        result = displaybpm(springtime, springtime.charts[0])
+        result = displaybpm(springtime.charts[0])
         self.assertEqual(StaticDisplayBPM(value=Decimal("182")), result)
         self.assertEqual("182", str(result))
 
@@ -31,7 +31,7 @@ class TestDisplayBPM(unittest.TestCase):
         )
         del springtime["DISPLAYBPM"]
         del springtime.charts[0]["DISPLAYBPM"]
-        result = displaybpm(springtime, springtime.charts[0])
+        result = displaybpm(springtime.charts[0])
         self.assertEqual(
             RangeDisplayBPM(min=Decimal("90.843"), max=Decimal("181.685")),
             result,
@@ -70,7 +70,7 @@ class TestDisplayBPM(unittest.TestCase):
         springtime = cast(
             SSCSimfile, simfile.open("testdata/Springtime/Springtime.ssc")
         )
-        result = displaybpm(springtime, springtime.charts[0], ignore_specified=True)
+        result = displaybpm(springtime.charts[0], ignore_specified=True)
         self.assertEqual(
             RangeDisplayBPM(min=Decimal("90.843"), max=Decimal("181.685")),
             result,
