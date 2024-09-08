@@ -91,18 +91,6 @@ class OrderedDictPropertyForwarder:
     def __iter__(self):
         return self._properties.__iter__()
 
-    def clear_properties(self):
-        return self._properties.clear()
-
-    def copy_properties(self):
-        return self._properties.copy()
-
-    def update_properties(
-        self,
-        other: OrderedDictPropertyType,
-    ):
-        self._properties.update(other)
-
     def move_to_end(self, key, last=True):
         return self._properties.move_to_end(key, last)
 

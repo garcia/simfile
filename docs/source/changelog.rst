@@ -58,11 +58,9 @@ Breaking changes
     by :data:`.Simfile` and :data:`.Chart`
     are **not** forwarded:
     
-    * The ``popitem``, ``reversed``, and ``setdefault`` methods from ``dict`` are no longer supported.
+    * The ``clear``, ``copy``, ``popitem``, ``reversed``, ``setdefault``,
+      and ``update`` methods from ``dict`` are no longer supported.
     * The ``|`` and ``|=`` operators are no longer supported.
-    * The ``clear``, ``copy``, and ``update`` methods are exposed as
-      :meth:`~.clear_properties`, :meth:`~.copy_properties`, and :meth:`~.update_properties`
-      for clarity.
     
     These operations **are** forwarded and should behave the same as before:
     
