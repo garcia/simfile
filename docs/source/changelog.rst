@@ -111,6 +111,20 @@ even made mistakes like these!
 Enhancements
 ~~~~~~~~~~~~
 
+Strict or non-strict parsing is now pervasive
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Simfiles and charts now know whether they were opened with strict parsing
+(or default to `False` when created in memory).
+When a simfile is parsed with ``strict=False``:
+
+* Stray text and missing semicolon recovery
+  are both allowed during MSD parsing.
+* :class:`.BeatValues` uses a lenient float parser
+  that permits trailing junk data.
+..
+  TODO: :class:`.NoteData`, :func:`.group_notes`
+
 Attached charts
 ^^^^^^^^^^^^^^^
 

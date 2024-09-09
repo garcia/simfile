@@ -248,12 +248,14 @@ def mutate(
 
     If an `output_filename` is provided, the modified simfile will be
     written to that filename upon exit from the context manager.
-    Otherwise, it will be written back to the `input_filename`.
+    If no `output_filename` is provided, the modified simfile will be
+    written back to the `input_filename` instead.
 
-    If a `backup_filename` is provided, the *original* simfile will be
-    written to that filename upon exit from the context manager.
-    Otherwise, no backup copy will be written. `backup_filename` must
-    be distinct from `input_filename` and `output_filename` if present.
+    If a `backup_filename` is provided, the *original* simfile will
+    additionally be written to that filename upon exit from the context
+    manager. Otherwise, no backup copy will be written. `backup_filename`
+    must be distinct from `input_filename` and `output_filename` if
+    present.
 
     If the context manager catches an exception, nothing will be
     written to disk, and the exception will be re-thrown. To prevent
