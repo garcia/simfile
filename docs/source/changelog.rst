@@ -84,12 +84,12 @@ These operations **are** forwarded and should behave the same as before:
 a :data:`.Simfile` *or* an :data:`.AttachedChart`
 (a chart taken from a :data:`.Simfile` - more on this below).
 Previously, they took one or two arguments,
-a required :data:`.Simfile` and an optional :class:`.Chart`.
+a required :data:`.Simfile` and an optional :data:`.Chart`.
 
-If your code passed both a :data:`.Simfile` and a :class:`.Chart`
+If your code passed both a :data:`.Simfile` and a :data:`.Chart`
 to either of these classes/functions,
 you can probably fix it by removing the first argument (the simfile).
-However, this might not work if your :class:`.Chart` is not an :data:`.AttachedChart`.
+However, this might fail if your :data:`.Chart` is not an :data:`.AttachedChart`.
 In that case, append your chart to the simfile's :attr:`~.BaseSimfile.charts`
 to *attach* it to the simfile.
 Then you can read the attached chart back from the simfile's :attr:`~.BaseSimfile.charts`.
@@ -140,8 +140,8 @@ It also fixes a few parsing bugs described below.
 Bugfixes
 ~~~~~~~~
 
-New, correct :mod:`simfile.notes.counter` module
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Note counts match StepMania
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The :mod:`simfile.notes.count` module has been replaced
 by :mod:`simfile.notes.counter`.
