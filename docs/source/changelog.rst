@@ -14,6 +14,12 @@ Breaking changes
     **simfile** 3.0 introduces some breaking changes
     that you may need to update your code to handle:
 
+    **Python 3.10 or higher required**
+
+    **simfile**'s minimum Python version was raised from 3.6 to 3.10.
+
+    ----
+
     **Strict parsing is now off by default**
 
     Functions in the top-level module,
@@ -69,8 +75,44 @@ Breaking changes
     * The ``move_to_end`` method from ``OrderedDict``
     * The ``keys``, ``values``, ``items``, ``get``, and ``pop`` methods from ``dict``
 
+    **TimingData and displaybpm parameters changed**
+
+    :class:`.TimingData` and :func:`.displaybpm` both now take a single argument,
+    a :data:`.Simfile` *or* an :data:`.AttachedChart`
+    (a chart taken from a :data:`.Simfile` - more on this below).
+    Previously, they took one or two arguments,
+    a required :data:`.Simfile` and an optional :class:`.Chart`.
+
+    If your code passed both a :data:`.Simfile` and a :class:`.Chart`
+    to either of these classes/functions,
+    you can probably fix it by removing the first argument (the simfile).
+    However, this might not work if your :class:`.Chart` is not an :data:`.AttachedChart`.
+    In that case, append your chart to the simfile's :attr:`~.BaseSimfile.charts`
+    to *attach* it to the simfile.
+    Then you can read the attached chart back from the simfile's :attr:`~.BaseSimfile.charts`.
+
+    **group_notes' "include_note_types" argument removed**
+
+    :func:`.group_notes`' optional `include_note_types` parameter was removed.
+    Use the built-in ``filter`` function on the input note data instead.
+
+    It was unclear how this parameter interacted with the other parameters.
+    The fact that such a simple operation was included as a parameter
+    suggested that it would do something "smarter" under the hood.
+    Consequently, it was very easy to make mistakes
+    like excluding :data:`.NoteType.TAIL` while setting `join_heads_to_tails` to `True`.
+    Other submodules of **simfile** that used :func:`.group_notes` under the hood
+    even made mistakes like these!
+
+
 Uncategorized
 ~~~~~~~~~~~~~
+
+All charts under a simfile's :attr:`~.charts` attribute
+are now instances of :data:`.AttachedChart`,
+which is a type union for :class:`.AttachedSMChart` and :class:`.AttachedSSCChart`.
+These are subclasses of :class:`.SMChart` and :class:`.SSCChart`
+that store a reference to the simfile they came from.
 
 * The plural :class:`.SMCharts` and :class:`.SSCCharts` classes
   are now lists of :class:`.AttachedSMChart` and :class:`.AttachedSSCChart` objects,
@@ -80,9 +122,6 @@ Uncategorized
   Adding a detached :class:`.SMChart` or :class:`.SSCChart` object
   to a :class:`.SMCharts` or :class:`.SSCCharts` list
   will create an attached copy and add that to the list instead.
-* :func:`.group_notes`' `include_note_types` argument was removed.
-  Instead, use the built-in `filter` method
-  on an iterable of :class:`Note` or :class:`GroupedNotes` objects as appropriate.
 
 New features
 ~~~~~~~~~~~~
