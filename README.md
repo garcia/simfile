@@ -2,21 +2,21 @@
 
 A modern simfile parsing & editing library for Python 3.
 
-Full documentation can be found on **[Read the Docs](https://simfile.readthedocs.io/en/latest/)**.
+Full documentation can be found on **[Read the Docs](https://simfile.readthedocs.io/en/main/)**.
 
 ## Features
 
 * Supports both SM and SSC files
-  - [Format-agnostic API for reading & writing simfiles](https://simfile.readthedocs.io/en/latest/reading-writing.html)
-  - [SM ↔︎ SSC conversion](https://simfile.readthedocs.io/en/latest/autoapi/simfile/convert/index.html)
-* [Timing data support](https://simfile.readthedocs.io/en/latest/timing-note-data.html#reading-timing-data)
-  - [Beat ↔︎ song time conversion](https://simfile.readthedocs.io/en/latest/timing-note-data.html#converting-song-time-to-beats)
+  - [Format-agnostic API for reading & writing simfiles](https://simfile.readthedocs.io/en/main/reading-writing.html)
+  - [SM ↔︎ SSC conversion](https://simfile.readthedocs.io/en/main/autoapi/simfile/convert/index.html)
+* [Timing data support](https://simfile.readthedocs.io/en/main/timing-note-data.html#reading-timing-data)
+  - [Beat ↔︎ song time conversion](https://simfile.readthedocs.io/en/main/timing-note-data.html#converting-song-time-to-beats)
   - Handles BPM changes, stops, delays and warps
   - Accepts "split timing" from SSC charts
-* [Note streams from charts](https://simfile.readthedocs.io/en/latest/timing-note-data.html#reading-note-data)
-  - [Algorithms for grouping jumps & hold/roll head/tail notes](https://simfile.readthedocs.io/en/latest/timing-note-data.html#handling-holds-rolls-and-jumps)
-  - [Flexible note counting functions](https://simfile.readthedocs.io/en/latest/timing-note-data.html#counting-notes)
-  - [Timing data integration](https://simfile.readthedocs.io/en/latest/timing-note-data.html#combining-notes-and-time)
+* [Note streams from charts](https://simfile.readthedocs.io/en/main/timing-note-data.html#reading-note-data)
+  - [Algorithms for grouping jumps & hold/roll head/tail notes](https://simfile.readthedocs.io/en/main/timing-note-data.html#handling-holds-rolls-and-jumps)
+  - [Flexible note counting functions](https://simfile.readthedocs.io/en/main/timing-note-data.html#counting-notes)
+  - [Timing data integration](https://simfile.readthedocs.io/en/main/timing-note-data.html#combining-notes-and-time)
 * Fully typed, documented, and tested API
 
 ## Installation
