@@ -10,4 +10,4 @@ sphinx:
   configuration: docs/source/conf.py
 python:
   install:
-    - requirements: requirements-dev.lock
+    - requirements: requirements-dev.txt
