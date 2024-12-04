@@ -105,6 +105,29 @@ class TestSMChart(unittest.TestCase):
 
         self.assertEqual(extradata, unit.extradata)
         self.assertTrue(str(unit).endswith(f":{':'.join(extradata)};\n"))
+    
+    def test_items(self):
+        unit = SMChart.from_msd_parameter(testing_chart())
+        items = unit.items()
+
+        self.assertEqual(len(items), 6)
+        self.assertIn(('STEPSTYPE', 'dance-single'), items)
+        self.assertIn(('DESCRIPTION', 'Brackets'), items)
+        self.assertIn(('DIFFICULTY', 'Edit'), items)
+        self.assertIn(('METER', '12'), items)
+        self.assertIn(('RADARVALUES', '0.793,1.205,0.500,0.298,0.961'), items)
+        self.assertIn(('NOTES', '0000\n0000\n0000\n0000'), items)
+    
+    def test_keys(self):
+        unit = SMChart.from_msd_parameter(testing_chart())
+        self.assertEqual(
+            set(unit.keys()),
+            set(('STEPSTYPE', 'DESCRIPTION', 'DIFFICULTY', 'METER', 'RADARVALUES', 'NOTES')),
+        )
+    
+    def test_values(self):
+        unit = SMChart.from_msd_parameter(testing_chart())
+        self.assertRaises(NotImplementedError, unit.values)
 
 
 class TestSMCharts(unittest.TestCase):

@@ -106,8 +106,6 @@ class TestSimfileModule(TestCase):
         sm = simfile.open("testing_simfile.sm")
 
         self.assertIsInstance(sm, SMSimfile)
-        print(sm._properties)
-        print(SMSimfile(string=test_sm.testing_simfile())._properties)
         self.assertEqual(SMSimfile(string=test_sm.testing_simfile()), sm)
 
     def test_open_with_ssc_file(self):

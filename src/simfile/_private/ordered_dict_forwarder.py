@@ -68,7 +68,7 @@ OrderedDictPropertyType = Union[
 
 class OrderedDictPropertyForwarder:
     _properties: OrderedDict[str, Property]
-    _default_property: Property
+    _default_parameter: MSDParameter
 
     def __len__(self):
         return self._properties.__len__()
@@ -81,7 +81,7 @@ class OrderedDictPropertyForwarder:
         try:
             property: Property = self._properties.__getitem__(key)
         except KeyError:
-            property = deepcopy(self._default_property)
+            property = Property('', self._default_parameter)
             self._properties.__setitem__(key, property)
         property.value = value
 

@@ -58,7 +58,7 @@ class BaseObject(MSDSerializable, OrderedDictPropertyForwarder, metaclass=ABCMet
         def item_property(self: OrderedDictPropertyForwarder, value: str) -> None:
             key = _name_or_alias(self)
             if not key in self._properties:
-                default_msd_parameter = self._default_property.msd_parameter
+                default_msd_parameter = self._default_parameter
                 self._properties[key] = Property(
                     value=value,
                     msd_parameter=MSDParameter(
@@ -97,7 +97,7 @@ class BaseChart(BaseObject, metaclass=ABCMeta):
     """
 
     _properties: "OrderedDict[str, Property]"
-    _default_property: Property
+    _default_parameter: MSDParameter
 
     stepstype = BaseObject._item_property("STEPSTYPE")
     description = BaseObject._item_property("DESCRIPTION")
@@ -108,7 +108,7 @@ class BaseChart(BaseObject, metaclass=ABCMeta):
 
     def __init__(self):
         self._properties = OrderedDict()
-        self._default_property = Property("", MSDParameter(("",), suffix=";\n"))
+        self._default_parameter = MSDParameter(("",), suffix=";\n")
 
     @abstractmethod
     def _parse(self, parser: MSDIterator):
@@ -195,7 +195,7 @@ class BaseSimfile(BaseObject, metaclass=ABCMeta):
     """
 
     _properties: "OrderedDict[str, Property]"
-    _default_property: Property
+    _default_parameter: MSDParameter
     _strict: bool
 
     MULTI_VALUE_PROPERTIES = ("ATTACKS", "DISPLAYBPM")
@@ -245,7 +245,7 @@ class BaseSimfile(BaseObject, metaclass=ABCMeta):
         strict: bool = True,
     ):
         self._properties = OrderedDict()
-        self._default_property = Property("", MSDParameter(("",), suffix=";\n"))
+        self._default_parameter = MSDParameter(("",), suffix=";\n")
         self._strict = strict
 
         provided_inputs = [inp for inp in [file, string, tokens] if inp is not None]
@@ -279,18 +279,23 @@ class BaseSimfile(BaseObject, metaclass=ABCMeta):
         """
 
     def serialize(self, file: TextIO):
-        for key, value in self._properties.items():
+        for key, property in self._properties.items():
             if key in BaseSimfile.MULTI_VALUE_PROPERTIES:
-                components = (key, *value.value.split(":"))
-            elif len(value.msd_parameter.components) == 1 and not value.value:
+                components = (key, *property.value.split(":"))
+            elif len(property.msd_parameter.components) == 1 and not property.value:
                 components = (key,)
             else:
-                components = (key, value.value)
+                components = (key, property.value)
+            
+            # Don't try to preserve comments & exact escapes if the value changed
+            preserve_ephemera = property.value == property.msd_parameter.value
+            
             param = MSDParameter(
                 components,
-                preamble=value.msd_parameter.preamble,
-                comments=value.msd_parameter.comments,
-                suffix=value.msd_parameter.suffix,
+                preamble=property.msd_parameter.preamble,
+                comments=property.msd_parameter.comments if preserve_ephemera else None,
+                escape_positions=property.msd_parameter.escape_positions if preserve_ephemera else None,
+                suffix=property.msd_parameter.suffix,
             )
             param.serialize(file, exact=True)
 

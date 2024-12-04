@@ -3,6 +3,7 @@ Simfile & chart classes for SSC files.
 """
 
 from copy import deepcopy
+from dataclasses import replace
 from typing import Iterable, Iterator, Optional, Sequence, Type
 
 from msdparser import parse_msd, MSDParameter
@@ -126,8 +127,9 @@ class SSCChart(BaseChart):
                 break
 
     def serialize(self, file):
-        notedata_property = self._properties["NOTEDATA"] or deepcopy(
-            self._default_property
+        notedata_property = self._properties["NOTEDATA"] or Property(
+            "",
+            replace(self._default_parameter.msd_parameter, components=('NOTEDATA',)),
         )
         notedata_property.msd_parameter.serialize(file, exact=True)
 
@@ -280,8 +282,18 @@ class SSCSimfile(BaseSimfile):
     def _parse(self, parser: MSDIterator):
         self.charts = SSCCharts(simfile=self)
         partial_chart: Optional[SSCChart] = None
-
+        suffix_heuristic = ';\n'
+        suffix_heuristic_match = False
+        
         for param in parser:
+            # Determine a default parameter suffix from the input
+            if not suffix_heuristic_match:
+                if param.suffix == suffix_heuristic:
+                    suffix_heuristic_match = True
+                    self._default_parameter = replace(self._default_parameter, suffix=suffix_heuristic)
+                else:
+                    suffix_heuristic = param.suffix
+            
             upper_key = param.key.upper()
 
             if upper_key in BaseSimfile.MULTI_VALUE_PROPERTIES:

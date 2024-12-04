@@ -3,6 +3,7 @@ Simfile & chart classes for SM files.
 """
 
 from copy import deepcopy
+from dataclasses import replace
 from typing import Iterable, Iterator, List, Optional, Sequence, Type
 
 from msdparser import MSDParameter
@@ -45,6 +46,12 @@ class SMChart(BaseChart):
     """
     If the chart data contains more than 6 components, the extra
     components will be stored in this attribute.
+    """
+
+    _real_property: Property
+    """
+    The actual MSD property for this chart,
+    including its surrounding whitespace & any comments.
     """
 
     @classmethod
@@ -130,17 +137,10 @@ class SMChart(BaseChart):
 
         # SMChart abuses the _properties OrderedDict to preserve whitespace
         # for things that are technically not MSD parameters themselves.
-        # Here we store the input param under a NOTES pseudo-param.
-        self._properties["OUTER"] = Property(
+        # Store the original MSD data on another private attribute instead.
+        self._real_property = Property(
             "",  # unused
-            msd_parameter=MSDParameter(
-                # TODO: cache all the components, not just the key
-                # (we need this so we can determine if the comments should be removed)
-                components=(param.key,),
-                comments=param.comments,
-                preamble=param.preamble,
-                suffix=param.suffix,
-            ),
+            msd_parameter=deepcopy(param),
         )
 
         for property, value in zip(SM_CHART_PROPERTIES, param.components[1:]):
@@ -175,9 +175,7 @@ class SMChart(BaseChart):
                 + property.msd_parameter.suffix  # whitespace after field
             )
 
-        # Pseudo-param for the whole NOTES parameter
-        # (Includes comments & actual ';' suffix)
-        notes_param = self._properties["OUTER"].msd_parameter
+        real_param = self._real_property.msd_parameter
 
         param = MSDParameter(
             components=(
@@ -188,15 +186,16 @@ class SMChart(BaseChart):
                 ),
                 *(self.extradata or ()),
             ),
-            preamble=notes_param.preamble,
-            comments=notes_param.comments,
-            suffix=notes_param.suffix,
+            preamble=real_param.preamble,
+            comments=real_param.comments,
+            suffix=real_param.suffix,
         )
         file.write(param.stringify(exact=True))
 
     def _attach(self, simfile: "SMSimfile") -> "AttachedSMChart":
         attached = AttachedSMChart(simfile)
-        attached._default_property = deepcopy(self._default_property)
+        attached._default_parameter = deepcopy(self._default_parameter)
+        attached._real_property = deepcopy(self._real_property)
         attached._properties = self._properties.copy()
         return attached
 
@@ -242,13 +241,9 @@ class SMChart(BaseChart):
         """Raises NotImplementedError."""
         raise NotImplementedError
 
-    # Prevent the pseudo "OUTER" item from leaking
-    def items(self) -> Sequence[tuple[str, str]]:
-        return [
-            (key, property.value)
-            for key, property in self._properties.items()
-            if key != "OUTER"
-        ]
+    def values(self) -> frozenset[str]:
+        """Raises NotImplementedError."""
+        raise NotImplementedError
 
 
 class AttachedSMChart(SMChart, BaseAttachedChart):
@@ -287,7 +282,18 @@ class SMSimfile(BaseSimfile):
 
     def _parse(self, parser: MSDIterator):
         self._charts = SMCharts(simfile=self)
+        suffix_heuristic = ';\n'
+        suffix_heuristic_match = False
+
         for param in parser:
+            # Determine a default parameter suffix from the input
+            if not suffix_heuristic_match:
+                if param.suffix == suffix_heuristic:
+                    suffix_heuristic_match = True
+                    self._default_parameter = replace(self._default_parameter, suffix=suffix_heuristic)
+                else:
+                    suffix_heuristic = param.suffix
+            
             upper_key = param.key.upper()
             if upper_key == "NOTES":
                 self.charts.append(SMChart.from_msd_parameter(param))
