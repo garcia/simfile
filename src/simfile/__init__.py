@@ -229,7 +229,8 @@ def openpack(
 
 class CancelMutation(BaseException):
     """
-    Raise from inside a :func:`mutate` block to prevent saving the simfile.
+    Raise this exception from inside a :func:`mutate` block
+    to prevent saving the simfile.
     """
 
 
@@ -244,7 +245,8 @@ def mutate(
     **kwargs,
 ) -> Iterator[Simfile]:
     """
-    Context manager that loads & saves a simfile by filename.
+    Context manager that loads a simfile by filename,
+    runs its `with` block, then saves the simfile back to disk.
 
     If an `output_filename` is provided, the modified simfile will be
     written to that filename upon exit from the context manager.
@@ -262,10 +264,11 @@ def mutate(
     saving without causing the context manager to re-throw an
     exception, raise :class:`CancelMutation`.
 
-    Keyword arguments are passed to the builtin :code:`open` function.
-    Uses :func:`open_with_detected_encoding` to detect & preserve the
-    encoding. The list of encodings can be overridden by supplying
-    `try_encodings`.
+    This function uses :func:`open_with_detected_encoding` under the
+    hood to detect & preserve the input file's encoding. The list of
+    encodings can be overridden by supplying `try_encodings`.
+
+    Any extra `kwargs` are passed to the builtin :code:`open` function.
     """
     if backup_filename:
         if backup_filename in (input_filename, output_filename):

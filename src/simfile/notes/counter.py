@@ -56,23 +56,52 @@ def _filter_notes(
 
 
 def count_taps(chart: AttachedChart):
+    """
+    Reproduce StepMania's tap note count,
+    which includes all taps, hold heads, roll heads, and lifts.
+
+    This count can be found in the StepMania editor,
+    where these note types are counted individually.
+    """
     filtered_notes = _filter_notes(chart, _COUNT_TAPS_NOTE_TYPES, drop_fake=True)
     return sum(1 for _ in filtered_notes)
 
 
 def count_steps(chart: AttachedChart):
+    """
+    Reproduce StepMania's step count,
+    which includes taps, hold heads, roll heads, and lifts.
+    Steps are grouped by beat, meaning e.g. jumps are counted as single steps.
+
+    This count can be found on StepMania's music select screen.
+    """
     filtered_notes = _filter_notes(chart, _COUNT_STEPS_NOTE_TYPES, drop_fake=True)
     grouped_notes = group_notes(filtered_notes, same_beat_notes=SameBeatNotes.JOIN_ALL)
     return sum(1 for _ in grouped_notes)
 
 
 def count_jumps(chart: AttachedChart):
+    """
+    Reproduce StepMania's jump count,
+    which includes taps, hold heads, roll heads, and lifts.
+    Jumps consist of 2 or more of the above note types on the same beat.
+
+    This count can be found on StepMania's music select screen.
+    """
     filtered_notes = _filter_notes(chart, _COUNT_STEPS_NOTE_TYPES, drop_fake=True)
     grouped_notes = group_notes(filtered_notes, same_beat_notes=SameBeatNotes.JOIN_ALL)
     return sum(1 for gn in grouped_notes if len(gn) > 2)
 
 
 def count_hands(chart: AttachedChart):
+    """
+    Reproduce StepMania's hand count.
+    Hands consist of 3 or more _active notes_ on a given step,
+    where active notes consist of steps and active hold/roll notes
+    (whether their bodies or tails).
+
+    This count can be found on StepMania's music select screen.
+    """
     active_tailed_notes: list[NoteWithTail] = []
     hands = 0
 
@@ -103,19 +132,45 @@ def count_hands(chart: AttachedChart):
 
 
 def count_holds(chart: AttachedChart):
+    """
+    Reproduce StepMania's hold count.
+    This is a straightforward tally of hold heads in the chart.
+
+    This count can be found on StepMania's music select screen.
+    """
     filtered_notes = _filter_notes(chart, (NoteType.HOLD_HEAD,), drop_fake=True)
     return sum(1 for note in filtered_notes)
 
 
 def count_rolls(chart: AttachedChart):
+    """
+    Reproduce StepMania's roll count.
+    This is a straightforward tally of roll heads in the chart.
+
+    This count can be found on StepMania's music select screen.
+    """
     filtered_notes = _filter_notes(chart, (NoteType.ROLL_HEAD,), drop_fake=True)
     return sum(1 for note in filtered_notes)
 
 
 def count_mines(chart: AttachedChart):
+    """
+    Reproduce StepMania's mine count.
+    This is a straightforward tally of mines in the chart.
+
+    This count can be found on StepMania's music select screen.
+    """
     filtered_notes = _filter_notes(chart, (NoteType.MINE,), drop_fake=True)
     return sum(1 for note in filtered_notes)
 
 
 def count_fakes(chart: AttachedChart):
+    """
+    Reproduce StepMania's fake count.
+    Fakes consist of all notes that aren't hittable,
+    whether due to a warp region, fake segment,
+    or being a literal fake note type ("F" in note data).
+
+    This count can be found on StepMania's music select screen.
+    """
     return sum(1 if not note.hittable else 0 for note in time_chart(chart))
