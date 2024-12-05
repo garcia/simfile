@@ -3,6 +3,20 @@
 Changelog
 =========
 
+v3.0.0-alpha.2
+--------------
+
+* A dummy property on :class:`.SMChart` introduced in alpha.1
+  was moved to a private attribute to stop it from leaking
+  via methods forwarded to the underlying ``OrderedDict``.
+* Newly created properties on :data:`.Simfile` objects
+  now use a heuristic to determine their suffix
+  (the ``;`` and any following whitespace)
+  based on the initial properties seen in the simfile.
+  For example,
+  a newly-added property on a file containing Windows-style newlines
+  will have its suffix set to ``;\r\n`` to match the rest of the file.
+
 v3.0.0-alpha.1
 --------------
 
@@ -53,6 +67,9 @@ join them with a comma::
   pip install 'simfile[assets,fs]'  # or...
   poetry add 'simfile[assets,fs]'  # or...
   rye add simfile --features assets,fs
+
+Which command to use depends on what package manager you're using for your project.
+If you're unsure, use the ``pip`` command.
 
 Some dict operations no longer supported on simfiles & charts
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -137,12 +154,18 @@ that store a reference to the simfile they came from.
 Simfile (de)serialization is now exact
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Deserializing and serializing a :data:`.Simfile` is now byte-for-byte symmetric.
+Deserializing and serializing a :data:`.Simfile` is now byte-for-byte symmetric
+_in most cases_.
 For example,
 if you open a simfile with :func:`simfile.mutate`
 and don't make any changes,
-the output file will exactly match the input file.
+the output file should exactly match the input file.
 This includes whitespace, comments, and any other ephemeral details.
+
+.. note::
+  
+  **Known exceptions:** Duplicate and lowercase keys currently break this claim.
+  These are both slated to be resolved before the stable 3.0 release.
 
 msdparser upgraded
 ^^^^^^^^^^^^^^^^^^
@@ -163,6 +186,10 @@ The :mod:`.counter` module contains functions with the same names,
 but which take an :data:`.AttachedChart` instead of :class:`.NoteData`.
 This enables these functions to **omit fake notes from counts**,
 fixing a long-standing misparity with StepMania's counts.
+
+Additionally,
+:func:`.count_hands` now takes active holds and rolls into account.
+This fixes hands being undercounted when compared to StepMania.
 
 Asset discovery matches StepMania
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
