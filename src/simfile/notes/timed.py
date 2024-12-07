@@ -32,7 +32,7 @@ def time_notes(
     engine = TimingEngine(timing_data)
 
     for note in note_data:
-        hittable = engine.hittable(note.beat)
+        hittable = engine.hittable(note.beat) and note.note_type != NoteType.FAKE
         yield TimedNote(
             time=engine.time_at(note.beat),
             note=note,
