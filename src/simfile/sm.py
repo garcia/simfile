@@ -48,7 +48,7 @@ class SMChart(BaseChart):
     components will be stored in this attribute.
     """
 
-    _real_property: Property
+    _real_parameter: MSDParameter
     """
     The actual MSD property for this chart,
     including its surrounding whitespace & any comments.
@@ -138,14 +138,14 @@ class SMChart(BaseChart):
         # SMChart abuses the _properties OrderedDict to preserve whitespace
         # for things that are technically not MSD parameters themselves.
         # Store the original MSD data on another private attribute instead.
-        self._real_property = Property(
-            "",  # unused
-            msd_parameter=deepcopy(param),
-        )
+        self._real_parameter = deepcopy(param)
 
         for property, value in zip(SM_CHART_PROPERTIES, param.components[1:]):
-            leading_ws = value[: len(value) - len(value.lstrip())]
-            trailing_ws = value[len(value.rstrip()) :]
+            value_lstripped = value.lstrip()
+            leading_ws = value[: len(value) - len(value_lstripped)]
+            # Start from the lstripped value so that we don't double-count
+            # the whitespace on empty properties.
+            trailing_ws = value_lstripped[len(value_lstripped.rstrip()) :]
             # Here we store the whitespace around each component
             # as pseudo-properties with a preamble & suffix.
             self._properties[property] = Property(
@@ -175,7 +175,7 @@ class SMChart(BaseChart):
                 + property.msd_parameter.suffix  # whitespace after field
             )
 
-        real_param = self._real_property.msd_parameter
+        real_param = self._real_parameter
 
         param = MSDParameter(
             components=(
@@ -195,7 +195,7 @@ class SMChart(BaseChart):
     def _attach(self, simfile: "SMSimfile") -> "AttachedSMChart":
         attached = AttachedSMChart(simfile)
         attached._default_parameter = deepcopy(self._default_parameter)
-        attached._real_property = deepcopy(self._real_property)
+        attached._real_parameter = deepcopy(self._real_parameter)
         attached._properties = self._properties.copy()
         return attached
 
@@ -282,7 +282,7 @@ class SMSimfile(BaseSimfile):
 
     def _parse(self, parser: MSDIterator):
         self._charts = SMCharts(simfile=self)
-        suffix_heuristic = ';\n'
+        suffix_heuristic = ";\n"
         suffix_heuristic_match = False
 
         for param in parser:
@@ -290,10 +290,12 @@ class SMSimfile(BaseSimfile):
             if not suffix_heuristic_match:
                 if param.suffix == suffix_heuristic:
                     suffix_heuristic_match = True
-                    self._default_parameter = replace(self._default_parameter, suffix=suffix_heuristic)
+                    self._default_parameter = replace(
+                        self._default_parameter, suffix=suffix_heuristic
+                    )
                 else:
                     suffix_heuristic = param.suffix
-            
+
             upper_key = param.key.upper()
             if upper_key == "NOTES":
                 self.charts.append(SMChart.from_msd_parameter(param))
