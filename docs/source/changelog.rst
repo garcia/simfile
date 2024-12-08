@@ -3,20 +3,6 @@
 Changelog
 =========
 
-v3.0.0-alpha.2
---------------
-
-* A dummy property on :class:`.SMChart` introduced in alpha.1
-  was moved to a private attribute to stop it from leaking
-  via methods forwarded to the underlying ``OrderedDict``.
-* Newly created properties on :data:`.Simfile` objects
-  now use a heuristic to determine their suffix
-  (the ``;`` and any following whitespace)
-  based on the initial properties seen in the simfile.
-  For example,
-  a newly-added property on a file containing Windows-style newlines
-  will have its suffix set to ``;\r\n`` to match the rest of the file.
-
 v3.0.0-alpha.1
 --------------
 
@@ -167,12 +153,21 @@ This includes whitespace, comments, and any other ephemeral details.
   **Known exceptions:** Duplicate and lowercase keys currently break this claim.
   These are both slated to be resolved before the stable 3.0 release.
 
+Similarly,
+newly created properties on :data:`.Simfile` objects
+now use a heuristic to determine their suffix
+(the ``;`` and any following whitespace)
+based on the initial properties seen in the simfile.
+For example,
+a newly-added property on a file containing Windows-style newlines
+will have its suffix set to ``;\r\n`` to match the rest of the file.
+
 msdparser upgraded
 ^^^^^^^^^^^^^^^^^^
 
 **simfile**'s dependency on **msdparser** was bumped to 3.0.
 This is what made the byte-for-byte symmetry described above possible.
-It also fixes a few parsing bugs described below.
+It also fixes a few parsing bugs that are described below.
 
 Bugfixes
 ~~~~~~~~
@@ -181,25 +176,25 @@ Note counts match StepMania
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The :mod:`simfile.notes.count` module has been replaced
-by :mod:`simfile.notes.counter`.
-The :mod:`.counter` module contains functions with the same names,
+by :mod:`simfile.notes.counter`,
+which **omits fake notes from counts**.
+The :mod:`.counter` module contains many functions with the same names,
 but which take an :data:`.AttachedChart` instead of :class:`.NoteData`.
-This enables these functions to **omit fake notes from counts**,
-fixing a long-standing misparity with StepMania's counts.
+This fixes a long-standing misparity with StepMania's counts.
 
 Additionally,
 :func:`.count_hands` now takes active holds and rolls into account.
 This fixes hands being undercounted when compared to StepMania.
 
-Asset discovery matches StepMania
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-:class:`.Assets` now discovers images by their dimensions
-when no filename-based match is found,
-using the same thresholds as StepMania.
-This fix required pulling in **pillow** as a dependency,
-which is why this feature now requires
-specifying the ``assets`` extra during installation.
+.. 
+  Asset discovery matches StepMania
+  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  :class:`.Assets` now discovers images by their dimensions
+  when no filename-based match is found,
+  using the same thresholds as StepMania.
+  This fix required pulling in **pillow** as a dependency,
+  which is why this feature now requires
+  specifying the ``assets`` extra during installation.
 
 Missing semicolon recovery matches StepMania
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
