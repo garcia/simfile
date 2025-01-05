@@ -254,7 +254,7 @@ class TestSSCSimfile(unittest.TestCase):
             #TITLE:Colons should be preserved below: but not here;
             #DISPLAYBPM:60:240;
             #ATTACKS:TIME=1.000:LEN=0.500:MODS=*5 -2.5 reverse;
-        """
+            """
         )
         self.assertEqual(
             "Colons should be preserved below", with_multi_value_properties.title

@@ -289,7 +289,7 @@ class SSCSimfile(BaseSimfile):
     def _parse(self, parser: MSDIterator):
         self.charts = SSCCharts(simfile=self)
         partial_chart: Optional[SSCChart] = None
-        suffix_heuristic = ';\n'
+        suffix_heuristic = ";\n"
         suffix_heuristic_match = False
         
         for param in parser:
@@ -297,10 +297,12 @@ class SSCSimfile(BaseSimfile):
             if not suffix_heuristic_match:
                 if param.suffix == suffix_heuristic:
                     suffix_heuristic_match = True
-                    self._default_parameter = replace(self._default_parameter, suffix=suffix_heuristic)
+                    self._default_parameter = replace(
+                        self._default_parameter, suffix=suffix_heuristic
+                    )
                 else:
                     suffix_heuristic = param.suffix
-            
+
             upper_key = param.key.upper()
 
             if upper_key in BaseSimfile.MULTI_VALUE_PROPERTIES:

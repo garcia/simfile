@@ -292,15 +292,19 @@ class BaseSimfile(BaseObject, metaclass=ABCMeta):
                 components = (key,)
             else:
                 components = (key, property.value)
-            
+
             # Don't try to preserve comments & exact escapes if the value changed
             preserve_ephemera = property.value == property.msd_parameter.value
-            
+
             param = MSDParameter(
                 components,
                 preamble=property.msd_parameter.preamble,
                 comments=property.msd_parameter.comments if preserve_ephemera else None,
-                escape_positions=property.msd_parameter.escape_positions if preserve_ephemera else None,
+                escape_positions=(
+                    property.msd_parameter.escape_positions
+                    if preserve_ephemera
+                    else None
+                ),
                 suffix=property.msd_parameter.suffix,
             )
             param.serialize(file, exact=True)
