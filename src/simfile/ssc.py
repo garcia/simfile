@@ -129,38 +129,45 @@ class SSCChart(BaseChart):
     def serialize(self, file):
         notedata_property = self._properties["NOTEDATA"] or Property(
             "",
-            replace(self._default_parameter.msd_parameter, components=('NOTEDATA',)),
+            replace(self._default_parameter, components=("NOTEDATA",)),
         )
         notedata_property.msd_parameter.serialize(file, exact=True)
 
         notes_key = "NOTES"
 
-        for upper_key, value in self._properties.items():
+        for upper_key, property in self._properties.items():
             if upper_key == "NOTEDATA":
                 continue
 
-            if value.msd_parameter.key.upper() == upper_key:
-                key = value.msd_parameter.key
+            if property.msd_parameter.key.upper() == upper_key:
+                key = property.msd_parameter.key
             else:
                 key = upper_key
 
             # Either NOTES or NOTES2 must be the last chart property
-            if value.value is self.notes:
+            if property.value is self.notes:
                 notes_key = key
                 continue
 
             if upper_key in BaseSimfile.MULTI_VALUE_PROPERTIES:
-                components = (key, *value.value.split(":"))
+                components = (key, *property.value.split(":"))
             else:
-                components = (key, value.value)
+                components = (key, property.value)
+
+            # Don't try to preserve comments & exact escapes if the value changed
+            preserve_ephemera = property.value == property.msd_parameter.value
 
             param = MSDParameter(
-                components=components,
-                preamble=value.msd_parameter.preamble,
-                comments=value.msd_parameter.comments,
-                suffix=value.msd_parameter.suffix,
+                components,
+                preamble=property.msd_parameter.preamble,
+                comments=property.msd_parameter.comments if preserve_ephemera else None,
+                escape_positions=(
+                    property.msd_parameter.escape_positions
+                    if preserve_ephemera
+                    else None
+                ),
+                suffix=property.msd_parameter.suffix,
             )
-
             param.serialize(file, exact=True)
 
         notes_property = self._properties.get(notes_key.upper())
