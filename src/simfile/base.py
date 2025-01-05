@@ -198,7 +198,13 @@ class BaseSimfile(BaseObject, metaclass=ABCMeta):
     _default_parameter: MSDParameter
     _strict: bool
 
-    MULTI_VALUE_PROPERTIES = ("ATTACKS", "DISPLAYBPM")
+    MULTI_VALUE_PROPERTIES = (
+        # From mainline StepMania:
+        "ATTACKS",
+        "DISPLAYBPM",
+        # From NotITG:
+        "UNLOCKSTEPS",
+    )
 
     title = BaseObject._item_property("TITLE")
     subtitle = BaseObject._item_property("SUBTITLE")
