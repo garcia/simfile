@@ -8,11 +8,13 @@ the SM and SSC formats.
 
 from abc import ABCMeta, abstractmethod
 from collections import OrderedDict
+from dataclasses import replace
 from typing import (
     Generic,
     Iterable,
     Iterator,
     Optional,
+    Sequence,
     TextIO,
     Tuple,
     TypeVar,
@@ -269,6 +271,46 @@ class BaseSimfile(BaseObject, metaclass=ABCMeta):
                     strict=strict,
                 )
             )
+
+    def _move_suffix_to_next_preamble(
+        self, parser: MSDIterator, keys: Sequence[str]
+    ) -> Iterator[MSDParameter]:
+        """
+        Shift whitespace preceding a chart such that it belongs to that
+        chart's preamble, rather than the preceding parameter's suffix.
+
+        For example, assuming the default suffix is `;\\n` and part of the
+        simfile looks like this::
+
+            #ATTACKS:;
+
+            //---------------dance-single - ----------------
+            #NOTEDATA:;
+
+        The ATTACKS param's suffix will be set to `;\\n` and the remaining
+        newlines & comment will be moved to the chart's preamble.
+        """
+        # Look ahead by one parameter
+        previous_param: Optional[MSDParameter] = None
+        for param in parser:
+            if previous_param is not None:
+                if param.key.upper() in keys:
+                    if previous_param.suffix.startswith(self._default_parameter.suffix):
+                        keep_suffix = self._default_parameter.suffix
+                    else:
+                        keep_suffix = previous_param.suffix[:2]
+                    param = replace(
+                        param, preamble=previous_param.suffix.removeprefix(keep_suffix)
+                    )
+                    previous_param = replace(previous_param, suffix=keep_suffix)
+
+                yield previous_param
+
+            previous_param = param
+
+        # Remember to yield the final parameter
+        if previous_param is not None:
+            yield previous_param
 
     @abstractmethod
     def _parse(self, parser: MSDIterator):

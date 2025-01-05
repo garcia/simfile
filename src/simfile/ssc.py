@@ -291,8 +291,8 @@ class SSCSimfile(BaseSimfile):
         partial_chart: Optional[SSCChart] = None
         suffix_heuristic = ";\n"
         suffix_heuristic_match = False
-        
-        for param in parser:
+
+        for param in self._move_suffix_to_next_preamble(parser, ("NOTEDATA",)):
             # Determine a default parameter suffix from the input
             if not suffix_heuristic_match:
                 if param.suffix == suffix_heuristic:

@@ -285,7 +285,7 @@ class SMSimfile(BaseSimfile):
         suffix_heuristic = ";\n"
         suffix_heuristic_match = False
 
-        for param in parser:
+        for param in self._move_suffix_to_next_preamble(parser, ("NOTES",)):
             # Determine a default parameter suffix from the input
             if not suffix_heuristic_match:
                 if param.suffix == suffix_heuristic:
