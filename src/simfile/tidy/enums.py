@@ -25,6 +25,9 @@ B = TypeVar("B", bound="BaseBehavior")
 
 
 class BaseBehavior(enum.Enum, meta=ABCMeta):
+    """
+    An optional behavior. See enum values for details.
+    """
 
     @abstractmethod
     @classmethod
