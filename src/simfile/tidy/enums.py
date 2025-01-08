@@ -10,7 +10,6 @@ from simfile.types import Simfile
 
 __all__ = [
     "Preset",
-    "Preset",
     "Whitespace",
     "LineEndings",
     "RemoveComments",
@@ -59,6 +58,10 @@ class BaseFlagBehavior(enum.Flag, BaseBehavior, meta=ABCMeta):
 
 
 class Preset(enum.Enum):
+    """
+    A predefined set of behaviors for use with :func:`~.tidy`.
+    """
+
     NO_OP = enum.auto()
     """
     Leave all optional behaviors off by default.
