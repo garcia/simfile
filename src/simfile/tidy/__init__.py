@@ -46,6 +46,7 @@ def tidy(
     Each optional behavior has an associated enum. Some enums are flags
     that can be combined using bitwise operators, like so::
 
+        import tidy, FilterComments from simfile.tidy
         tidy(
             sim,
             filter_comments=FilterComments.PREAMBLE | FilterComments.CHART_PREAMBLE,
