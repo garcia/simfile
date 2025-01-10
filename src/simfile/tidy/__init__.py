@@ -1,7 +1,8 @@
+from dataclasses import replace
 from typing import Optional
 
 from simfile.types import Simfile
-from .enums import *
+from .behaviors import *
 
 
 __all__ = [
@@ -21,13 +22,13 @@ def tidy(
     sim: Simfile,
     preset: Optional[Preset] = None,
     *,
-    whitespace: bool | Whitespace = False,
-    line_endings: bool | LineEndings = False,
-    remove_comments: bool | RemoveComments = False,
-    create_comments: bool | CreateComments = False,
-    create_default_properties: bool | CreateDefaultProperties = False,
-    destructively_remove_properties: bool | DestructivelyRemoveProperties = False,
-    sort_properties: bool | SortProperties = False,
+    whitespace: Optional[Whitespace] = None,
+    line_endings: Optional[LineEndings] = None,
+    remove_comments: Optional[RemoveComments] = None,
+    create_comments: Optional[CreateComments] = None,
+    create_default_properties: Optional[CreateDefaultProperties] = None,
+    destructively_remove_properties: Optional[DestructivelyRemoveProperties] = None,
+    sort_properties: Optional[SortProperties] = None,
 ):
     """
     Tidy up a simfile for serialization to disk, mutating it in-memory.
@@ -39,9 +40,9 @@ def tidy(
         import tidy, Preset from simfile.tidy
         tidy(sim, Preset.SM5)
 
-    Without a preset, all behaviors default to `False`. You must set at
-    least one behavior to a non-`False` value, or specify the
-    :data:`~.NO_OP` preset to allow no behaviors.
+    Without a preset, all behaviors default to `False`. If you don't
+    specify a preset, you must set at least one behavior to a non-`False`
+    value, or specify the :data:`~.NO_OP` preset to allow no behaviors.
 
     Each optional behavior has an associated enum. Some enums are flags
     that can be combined using bitwise operators, like so::
@@ -79,20 +80,29 @@ def tidy(
     changed = False
 
     if whitespace:
-        changed |= Whitespace.run_outer(sim, whitespace)
+        changed |= whitespace.run(sim)
     if line_endings:
-        changed |= LineEndings.run_outer(sim, line_endings)
+        changed |= line_endings.run(sim)
     if remove_comments:
-        changed |= RemoveComments.run_outer(sim, remove_comments)
+        changed |= remove_comments.run(sim)
     if create_comments:
-        changed |= CreateComments.run_outer(sim, create_comments)
+        changed |= create_comments.run(sim)
     if create_default_properties:
-        changed |= CreateDefaultProperties.run_outer(sim, create_default_properties)
+        changed |= create_default_properties.run(sim)
     if destructively_remove_properties:
-        changed |= DestructivelyRemoveProperties.run_outer(
-            sim, destructively_remove_properties
-        )
+        changed |= destructively_remove_properties.run(sim)
     if sort_properties:
-        changed |= SortProperties.run_outer(sim, sort_properties)
+        changed |= sort_properties.run(sim)
 
     return changed
+
+
+def set_preamble_comment(sim: Simfile, text: str):
+    first_property = next(iter(sim._properties.values()))
+    first_property.msd_parameter = replace(
+        first_property.msd_parameter,
+        preamble="".join(
+            f"// {line}\n" if not line.startswith("//") else line
+            for line in text.splitlines()
+        ),
+    )

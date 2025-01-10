@@ -1,10 +1,10 @@
-from abc import ABCMeta, abstractmethod
 from dataclasses import dataclass, replace
 import enum
-from functools import reduce
-from operator import __or__ as _or_
-from typing import TypeVar, Literal
+from typing import Optional
+from typing_extensions import assert_never
 
+from simfile.sm import SMChart
+from simfile.ssc import SSCChart
 from simfile.types import Simfile
 
 
@@ -18,43 +18,6 @@ __all__ = [
     "DestructivelyRemoveProperties",
     "SortProperties",
 ]
-
-
-B = TypeVar("B", bound="BaseBehavior")
-
-
-class BaseBehavior(enum.Enum, meta=ABCMeta):
-    """
-    An optional behavior. See enum values for details.
-    """
-
-    @abstractmethod
-    @classmethod
-    def default(cls: type[B]) -> B:
-        raise NotImplementedError()
-
-    @abstractmethod
-    def run(self, sim: Simfile) -> bool:
-        raise NotImplementedError()
-
-    @classmethod
-    def run_outer(cls: type[B], sim: Simfile, instance: Literal[True] | B):
-        if instance is True:
-            return cls.default().run(sim)
-        else:
-            return instance.run(sim)
-
-
-class BaseFlagBehavior(enum.Flag, BaseBehavior, meta=ABCMeta):
-
-    @classmethod
-    def default(cls):
-        cls_name = cls.__name__
-        if not len(cls):
-            raise AttributeError("empty %s does not have an ALL value" % cls_name)
-        value = cls(reduce(_or_, cls))
-        cls._member_map_["ALL"] = value
-        return value
 
 
 class Preset(enum.Enum):
@@ -114,7 +77,7 @@ class Preset(enum.Enum):
             assert False
 
 
-class Whitespace(BaseBehavior):
+class Whitespace(enum.Enum):
     SM5 = enum.auto()
     """
     Normalize whitespace to match StepMania 5's output:
@@ -127,11 +90,66 @@ class Whitespace(BaseBehavior):
     def default(cls):
         return cls.SM5
 
-    def run(self) -> bool:
-        return False
+    def run(self, sim: Simfile) -> bool:
+        if self is Whitespace.SM5:
+            nl = "\r\n" if "\r\n" in sim._default_parameter.suffix else "\n"
+
+            def sm5_chart_preamble(existing_preamble: Optional[str]):
+                if not existing_preamble or existing_preamble.isspace():
+                    return nl
+                else:
+                    return f"{nl}{existing_preamble.strip()}{nl}"
+
+            sim._default_parameter = replace(sim._default_parameter, suffix=f";{nl}")
+            for property in sim._properties.values():
+                property.msd_parameter = replace(
+                    property.msd_parameter, suffix=sim._default_parameter.suffix
+                )
+
+            for chart in sim.charts:
+
+                if isinstance(chart, SMChart):
+                    # Normalize whitespace before the (real) chart property
+                    chart._real_parameter = replace(
+                        chart._real_parameter,
+                        preamble=sm5_chart_preamble(chart._real_parameter.preamble),
+                        suffix=sim._default_parameter.suffix,
+                    )
+
+                    # Normalize whitespace between each (pseudo) property
+                    for key, property in chart._properties.items():
+                        if key == "NOTES":
+                            property.msd_parameter = replace(
+                                property.msd_parameter, preamble=nl, suffix=nl
+                            )
+                        else:
+                            property.msd_parameter = replace(
+                                property.msd_parameter, preamble=f"{nl}     "
+                            )
+
+                elif isinstance(chart, SSCChart):
+                    # Normalize whitespace before the chart
+                    notedata = chart._properties["NOTEDATA"]
+                    notedata.msd_parameter = replace(
+                        notedata.msd_parameter,
+                        preamble=sm5_chart_preamble(notedata.msd_parameter.preamble),
+                    )
+
+                    # Normalize whitespace between each property
+                    for property in chart._properties.values():
+                        property.msd_parameter = replace(
+                            property.msd_parameter, suffix=sim._default_parameter.suffix
+                        )
+                else:
+                    assert_never(chart)
+
+            return True
+
+        else:
+            assert_never(self)
 
 
-class LineEndings(BaseBehavior):
+class LineEndings(enum.Enum):
     LF = enum.auto()
     """
     Normalize all line endings to '\\n'.
@@ -142,15 +160,22 @@ class LineEndings(BaseBehavior):
     Normalize all line endings to '\\r\\n'.
     """
 
+    HEURISTIC = enum.auto()
+    """
+    Use the heuristic-determined line ending.
+
+    This typically matches the first line ending seen in the file.
+    """
+
     @classmethod
     def default(cls):
         return cls.LF
 
-    def run(self) -> bool:
+    def run(self, sim: Simfile) -> bool:
         return False
 
 
-class RemoveComments(BaseFlagBehavior):
+class RemoveComments(enum.Flag):
     PREAMBLE = enum.auto()
     """
     Remove any preamble (comment at the start of the file).
@@ -173,11 +198,11 @@ class RemoveComments(BaseFlagBehavior):
     Remove any other comments that don't match the above definitions.
     """
 
-    def run(self) -> bool:
+    def run(self, sim: Simfile) -> bool:
         return False
 
 
-class CreateComments(BaseFlagBehavior):
+class CreateComments(enum.Flag):
     LIBRARY_VERSION_PREAMBLE = enum.auto()
     """
     Create a comment at the start of the file with the following string::
@@ -212,11 +237,11 @@ class CreateComments(BaseFlagBehavior):
         (etc.)
     """
 
-    def run(self) -> bool:
+    def run(self, sim: Simfile) -> bool:
         return False
 
 
-class CreateDefaultProperties(BaseBehavior):
+class CreateDefaultProperties(enum.Enum):
     SM5_DEFAULT = enum.auto()
     """
     Create the same default properties that the StepMania 5 editor creates,
@@ -237,11 +262,11 @@ class CreateDefaultProperties(BaseBehavior):
     def default(cls):
         return cls.SM5_DEFAULT
 
-    def run(self) -> bool:
+    def run(self, sim: Simfile) -> bool:
         return False
 
 
-class DestructivelyRemoveProperties(BaseBehavior):
+class DestructivelyRemoveProperties(enum.Enum):
     SM5 = enum.auto()
     """
     Remove all properties that are unknown to the StepMania 5 editor.
@@ -251,11 +276,11 @@ class DestructivelyRemoveProperties(BaseBehavior):
     def default(cls):
         return cls.SM5
 
-    def run(self) -> bool:
+    def run(self, sim: Simfile) -> bool:
         return False
 
 
-class SortProperties(BaseBehavior):
+class SortProperties(enum.Enum):
     SM5 = enum.auto()
     """
     Sort known properties to match the StepMania 5 editor's output.
@@ -268,7 +293,7 @@ class SortProperties(BaseBehavior):
     def default(cls):
         return cls.SM5
 
-    def run(self) -> bool:
+    def run(self, sim: Simfile) -> bool:
         return False
 
 
