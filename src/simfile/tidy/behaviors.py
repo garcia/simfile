@@ -1,6 +1,7 @@
 from dataclasses import dataclass, replace
 import enum
 from typing import Optional
+from msdparser import MSDParameter
 from typing_extensions import assert_never
 
 from simfile.sm import SMChart
@@ -91,59 +92,91 @@ class Whitespace(enum.Enum):
         return cls.SM5
 
     def run(self, sim: Simfile) -> bool:
+        changed = False
+
         if self is Whitespace.SM5:
+            # Extract newline from heursitic-determined suffix
             nl = "\r\n" if "\r\n" in sim._default_parameter.suffix else "\n"
 
-            def sm5_chart_preamble(existing_preamble: Optional[str]):
-                if not existing_preamble or existing_preamble.isspace():
-                    return nl
+            # Normalize suffix & (optionally) preamble whitespace
+            def normalize_ws(param: MSDParameter, preamble=False) -> MSDParameter:
+                if preamble:
+                    # Blank / empty -> single newline
+                    if not param.preamble or param.preamble.isspace():
+                        preamble = nl
+                    # Non-empty -> strip & pad with newline on each side
+                    else:
+                        preamble = f"{nl}{param.preamble.strip()}{nl}"
                 else:
-                    return f"{nl}{existing_preamble.strip()}{nl}"
+                    preamble = param.preamble
 
-            sim._default_parameter = replace(sim._default_parameter, suffix=f";{nl}")
-            for property in sim._properties.values():
-                property.msd_parameter = replace(
-                    property.msd_parameter, suffix=sim._default_parameter.suffix
+                suffix_ws = property.msd_parameter.suffix.removeprefix(";")
+                # Blank / empty -> semicolon followed by newline
+                if not suffix_ws or suffix_ws.isspace():
+                    suffix = f";{nl}"
+                # Non-empty -> ensure semicolon & one trailing newline
+                else:
+                    suffix = f";{suffix_ws.rstrip()}{nl}"
+
+                return replace(param, preamble=preamble, suffix=suffix)
+
+            if sim._default_parameter.suffix != f";{nl}":
+                sim._default_parameter = replace(
+                    sim._default_parameter, suffix=f";{nl}"
                 )
+                changed = True
+
+            for property in sim._properties.values():
+                normalized_ws = normalize_ws(property.msd_parameter)
+                if property.msd_parameter != normalized_ws:
+                    property.msd_parameter = normalized_ws
+                    changed = True
 
             for chart in sim.charts:
 
                 if isinstance(chart, SMChart):
                     # Normalize whitespace before the (real) chart property
-                    chart._real_parameter = replace(
-                        chart._real_parameter,
-                        preamble=sm5_chart_preamble(chart._real_parameter.preamble),
-                        suffix=sim._default_parameter.suffix,
-                    )
+                    normalized_ws = normalize_ws(chart._real_parameter, preamble=True)
+                    if chart._real_parameter != normalized_ws:
+                        chart._real_parameter = normalized_ws
+                        changed = True
 
                     # Normalize whitespace between each (pseudo) property
+                    # TODO: check how this interacts with escape & comment MSD data
                     for key, property in chart._properties.items():
                         if key == "NOTES":
-                            property.msd_parameter = replace(
+                            updated_parameter = replace(
                                 property.msd_parameter, preamble=nl, suffix=nl
                             )
+                            if property.msd_parameter != updated_parameter:
+                                property.msd_parameter = updated_parameter
+                                changed = True
                         else:
-                            property.msd_parameter = replace(
+                            updated_parameter = replace(
                                 property.msd_parameter, preamble=f"{nl}     "
                             )
+                            if property.msd_parameter != updated_parameter:
+                                property.msd_parameter = updated_parameter
+                                changed = True
 
                 elif isinstance(chart, SSCChart):
                     # Normalize whitespace before the chart
                     notedata = chart._properties["NOTEDATA"]
-                    notedata.msd_parameter = replace(
-                        notedata.msd_parameter,
-                        preamble=sm5_chart_preamble(notedata.msd_parameter.preamble),
-                    )
+                    normalized_ws = normalize_ws(notedata.msd_parameter, preamble=True)
+                    if notedata.msd_parameter != normalized_ws:
+                        notedata.msd_parameter = normalized_ws
+                        changed = True
 
                     # Normalize whitespace between each property
                     for property in chart._properties.values():
-                        property.msd_parameter = replace(
-                            property.msd_parameter, suffix=sim._default_parameter.suffix
-                        )
+                        normalized_ws = normalize_ws(property.msd_parameter)
+                        if property.msd_parameter != normalized_ws:
+                            property.msd_parameter = normalized_ws
+                            changed = True
                 else:
                     assert_never(chart)
 
-            return True
+            return changed
 
         else:
             assert_never(self)

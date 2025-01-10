@@ -8,7 +8,7 @@ from simfile.tidy.behaviors import Whitespace
 class TestWhitespace(unittest.TestCase):
     def test_sm5_sm(self):
         self.maxDiff = None
-        text = dedent_and_trim(
+        sim_string = dedent_and_trim(
             """
             #TITLE:Song title;#SUBTITLE:Song subtitle;
                         
@@ -34,10 +34,6 @@ class TestWhitespace(unittest.TestCase):
             0000
             0000;"""
         )
-
-        sim = simfile.loads(text)
-
-        tidy(sim, whitespace=Whitespace.SM5)
 
         expected = dedent_and_trim(
             """
@@ -71,11 +67,15 @@ class TestWhitespace(unittest.TestCase):
             """
         )
 
+        sim = simfile.loads(sim_string)
+        self.assertTrue(tidy(sim, whitespace=Whitespace.SM5))
         self.assertEqual(expected, str(sim))
+        # Idempotency check
+        self.assertFalse(tidy(sim, whitespace=Whitespace.SM5))
 
     def test_sm5_ssc(self):
         self.maxDiff = None
-        text = dedent_and_trim(
+        sim_string = dedent_and_trim(
             """
             #VERSION:0.83;
             #TITLE:Song title;#SUBTITLE:Song subtitle;
@@ -93,6 +93,7 @@ class TestWhitespace(unittest.TestCase):
             ;
             // comment
 
+            
             #NOTEDATA:;
             #STEPSTYPE:dance-single;#DIFFICULTY:Easy;
             
@@ -102,13 +103,8 @@ class TestWhitespace(unittest.TestCase):
             0000
             0000
             0000
-            ;"""
+            ; // another comment"""
         )
-
-        sim = simfile.loads(text)
-
-        tidy(sim, whitespace=Whitespace.SM5)
-
         expected = dedent_and_trim(
             """
             #VERSION:0.83;
@@ -137,8 +133,12 @@ class TestWhitespace(unittest.TestCase):
             0000
             0000
             0000
-            ;
+            ; // another comment
             """
         )
 
+        sim = simfile.loads(sim_string)
+        self.assertTrue(tidy(sim, whitespace=Whitespace.SM5))
         self.assertEqual(expected, str(sim))
+        # Idempotency check
+        self.assertFalse(tidy(sim, whitespace=Whitespace.SM5))
