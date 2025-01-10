@@ -1,4 +1,3 @@
-from collections import UserList
 from typing import Iterable, List, Optional, TypeVar
 
 E = TypeVar("E")
