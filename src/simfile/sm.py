@@ -138,9 +138,10 @@ class SMChart(BaseChart):
         # SMChart abuses the _properties OrderedDict to preserve whitespace
         # for things that are technically not MSD parameters themselves.
         # Store the original MSD data on another private attribute instead.
-        self._real_parameter = deepcopy(param)
+        # No need to deepcopy because MSDParameter is frozen.
+        self._real_parameter = param
 
-        for property, value in zip(SM_CHART_PROPERTIES, param.components[1:]):
+        for key, value in zip(SM_CHART_PROPERTIES, param.components[1:]):
             value_lstripped = value.lstrip()
             leading_ws = value[: len(value) - len(value_lstripped)]
             # Start from the lstripped value so that we don't double-count
@@ -148,10 +149,10 @@ class SMChart(BaseChart):
             trailing_ws = value_lstripped[len(value_lstripped.rstrip()) :]
             # Here we store the whitespace around each component
             # as pseudo-properties with a preamble & suffix.
-            self._properties[property] = Property(
+            self._properties[key] = Property(
                 value=value.strip(),
                 msd_parameter=MSDParameter(
-                    components=(value,),
+                    components=(key, value.strip()),
                     preamble=leading_ws,
                     suffix=trailing_ws,
                 ),

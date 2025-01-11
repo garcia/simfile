@@ -103,22 +103,22 @@ class Whitespace(enum.Enum):
                 if preamble:
                     # Blank / empty -> single newline
                     if not param.preamble or param.preamble.isspace():
-                        preamble = nl
+                        new_preamble = nl
                     # Non-empty -> strip & pad with newline on each side
                     else:
-                        preamble = f"{nl}{param.preamble.strip()}{nl}"
+                        new_preamble = f"{nl}{param.preamble.strip()}{nl}"
                 else:
-                    preamble = param.preamble
+                    new_preamble = param.preamble
 
-                suffix_ws = property.msd_parameter.suffix.removeprefix(";")
+                suffix_no_semicolon = param.suffix.removeprefix(";")
                 # Blank / empty -> semicolon followed by newline
-                if not suffix_ws or suffix_ws.isspace():
-                    suffix = f";{nl}"
+                if suffix_no_semicolon == "" or suffix_no_semicolon.isspace():
+                    new_suffix = f";{nl}"
                 # Non-empty -> ensure semicolon & one trailing newline
                 else:
-                    suffix = f";{suffix_ws.rstrip()}{nl}"
+                    new_suffix = f";{suffix_no_semicolon.rstrip()}{nl}"
 
-                return replace(param, preamble=preamble, suffix=suffix)
+                return replace(param, preamble=new_preamble, suffix=new_suffix)
 
             if sim._default_parameter.suffix != f";{nl}":
                 sim._default_parameter = replace(
@@ -134,6 +134,8 @@ class Whitespace(enum.Enum):
 
             for chart in sim.charts:
 
+                # This is tricky to get right on SMChart
+                # because of the way it abuses the _properties dict.
                 if isinstance(chart, SMChart):
                     # Normalize whitespace before the (real) chart property
                     normalized_ws = normalize_ws(chart._real_parameter, preamble=True)
@@ -144,20 +146,35 @@ class Whitespace(enum.Enum):
                     # Normalize whitespace between each (pseudo) property
                     # TODO: check how this interacts with escape & comment MSD data
                     for key, property in chart._properties.items():
+                        sm_chart_changed = False
                         if key == "NOTES":
                             updated_parameter = replace(
-                                property.msd_parameter, preamble=nl, suffix=nl
+                                property.msd_parameter, suffix=nl
                             )
                             if property.msd_parameter != updated_parameter:
                                 property.msd_parameter = updated_parameter
-                                changed = True
+                                sm_chart_changed = True
                         else:
                             updated_parameter = replace(
                                 property.msd_parameter, preamble=f"{nl}     "
                             )
                             if property.msd_parameter != updated_parameter:
                                 property.msd_parameter = updated_parameter
-                                changed = True
+                                sm_chart_changed = True
+
+                        # Adjusting whitespace *inside* of an MSD parameter
+                        # invalidates the escape & comment positions;
+                        # we could try to keep track of the positions,
+                        # but for now, just reset it and let msdparser
+                        # regenerate any necessary escapes.
+                        if sm_chart_changed:
+                            chart._real_parameter = replace(
+                                chart._real_parameter,
+                                escape_positions=None,
+                                comments=None,
+                            )
+
+                        changed |= sm_chart_changed
 
                 elif isinstance(chart, SSCChart):
                     # Normalize whitespace before the chart

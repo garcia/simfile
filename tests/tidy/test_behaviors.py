@@ -15,7 +15,8 @@ class TestWhitespace(unittest.TestCase):
                 #ARTIST:Song artist;
             #NOTES:
             dance-single:
-            :
+
+            http\\:\\//stepartist.example: // contrived use of escapes
             Beginner:
             1:
             0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000:
@@ -23,16 +24,24 @@ class TestWhitespace(unittest.TestCase):
             0000
             0000
             0000;
+            // comment
                         #NOTES:
-            dance-single:
-            :
-            Easy:
-            3:
-            0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000:
+                 dance-single:
+                 :
+                 Easy:
+                 3:
+                 0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000:
+            // measure 0
             1000
-            0000
-            0000
-            0000;"""
+            0100
+            0010
+            0001
+            , // measure 1
+            0100
+            0010
+            1000
+            0001
+            ; // trailing comment SM"""
         )
 
         expected = dedent_and_trim(
@@ -43,7 +52,7 @@ class TestWhitespace(unittest.TestCase):
 
             #NOTES:
                  dance-single:
-                 :
+                 http\\:\\//stepartist.example:
                  Beginner:
                  1:
                  0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000:
@@ -53,23 +62,32 @@ class TestWhitespace(unittest.TestCase):
             0000
             ;
 
+            // comment
             #NOTES:
                  dance-single:
                  :
                  Easy:
                  3:
                  0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000:
+            // measure 0
             1000
-            0000
-            0000
-            0000
-            ;
+            0100
+            0010
+            0001
+            , // measure 1
+            0100
+            0010
+            1000
+            0001
+            ; // trailing comment SM
             """
         )
 
         sim = simfile.loads(sim_string)
         self.assertTrue(tidy(sim, whitespace=Whitespace.SM5))
         self.assertEqual(expected, str(sim))
+        # Validity check
+        self.assertEqual(sim, simfile.loads(str(sim)))
         # Idempotency check
         self.assertFalse(tidy(sim, whitespace=Whitespace.SM5))
 
@@ -83,8 +101,10 @@ class TestWhitespace(unittest.TestCase):
                 #ARTIST:Song artist;
             #NOTEDATA:;
             #STEPSTYPE:dance-single;#DIFFICULTY:Beginner;
-            
             #METER:1;
+
+            #CREDIT:http\\:\\//stepartist.example; // contrived use of escapes
+
             #NOTES:
             0000
             0000
@@ -99,11 +119,17 @@ class TestWhitespace(unittest.TestCase):
             
             #METER:3;
             #NOTES:
+            // measure 0
             1000
-            0000
-            0000
-            0000
-            ; // another comment"""
+            0100
+            0010
+            0001
+            , // measure 1
+            0100
+            0010
+            1000
+            0001
+            ; // trailing comment"""
         )
         expected = dedent_and_trim(
             """
@@ -116,6 +142,7 @@ class TestWhitespace(unittest.TestCase):
             #STEPSTYPE:dance-single;
             #DIFFICULTY:Beginner;
             #METER:1;
+            #CREDIT:http\\:\\//stepartist.example; // contrived use of escapes
             #NOTES:
             0000
             0000
@@ -129,16 +156,24 @@ class TestWhitespace(unittest.TestCase):
             #DIFFICULTY:Easy;
             #METER:3;
             #NOTES:
+            // measure 0
             1000
-            0000
-            0000
-            0000
-            ; // another comment
+            0100
+            0010
+            0001
+            , // measure 1
+            0100
+            0010
+            1000
+            0001
+            ; // trailing comment
             """
         )
 
         sim = simfile.loads(sim_string)
         self.assertTrue(tidy(sim, whitespace=Whitespace.SM5))
         self.assertEqual(expected, str(sim))
+        # Validity check
+        self.assertEqual(sim, simfile.loads(str(sim)))
         # Idempotency check
         self.assertFalse(tidy(sim, whitespace=Whitespace.SM5))
