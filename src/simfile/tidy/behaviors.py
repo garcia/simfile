@@ -50,10 +50,6 @@ class Preset(enum.Enum):
     Equivalent to specifying ``True`` for all _nondestructive_ behaviors.
     """
 
-    @classmethod
-    def default(cls):
-        return cls.NO_OP
-
     def behaviors(self) -> "DefaultBehaviors":
         if self is Preset.NO_OP:
             return DefaultBehaviors()
@@ -85,11 +81,12 @@ class Whitespace(enum.Enum):
 
     * Properties are separated by a newline.
     * Each chart is prefixed by a blank line.
-    """
+    * Each SM chart property (before note data) is prefixed by 5 spaces.
 
-    @classmethod
-    def default(cls):
-        return cls.SM5
+    Currently, this option removes comments inside of SM charts
+    if their whitespace is adjusted. Combine with :class:`.CreateComments`
+    to regenerate measure comments if desired.
+    """
 
     def run(self, sim: Simfile) -> bool:
         changed = False
@@ -217,10 +214,6 @@ class LineEndings(enum.Enum):
     This typically matches the first line ending seen in the file.
     """
 
-    @classmethod
-    def default(cls):
-        return cls.LF
-
     def run(self, sim: Simfile) -> bool:
         return False
 
@@ -308,10 +301,6 @@ class CreateDefaultProperties(enum.Enum):
     ``DISPLAYBPM``.
     """
 
-    @classmethod
-    def default(cls):
-        return cls.SM5_DEFAULT
-
     def run(self, sim: Simfile) -> bool:
         return False
 
@@ -321,10 +310,6 @@ class DestructivelyRemoveProperties(enum.Enum):
     """
     Remove all properties that are unknown to the StepMania 5 editor.
     """
-
-    @classmethod
-    def default(cls):
-        return cls.SM5
 
     def run(self, sim: Simfile) -> bool:
         return False
@@ -338,10 +323,6 @@ class SortProperties(enum.Enum):
     Unknown properties, if not removed, are sorted alphabetically after
     known properties.
     """
-
-    @classmethod
-    def default(cls):
-        return cls.SM5
 
     def run(self, sim: Simfile) -> bool:
         return False
