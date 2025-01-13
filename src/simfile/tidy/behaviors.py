@@ -1,9 +1,10 @@
 from dataclasses import dataclass, replace
 import enum
 from typing import Optional
-from msdparser import MSDParameter
+from msdparser import MSDParameter, parse_msd
 from typing_extensions import assert_never
 
+from simfile._private.ordered_dict_forwarder import Property
 from simfile.sm import SMChart
 from simfile.ssc import SSCChart
 from simfile.types import Simfile
@@ -215,7 +216,87 @@ class LineEndings(enum.Enum):
     """
 
     def run(self, sim: Simfile) -> bool:
-        return False
+        if self in (LineEndings.LF, LineEndings.CRLF):
+            changed = False
+            nl = "\n" if self is LineEndings.LF else "\r\n"
+
+            sim._default_parameter = replace(
+                sim._default_parameter,
+                suffix=sim._default_parameter.suffix.rstrip("\r\n") + nl,
+            )
+
+            for property in sim._properties.values():
+                changed |= self._normalize_property(nl, property)
+
+            for chart in sim.charts:
+
+                # _normalize_property doesn't work well with fake SMChart
+                # properties, so instead serialize the whole chart into a
+                # fresh MSDParameter, then update the chart in-place.
+                if isinstance(chart, SMChart):
+                    parameter = next(parse_msd(string=str(chart)))
+                    fake_property = Property("", parameter)
+                    self._normalize_property(nl, fake_property)
+                    normalized_chart = SMChart.from_msd_parameter(
+                        fake_property.msd_parameter
+                    )
+                    chart._real_parameter = normalized_chart._real_parameter
+                    chart._properties = normalized_chart._properties
+
+                elif isinstance(chart, SSCChart):
+                    for property in chart._properties.values():
+                        changed |= self._normalize_property(nl, property)
+
+                else:
+                    assert_never(chart)
+
+            return changed
+
+        elif self is LineEndings.HEURISTIC:
+            crlf = "\r\n" in sim._default_parameter.suffix
+            if crlf:
+                return LineEndings.CRLF.run(sim)
+            else:
+                return LineEndings.LF.run(sim)
+
+        else:
+            assert_never(self)
+
+    def _normalize_property(self, nl, property: Property) -> bool:
+        # Serialize using msdparser so that we can perform the newline swap
+        # on everything (preamble, key, value(s), suffix) at once.
+        # This also means we get correct escape_positions for free.
+        stringified = property.msd_parameter.stringify(exact=True)
+        changed = False
+
+        # Short-circuit if no newlines to change
+        if "\r" not in stringified and "\n" not in stringified:
+            return False
+
+        split = stringified.splitlines(keepends=True)
+        normalized = []
+        for line in split:
+            if line.endswith("\n") or line.endswith("\r"):
+                normalized.append(line.rstrip("\r\n") + nl)
+            else:
+                normalized.append(line)
+
+        normalized_string = "".join(normalized)
+        normalized_param = next(parse_msd(string=normalized_string))
+
+        # parse_msd always outputs a (possibly empty) preamble for the
+        # first parameter, which will mess up the equality comparison
+        # if it's None in the original parameter.
+        if property.msd_parameter.preamble is None:
+            normalized_param = replace(normalized_param, preamble=None)
+
+        if normalized_param != property.msd_parameter:
+            property.msd_parameter = normalized_param
+            # TODO: handle multi-value properties
+            property.value = normalized_param.value
+            changed = True
+
+        return changed
 
 
 class RemoveComments(enum.Flag):
