@@ -48,31 +48,44 @@ class Preset(enum.Enum):
     properties).
     """
 
-    ALL_NONDESTRUCTIVE = enum.auto()
+    RECOMMENDED = enum.auto()
     """
-    Equivalent to specifying ``True`` for all _nondestructive_ behaviors.
+    Same as SM5, but keep the preamble & add or update the library version.
     """
 
     def behaviors(self) -> "DefaultBehaviors":
         if self is Preset.NO_OP:
             return DefaultBehaviors()
+
         elif self is Preset.SM5:
             return replace(
                 DefaultBehaviors(),
                 whitespace=Whitespace.SM5,
                 line_endings=LineEndings.LF,
-                remove_comments=RemoveComments.PREAMBLE | RemoveComments.OTHER,
+                remove_comments=RemoveComments.ALL,
                 create_comments=CreateComments.CHART_PREAMBLE
                 | CreateComments.CHART_MEASURES,
                 create_missing_properties=CreateMissingProperties.SM5_DEFAULT,
-                destructively_remove_properties=False,
                 sort_properties=SortProperties.SM5,
             )
+
         elif self is Preset.SM5_DESTRUCTIVE:
             return replace(
                 Preset.SM5.behaviors(),
                 destructively_remove_properties=DestructivelyRemoveProperties.SM5,
             )
+
+        elif self is Preset.RECOMMENDED:
+            sm5 = Preset.SM5.behaviors()
+            assert sm5.remove_comments
+            assert sm5.create_comments
+            return replace(
+                sm5,
+                remove_comments=sm5.remove_comments ^ RemoveComments.PREAMBLE,
+                create_comments=sm5.create_comments
+                | CreateComments.LIBRARY_VERSION_PREAMBLE,
+            )
+
         else:
             assert False
 
@@ -566,6 +579,10 @@ class DestructivelyRemoveProperties(enum.Enum):
 
 
 class SortProperties(enum.Enum):
+    """
+    Sort the properties in the simfile.
+    """
+
     SM5 = enum.auto()
     """
     Sort known properties to match the StepMania 5 editor's output.
@@ -580,11 +597,11 @@ class SortProperties(enum.Enum):
 
 @dataclass
 class DefaultBehaviors:
-    preset: bool | Preset = False
-    whitespace: bool | Whitespace = False
-    line_endings: bool | LineEndings = False
-    remove_comments: bool | RemoveComments = False
-    create_comments: bool | CreateComments = False
-    create_missing_properties: bool | CreateMissingProperties = False
-    destructively_remove_properties: bool | DestructivelyRemoveProperties = False
-    sort_properties: bool | SortProperties = False
+    preset: Optional[Preset] = None
+    whitespace: Optional[Whitespace] = None
+    line_endings: Optional[LineEndings] = None
+    remove_comments: Optional[RemoveComments] = None
+    create_comments: Optional[CreateComments] = None
+    create_missing_properties: Optional[CreateMissingProperties] = None
+    destructively_remove_properties: Optional[DestructivelyRemoveProperties] = None
+    sort_properties: Optional[SortProperties] = None
