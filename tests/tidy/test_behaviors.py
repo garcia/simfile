@@ -411,4 +411,6 @@ class TestRemoveComments(SimfileTestCase):
 
         # Ensure we got all the expected combinations;
         # otherwise, the combinations may not be exhaustive
-        self.assertEqual(2 ** len(RemoveComments) - 1, permutation_count)
+        # Subtract 1 from the exponent to ignore RemoveComments.ALL
+        # and 1 from the result to ignore the empty combination
+        self.assertEqual(2 ** (len(RemoveComments) - 1) - 1, permutation_count)

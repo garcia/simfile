@@ -78,6 +78,10 @@ class Preset(enum.Enum):
 
 
 class Whitespace(enum.Enum):
+    """
+    Normalize all whitespace in the file.
+    """
+
     SM5 = enum.auto()
     """
     Normalize whitespace to match StepMania 5's output:
@@ -200,6 +204,10 @@ class Whitespace(enum.Enum):
 
 
 class LineEndings(enum.Enum):
+    """
+    Normalize all line endings in the file.
+    """
+
     LF = enum.auto()
     """
     Normalize all line endings to '\\n'.
@@ -387,6 +395,10 @@ class PropertyForComments(enum.Enum):
 
 
 class RemoveComments(enum.Flag):
+    """
+    Remove comments from various (or all) parts of the simfile.
+    """
+
     PREAMBLE = enum.auto()
     """
     Remove any preamble (comment at the start of the file).
@@ -407,6 +419,11 @@ class RemoveComments(enum.Flag):
     OTHER = enum.auto()
     """
     Remove any other comments that don't match the above definitions.
+    """
+
+    ALL = PREAMBLE | CHART_PREAMBLE | CHART_INNER | OTHER
+    """
+    Remove all comments.
     """
 
     def run(self, sim: Simfile) -> bool:
@@ -467,6 +484,10 @@ class RemoveComments(enum.Flag):
 
 
 class CreateComments(enum.Flag):
+    """
+    Create or update pre-fabricated comments in the simfile.
+    """
+
     LIBRARY_VERSION_PREAMBLE = enum.auto()
     """
     Create a comment at the start of the file with the following string::
@@ -506,6 +527,10 @@ class CreateComments(enum.Flag):
 
 
 class CreateMissingProperties(enum.Enum):
+    """
+    Fill in any missing properties in the simfile with a default value.
+    """
+
     SM5_DEFAULT = enum.auto()
     """
     Create the same default properties that the StepMania 5 editor creates,
@@ -527,6 +552,10 @@ class CreateMissingProperties(enum.Enum):
 
 
 class DestructivelyRemoveProperties(enum.Enum):
+    """
+    Remove any unknown properties (a destructive operation).
+    """
+
     SM5 = enum.auto()
     """
     Remove all properties that are unknown to the StepMania 5 editor.
