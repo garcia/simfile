@@ -1,11 +1,13 @@
 from dataclasses import dataclass, replace
 import enum
-from typing import Optional
-from msdparser import MSDParameter, parse_msd
+import re
+from typing import Iterator, Mapping, Optional
 from typing_extensions import assert_never
 
+from msdparser import MSDParameter, parse_msd
+
 from simfile._private.ordered_dict_forwarder import Property
-from simfile.sm import SMChart
+from simfile.sm import SMChart, SMSimfile
 from simfile.ssc import SSCChart
 from simfile.types import Simfile
 
@@ -299,6 +301,91 @@ class LineEndings(enum.Enum):
         return changed
 
 
+# Scaffolding for RemoveComments:
+
+
+class MsdFieldForComments(enum.Flag):
+    PREAMBLE = enum.auto()
+    COMMENTS = enum.auto()
+    SUFFIX = enum.auto()
+
+
+class PropertyForComments(enum.Enum):
+    SIMFILE_FIRST_PROP = enum.auto()
+    SIMFILE_OTHER_PROPS = enum.auto()
+    SSCCHART_FIRST_PROP = enum.auto()
+    SSCCHART_OTHER_PROPS = enum.auto()
+    SMCHART_REAL_PARAM = enum.auto()
+
+    def iter_props(self, sim: Simfile) -> Iterator[Property]:
+        if self is PropertyForComments.SIMFILE_FIRST_PROP:
+            yield next(iter(sim._properties.values()))
+        elif self is PropertyForComments.SIMFILE_OTHER_PROPS:
+            iterator = iter(sim._properties.values())
+            next(iterator)
+            yield from iterator
+        elif self is PropertyForComments.SMCHART_REAL_PARAM:
+            for chart in sim.charts:
+                if isinstance(chart, SMChart):
+                    # HACK(update-real-param): fake property must be updated
+                    # in the simfile *manually* by the caller
+                    fake_prop = Property(value="", msd_parameter=chart._real_parameter)
+                    yield fake_prop
+        elif self is PropertyForComments.SSCCHART_FIRST_PROP:
+            for chart in sim.charts:
+                if isinstance(chart, SSCChart):
+                    yield next(iter(chart._properties.values()))
+        elif self is PropertyForComments.SSCCHART_OTHER_PROPS:
+            for chart in sim.charts:
+                if isinstance(chart, SSCChart):
+                    iterator = iter(chart._properties.values())
+                    next(iterator)
+                    yield from iterator
+        else:
+            assert_never(self)
+
+    def change_msd_fields(
+        self, remove_comments: "RemoveComments"
+    ) -> MsdFieldForComments:
+        field = MsdFieldForComments(0)
+
+        if self is PropertyForComments.SIMFILE_FIRST_PROP:
+            if RemoveComments.PREAMBLE in remove_comments:
+                field |= MsdFieldForComments.PREAMBLE
+            if RemoveComments.OTHER in remove_comments:
+                field |= MsdFieldForComments.COMMENTS | MsdFieldForComments.SUFFIX
+
+        elif self is PropertyForComments.SIMFILE_OTHER_PROPS:
+            if RemoveComments.OTHER in remove_comments:
+                field |= (
+                    MsdFieldForComments.PREAMBLE
+                    | MsdFieldForComments.COMMENTS
+                    | MsdFieldForComments.SUFFIX
+                )
+
+        elif self in (
+            PropertyForComments.SSCCHART_FIRST_PROP,
+            PropertyForComments.SMCHART_REAL_PARAM,
+        ):
+            if RemoveComments.CHART_PREAMBLE in remove_comments:
+                field |= MsdFieldForComments.PREAMBLE
+            if RemoveComments.CHART_INNER in remove_comments:
+                field |= MsdFieldForComments.COMMENTS
+            if RemoveComments.OTHER in remove_comments:
+                field |= MsdFieldForComments.SUFFIX
+
+        elif self is PropertyForComments.SSCCHART_OTHER_PROPS:
+            if RemoveComments.CHART_INNER in remove_comments:
+                field |= MsdFieldForComments.COMMENTS
+            if RemoveComments.OTHER in remove_comments:
+                field |= MsdFieldForComments.PREAMBLE | MsdFieldForComments.SUFFIX
+
+        else:
+            assert_never(self)
+
+        return field
+
+
 class RemoveComments(enum.Flag):
     PREAMBLE = enum.auto()
     """
@@ -323,7 +410,60 @@ class RemoveComments(enum.Flag):
     """
 
     def run(self, sim: Simfile) -> bool:
-        return False
+        changed = False
+
+        def _remove_comments(string: str) -> str:
+            output_lines = []
+            for line in string.splitlines(keepends=True):
+                # Completely drop the line if it only contains a comment
+                if not line.lstrip().startswith("//"):
+                    output_lines.append(re.sub(r"(?<!\\)//.*", "", line))
+            return "".join(output_lines)
+
+        for prop_type in PropertyForComments:
+            for prop in prop_type.iter_props(sim):
+
+                original_msd_parameter = prop.msd_parameter
+                change_msd_fields = prop_type.change_msd_fields(self)
+                msd_field_names = {
+                    MsdFieldForComments.PREAMBLE: "preamble",
+                    MsdFieldForComments.COMMENTS: "comments",
+                    MsdFieldForComments.SUFFIX: "suffix",
+                }
+
+                for field, field_name in msd_field_names.items():
+                    if field in change_msd_fields:
+                        if field in (
+                            MsdFieldForComments.PREAMBLE | MsdFieldForComments.SUFFIX
+                        ):
+                            field_value: Optional[str] = getattr(
+                                prop.msd_parameter, field_name
+                            )
+                            if field_value and "//" in field_value:
+                                field_value_no_comments = _remove_comments(field_value)
+                                if field_value_no_comments != field_value:
+                                    prop.msd_parameter = replace(
+                                        prop.msd_parameter,
+                                        **{field_name: field_value_no_comments},
+                                    )
+                                    changed = True
+
+                        elif field is MsdFieldForComments.COMMENTS:
+                            if prop.msd_parameter.comments:
+                                prop.msd_parameter = replace(
+                                    prop.msd_parameter, comments={}
+                                )
+                                changed = True
+
+                # HACK(update-real-param): update chart._real_parameter
+                # manually here (because it isn't contained in a Property)
+                if prop_type is PropertyForComments.SMCHART_REAL_PARAM:
+                    if isinstance(sim, SMSimfile):
+                        for chart in sim.charts:
+                            if chart._real_parameter == original_msd_parameter:
+                                chart._real_parameter = prop.msd_parameter
+
+        return changed
 
 
 class CreateComments(enum.Flag):
