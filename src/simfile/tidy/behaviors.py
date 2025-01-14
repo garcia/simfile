@@ -368,17 +368,17 @@ class PropertyForComments(enum.Enum):
     def change_msd_fields(
         self, remove_comments: "RemoveComments"
     ) -> MsdFieldForComments:
-        field = MsdFieldForComments(0)
+        fields = MsdFieldForComments(0)
 
         if self is PropertyForComments.SIMFILE_FIRST_PROP:
             if RemoveComments.PREAMBLE in remove_comments:
-                field |= MsdFieldForComments.PREAMBLE
+                fields |= MsdFieldForComments.PREAMBLE
             if RemoveComments.OTHER in remove_comments:
-                field |= MsdFieldForComments.COMMENTS | MsdFieldForComments.SUFFIX
+                fields |= MsdFieldForComments.COMMENTS | MsdFieldForComments.SUFFIX
 
         elif self is PropertyForComments.SIMFILE_OTHER_PROPS:
             if RemoveComments.OTHER in remove_comments:
-                field |= (
+                fields |= (
                     MsdFieldForComments.PREAMBLE
                     | MsdFieldForComments.COMMENTS
                     | MsdFieldForComments.SUFFIX
@@ -389,22 +389,22 @@ class PropertyForComments(enum.Enum):
             PropertyForComments.SMCHART_REAL_PARAM,
         ):
             if RemoveComments.CHART_PREAMBLE in remove_comments:
-                field |= MsdFieldForComments.PREAMBLE
+                fields |= MsdFieldForComments.PREAMBLE
             if RemoveComments.CHART_INNER in remove_comments:
-                field |= MsdFieldForComments.COMMENTS
+                fields |= MsdFieldForComments.COMMENTS
             if RemoveComments.OTHER in remove_comments:
-                field |= MsdFieldForComments.SUFFIX
+                fields |= MsdFieldForComments.SUFFIX
 
         elif self is PropertyForComments.SSCCHART_OTHER_PROPS:
             if RemoveComments.CHART_INNER in remove_comments:
-                field |= MsdFieldForComments.COMMENTS
+                fields |= MsdFieldForComments.COMMENTS
             if RemoveComments.OTHER in remove_comments:
-                field |= MsdFieldForComments.PREAMBLE | MsdFieldForComments.SUFFIX
+                fields |= MsdFieldForComments.PREAMBLE | MsdFieldForComments.SUFFIX
 
         else:
             assert_never(self)
 
-        return field
+        return fields
 
 
 class RemoveComments(enum.Flag):
@@ -451,6 +451,7 @@ class RemoveComments(enum.Flag):
             return "".join(output_lines)
 
         for prop_type in PropertyForComments:
+            # Iterate over all properties of a given type
             for prop in prop_type.iter_props(sim):
 
                 original_msd_parameter = prop.msd_parameter

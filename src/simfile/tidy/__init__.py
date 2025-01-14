@@ -31,32 +31,29 @@ def tidy(
     sort_properties: Optional[SortProperties] = None,
 ):
     """
-    Tidy up a simfile for serialization to disk, mutating it in-memory.
+    Tidy up a simfile for future serialization, mutating it in-memory.
 
     This function has many optional parameters that toggle various
     tidying **behaviors**. The simplest way to call it is to pass a preset
     as the second argument::
 
         import tidy, Preset from simfile.tidy
-        tidy(sim, Preset.SM5)
+        tidy(sim, Preset.RECOMMENDED)  # or Preset.SM5
 
-    Without a preset, all behaviors default to `False`. If you don't
-    specify a preset, you must set at least one behavior to a non-`False`
-    value, or specify the :data:`~.NO_OP` preset to allow no behaviors.
+    Without a preset, all behaviors default to off. If you don't specify
+    a preset, you must set at least one behavior to a non-empty value, or
+    specify the :data:`~Preset.NO_OP` preset to allow no behaviors.
 
-    Each optional behavior has an associated enum. Some enums are flags
-    that can be combined using bitwise operators, like so::
+    Each optional behavior has an associated enum. Some behaviors' enums
+    are flags that can be combined using bitwise operators, for example::
 
-        import tidy, FilterComments from simfile.tidy
+        import tidy, RemoveComments from simfile.tidy
         tidy(
             sim,
-            filter_comments=FilterComments.PREAMBLE | FilterComments.CHART_PREAMBLE,
+            remove_comments=RemoveComments.PREAMBLE | RemoveComments.CHART_PREAMBLE,
         )
 
-    Optional behaviors also take the shorthand `True` to opt into a default
-    behavior. For non-flag enums, this is equivalent to passing the first
-    enum value. For flag enums, it's equivalent to combining all options.
-    Refer to each enum class's documentation for more details.
+    All flag enums include an ``ALL`` alias, a union of all the other fields.
 
     Returns `True` only if changes were made to the simfile.
     Raises `ValueError` if no preset or behaviors are specified.
