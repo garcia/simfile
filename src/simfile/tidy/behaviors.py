@@ -18,7 +18,7 @@ __all__ = [
     "LineEndings",
     "RemoveComments",
     "CreateComments",
-    "CreateDefaultProperties",
+    "CreateMissingProperties",
     "DestructivelyRemoveProperties",
     "SortProperties",
 ]
@@ -64,7 +64,7 @@ class Preset(enum.Enum):
                 remove_comments=RemoveComments.PREAMBLE | RemoveComments.OTHER,
                 create_comments=CreateComments.CHART_PREAMBLE
                 | CreateComments.CHART_MEASURES,
-                create_default_properties=CreateDefaultProperties.SM5_DEFAULT,
+                create_missing_properties=CreateMissingProperties.SM5_DEFAULT,
                 destructively_remove_properties=False,
                 sort_properties=SortProperties.SM5,
             )
@@ -505,7 +505,7 @@ class CreateComments(enum.Flag):
         return False
 
 
-class CreateDefaultProperties(enum.Enum):
+class CreateMissingProperties(enum.Enum):
     SM5_DEFAULT = enum.auto()
     """
     Create the same default properties that the StepMania 5 editor creates,
@@ -556,6 +556,6 @@ class DefaultBehaviors:
     line_endings: bool | LineEndings = False
     remove_comments: bool | RemoveComments = False
     create_comments: bool | CreateComments = False
-    create_default_properties: bool | CreateDefaultProperties = False
+    create_missing_properties: bool | CreateMissingProperties = False
     destructively_remove_properties: bool | DestructivelyRemoveProperties = False
     sort_properties: bool | SortProperties = False

@@ -12,7 +12,7 @@ __all__ = [
     "LineEndings",
     "RemoveComments",
     "CreateComments",
-    "CreateDefaultProperties",
+    "CreateMissingProperties",
     "DestructivelyRemoveProperties",
     "SortProperties",
 ]
@@ -26,7 +26,7 @@ def tidy(
     line_endings: Optional[LineEndings] = None,
     remove_comments: Optional[RemoveComments] = None,
     create_comments: Optional[CreateComments] = None,
-    create_default_properties: Optional[CreateDefaultProperties] = None,
+    create_missing_properties: Optional[CreateMissingProperties] = None,
     destructively_remove_properties: Optional[DestructivelyRemoveProperties] = None,
     sort_properties: Optional[SortProperties] = None,
 ):
@@ -59,6 +59,7 @@ def tidy(
     Refer to each enum class's documentation for more details.
 
     Returns `True` only if changes were made to the simfile.
+    Raises `ValueError` if no preset or behaviors are specified.
     """
     if not any(
         (
@@ -67,14 +68,14 @@ def tidy(
             line_endings,
             remove_comments,
             create_comments,
-            create_default_properties,
+            create_missing_properties,
             destructively_remove_properties,
             sort_properties,
         )
     ):
         raise ValueError(
             "Must specify a preset or at least one behavior"
-            " (specify `Preset.NO_OP` to silence this error)"
+            " (pass `Preset.NO_OP` as the second argument to silence this error)"
         )
 
     changed = False
@@ -87,8 +88,8 @@ def tidy(
         changed |= remove_comments.run(sim)
     if create_comments:
         changed |= create_comments.run(sim)
-    if create_default_properties:
-        changed |= create_default_properties.run(sim)
+    if create_missing_properties:
+        changed |= create_missing_properties.run(sim)
     if destructively_remove_properties:
         changed |= destructively_remove_properties.run(sim)
     if sort_properties:
