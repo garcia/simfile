@@ -88,7 +88,7 @@ class Preset(enum.Enum):
                 remove_comments=RemoveComments.ALL,
                 create_comments=CreateComments.CHART_PREAMBLE
                 | CreateComments.CHART_MEASURES,
-                create_missing_properties=CreateMissingProperties.SM5_DEFAULT,
+                create_missing_properties=CreateMissingProperties.SM5,
                 sort_properties=SortProperties.SM5,
             )
 
@@ -462,16 +462,17 @@ class RemoveComments(enum.Flag):
     Remove all comments.
     """
 
+    @staticmethod
+    def _remove_comments(string: str) -> str:
+        output_lines = []
+        for line in string.splitlines(keepends=True):
+            # Completely drop the line if it only contains a comment
+            if not line.lstrip().startswith("//"):
+                output_lines.append(re.sub(r"(?<!\\)//.*", "", line))
+        return "".join(output_lines)
+
     def run(self, sim: Simfile) -> bool:
         changed = False
-
-        def _remove_comments(string: str) -> str:
-            output_lines = []
-            for line in string.splitlines(keepends=True):
-                # Completely drop the line if it only contains a comment
-                if not line.lstrip().startswith("//"):
-                    output_lines.append(re.sub(r"(?<!\\)//.*", "", line))
-            return "".join(output_lines)
 
         for prop_type in PropertyForComments:
             # Iterate over all properties of a given type
@@ -494,7 +495,9 @@ class RemoveComments(enum.Flag):
                                 prop.msd_parameter, field_name
                             )
                             if field_value and "//" in field_value:
-                                field_value_no_comments = _remove_comments(field_value)
+                                field_value_no_comments = (
+                                    RemoveComments._remove_comments(field_value)
+                                )
                                 if field_value_no_comments != field_value:
                                     prop.msd_parameter = replace(
                                         prop.msd_parameter,
@@ -558,8 +561,9 @@ class CreateComments(enum.Flag):
         (etc.)
     """
 
+    @staticmethod
     def _update_or_create_preamble_line(
-        self, prop: Property, comment_pattern: str, comment_text: str
+        prop: Property, comment_pattern: str, comment_text: str
     ) -> bool:
         changed = False
 
@@ -588,7 +592,8 @@ class CreateComments(enum.Flag):
 
         return changed
 
-    def _generate_measure_comments(self, chart: Chart, *, line_offset=0):
+    @staticmethod
+    def _generate_measure_comments(chart: Chart, *, line_offset=0):
         comments: dict[int, str] = {}
         notes_with_preamble = (
             chart._properties["NOTES"].msd_parameter.preamble or ""
@@ -623,7 +628,7 @@ class CreateComments(enum.Flag):
             comment_pattern = comment_base.format(version=r"\S+")
             comment_text = comment_base.format(version=simfile.__version__) + "\n"
             first_property = next(iter(sim._properties.values()))
-            changed |= self._update_or_create_preamble_line(
+            changed |= CreateComments._update_or_create_preamble_line(
                 first_property, comment_pattern, comment_text
             )
 
@@ -645,8 +650,10 @@ class CreateComments(enum.Flag):
                     fake_property = Property(
                         value="", msd_parameter=chart._real_parameter
                     )
-                    changed_smchart_preamble = self._update_or_create_preamble_line(
-                        fake_property, comment_pattern, comment_text
+                    changed_smchart_preamble = (
+                        CreateComments._update_or_create_preamble_line(
+                            fake_property, comment_pattern, comment_text
+                        )
                     )
                     if changed_smchart_preamble:
                         chart._real_parameter = replace(
@@ -657,7 +664,7 @@ class CreateComments(enum.Flag):
 
                 elif isinstance(chart, SSCChart):
                     first_sscchart_property = next(iter(chart._properties.values()))
-                    changed |= self._update_or_create_preamble_line(
+                    changed |= CreateComments._update_or_create_preamble_line(
                         first_sscchart_property, comment_pattern, comment_text
                     )
 
@@ -684,7 +691,7 @@ class CreateComments(enum.Flag):
                                 - 1
                             )
 
-                        comments = self._generate_measure_comments(
+                        comments = CreateComments._generate_measure_comments(
                             chart, line_offset=line_offset
                         )
 
@@ -700,7 +707,7 @@ class CreateComments(enum.Flag):
 
                 elif isinstance(chart, SSCChart):
                     if chart.notes and not chart.notes.isspace():
-                        comments = self._generate_measure_comments(chart)
+                        comments = CreateComments._generate_measure_comments(chart)
 
                         notes_property = chart._properties["NOTES"]
                         if comments != notes_property.msd_parameter.comments:
