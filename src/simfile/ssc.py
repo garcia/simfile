@@ -2,11 +2,11 @@
 Simfile & chart classes for SSC files.
 """
 
-from copy import deepcopy
 from dataclasses import replace
-from typing import Iterable, Iterator, Optional, Sequence, Type
+from typing import Iterable, Optional, Sequence, TextIO, Tuple, Type
 
 from msdparser import parse_msd, MSDParameter
+from msdparser.lexer import MSDToken
 
 from simfile._private.ordered_dict_forwarder import Property
 
@@ -239,6 +239,17 @@ class SSCSimfile(BaseSimfile):
     speeds = BaseObject._item_property("SPEEDS")
     scrolls = BaseObject._item_property("SCROLLS")
     fakes = BaseObject._item_property("FAKES")
+
+    def __init__(
+        self,
+        *,
+        file: Optional[TextIO] = None,
+        string: Optional[str] = None,
+        tokens: Optional[Iterable[Tuple[MSDToken, str]]] = None,
+        strict: bool = True,
+    ):
+        self._charts = SSCCharts(simfile=self)
+        super().__init__(file=file, string=string, tokens=tokens, strict=strict)
 
     @classmethod
     def blank(cls: Type["SSCSimfile"]) -> "SSCSimfile":

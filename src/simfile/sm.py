@@ -4,9 +4,10 @@ Simfile & chart classes for SM files.
 
 from copy import deepcopy
 from dataclasses import replace
-from typing import Iterable, Iterator, List, Optional, Sequence, Type
+from typing import Iterable, Iterator, List, Optional, Sequence, TextIO, Tuple, Type
 
 from msdparser import MSDParameter
+from msdparser.lexer import MSDToken
 
 from ._private.ordered_dict_forwarder import Property
 from ._private.dedent import dedent_and_trim
@@ -281,8 +282,18 @@ class SMSimfile(BaseSimfile):
     Specialized property for `STOPS` that supports `FREEZES` as an alias.
     """
 
-    def _parse(self, parser: MSDIterator):
+    def __init__(
+        self,
+        *,
+        file: Optional[TextIO] = None,
+        string: Optional[str] = None,
+        tokens: Optional[Iterable[Tuple[MSDToken, str]]] = None,
+        strict: bool = True,
+    ):
         self._charts = SMCharts(simfile=self)
+        super().__init__(file=file, string=string, tokens=tokens, strict=strict)
+
+    def _parse(self, parser: MSDIterator):
         suffix_heuristic = ";\n"
         suffix_heuristic_match = False
 
