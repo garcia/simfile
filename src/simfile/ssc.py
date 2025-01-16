@@ -9,6 +9,7 @@ from msdparser import parse_msd, MSDParameter
 from msdparser.lexer import MSDToken
 
 from simfile._private.ordered_dict_forwarder import Property
+from .sm import SM_CHART_PROPERTIES, SM_SIMFILE_PROPERTIES
 
 from .base import (
     BaseAttachedChart,
@@ -22,6 +23,40 @@ from ._private.dedent import dedent_and_trim
 
 
 __all__ = ["SSCChart", "AttachedSSCChart", "SSCCharts", "SSCSimfile"]
+
+
+SSC_CHART_PROPERTIES = (
+    "CHARTNAME",
+    "STEPSTYPE",
+    "DESCRIPTION",
+    "CHARTSTYLE",
+    "DIFFICULTY",
+    "METER",
+    "MUSIC",
+    "RADARVALUES",
+    "CREDIT",
+    "OFFSET",
+    "BPMS",
+    "STOPS",
+    "DELAYS",
+    "TIMESIGNATURES",
+    "TICKCOUNTS",
+    "COMBOS",
+    "WARPS",
+    "SPEEDS",
+    "SCROLLS",
+    "FAKES",
+    "LABELS",
+    "ATTACKS",
+    "DISPLAYBPM",
+    "NOTES",
+    "NOTES2",
+)
+"""
+All chart-level properties of .SSC files recognized by StepMania 5.
+
+This sequence is sorted in the same order produced by the StepMania 5 editor.
+"""
 
 
 class SSCChart(BaseChart):
@@ -44,8 +79,9 @@ class SSCChart(BaseChart):
 
     chartname = BaseObject._item_property("CHARTNAME")
     chartstyle = BaseObject._item_property("CHARTSTYLE")
-    credit = BaseObject._item_property("CREDIT")
     music = BaseObject._item_property("MUSIC")
+    credit = BaseObject._item_property("CREDIT")
+    offset = BaseObject._item_property("OFFSET")
     bpms = BaseObject._item_property("BPMS")
     stops = BaseObject._item_property("STOPS")
     delays = BaseObject._item_property("DELAYS")
@@ -58,7 +94,6 @@ class SSCChart(BaseChart):
     fakes = BaseObject._item_property("FAKES")
     labels = BaseObject._item_property("LABELS")
     attacks = BaseObject._item_property("ATTACKS")
-    offset = BaseObject._item_property("OFFSET")
     displaybpm = BaseObject._item_property("DISPLAYBPM")
 
     # "NOTES2" alias only supported by SSC files
@@ -208,6 +243,57 @@ class SSCCharts(BaseCharts[AttachedSSCChart, "SSCChart", "SSCSimfile"]):
         return super().extend(chart._attach(self._simfile) for chart in iterable)
 
 
+SSC_SIMFILE_PROPERTIES = (
+    "VERSION",
+    "TITLE",
+    "SUBTITLE",
+    "ARTIST",
+    "TITLETRANSLIT",
+    "SUBTITLETRANSLIT",
+    "ARTISTTRANSLIT",
+    "GENRE",
+    "ORIGIN",
+    "CREDIT",
+    "BANNER",
+    "BACKGROUND",
+    "PREVIEWVID",
+    "JACKET",
+    "CDIMAGE",
+    "DISCIMAGE",
+    "LYRICSPATH",
+    "CDTITLE",
+    "MUSIC",
+    "PREVIEW",
+    "INSTRUMENTTRACK",
+    "OFFSET",
+    "SAMPLESTART",
+    "SAMPLELENGTH",
+    "SELECTABLE",
+    "DISPLAYBPM",
+    "BPMS",
+    "STOPS",
+    "DELAYS",
+    "WARPS",
+    "TIMESIGNATURES",
+    "TICKCOUNTS",
+    "COMBOS",
+    "SPEEDS",
+    "SCROLLS",
+    "FAKES",
+    "LABELS",
+    "LASTSECONDHINT",
+    "BGCHANGES",
+    "FGCHANGES",
+    "KEYSOUNDS",
+    "ATTACKS",
+)
+"""
+All simfile-level properties of .SSC files recognized by StepMania 5.
+
+This sequence is sorted in the same order produced by the StepMania 5 editor.
+"""
+
+
 class SSCSimfile(BaseSimfile):
     """
     SSC implementation of :class:`~simfile.base.BaseSimfile`.
@@ -215,7 +301,7 @@ class SSCSimfile(BaseSimfile):
     Adds the following known properties:
 
     * SSC version: `version`
-    * Metadata: `origin`, `labels`, `musiclength`, `lastsecondhint`
+    * Metadata: `origin`, `labels`, `lastsecondhint`
     * File paths: `previewvid`, `jacket`, `cdimage`, `discimage`,
       `preview`
     * Gameplay events: `combos`, `speeds`, `scrolls`, `fakes`
@@ -231,7 +317,6 @@ class SSCSimfile(BaseSimfile):
     cdimage = BaseObject._item_property("CDIMAGE")
     discimage = BaseObject._item_property("DISCIMAGE")
     preview = BaseObject._item_property("PREVIEW")
-    musiclength = BaseObject._item_property("MUSICLENGTH")
     lastsecondhint = BaseObject._item_property("LASTSECONDHINT")
     warps = BaseObject._item_property("WARPS")
     labels = BaseObject._item_property("LABELS")

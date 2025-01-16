@@ -21,7 +21,14 @@ from .base import (
 )
 
 
-__all__ = ["SMChart", "AttachedSMChart", "SMCharts", "SMSimfile"]
+__all__ = [
+    "SM_CHART_PROPERTIES",
+    "SMChart",
+    "AttachedSMChart",
+    "SMCharts",
+    "SM_SIMFILE_PROPERTIES",
+    "SMSimfile",
+]
 
 
 SM_CHART_PROPERTIES = (
@@ -32,6 +39,11 @@ SM_CHART_PROPERTIES = (
     "RADARVALUES",
     "NOTES",
 )
+"""
+Pseudo-properties of .SM files, named how they are recognized internally.
+
+This sequence is sorted in the same order dictated by the .SM format.
+"""
 
 
 class SMChart(BaseChart):
@@ -267,6 +279,47 @@ class SMCharts(BaseCharts[AttachedSMChart, SMChart, "SMSimfile"]):
 
     def extend(self, iterable: Iterable[SMChart]) -> None:
         return super().extend(chart._attach(self._simfile) for chart in iterable)
+
+
+SM_SIMFILE_PROPERTIES = (
+    "TITLE",
+    "SUBTITLE",
+    "ARTIST",
+    "TITLETRANSLIT",
+    "SUBTITLETRANSLIT",
+    "ARTISTTRANSLIT",
+    "GENRE",
+    "CREDIT",
+    "BANNER",
+    "BACKGROUND",
+    "LYRICSPATH",
+    "CDTITLE",
+    "MUSIC",
+    "OFFSET",
+    "SAMPLESTART",
+    "SAMPLELENGTH",
+    "LASTBEATHINT",
+    "SELECTABLE",
+    "DISPLAYBPM",
+    "BPMS",
+    "STOPS",
+    "FREEZES",  # alias of STOPS
+    "DELAYS",
+    "TIMESIGNATURES",
+    "TICKCOUNTS",
+    "INSTRUMENTTRACK",
+    "BGCHANGES",
+    "ANIMATIONS",  # alias of BGCHANGES
+    "FGCHANGES",
+    "KEYSOUNDS",
+    "ATTACKS",
+)
+"""
+All simfile-level properties of .SM files recognized by StepMania 5,
+including aliases.
+
+This sequence is sorted in the same order produced by the StepMania 5 editor.
+"""
 
 
 class SMSimfile(BaseSimfile):
