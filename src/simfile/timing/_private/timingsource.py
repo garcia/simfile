@@ -1,3 +1,4 @@
+from collections import defaultdict
 from typing import Optional, Union
 
 from simfile.sm import SMChart
@@ -23,7 +24,23 @@ CHART_TIMING_PROPERTIES = (
     SSCChart.scrolls,
     SSCChart.fakes,
     SSCChart.labels,
+    SSCChart.offset,
 )
+
+CHART_TIMING_DEFAULTS = {
+    SSCChart.bpms: "0.000=60.000",
+    SSCChart.stops: "",
+    SSCChart.delays: "",
+    SSCChart.timesignatures: "0.000=4=4",
+    SSCChart.tickcounts: "0.000=4",
+    SSCChart.combos: "0.000=1",
+    SSCChart.warps: "",
+    SSCChart.speeds: "0.000=1.000=0.000=0",
+    SSCChart.scrolls: "0.000=1.000",
+    SSCChart.fakes: "",
+    SSCChart.labels: "0.000=Song Start",
+    SSCChart.offset: "0.000",
+}
 
 
 def timing_source(
