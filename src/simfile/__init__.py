@@ -10,7 +10,7 @@ setting `strict` to False.
 from contextlib import contextmanager
 from io import StringIO, TextIOWrapper
 from itertools import tee
-from typing import Iterator, List, Optional, TextIO, Tuple, Union, cast
+from typing import Iterator, List, Optional, TextIO, Tuple, cast
 
 from msdparser import parse_msd
 
