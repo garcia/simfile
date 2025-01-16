@@ -11,6 +11,7 @@ from simfile.tidy import tidy
 from simfile._private.dedent import dedent_and_trim
 from simfile.tidy.behaviors import (
     CreateComments,
+    CreateMissingProperties,
     LineEndings,
     RemoveComments,
     Whitespace,
@@ -869,3 +870,64 @@ class TestCreateComments(SimfileTestCase):
             elif line.startswith(","):
                 self.assertEqual(f",  // measure {mn}", line)
                 mn += 1
+
+
+class TestCreateMissingProperties(SimfileTestCase):
+    def test_sm5_sm_no_missing_properties(self):
+        sim = simfile.open("testdata/backup/backup.sm")
+
+        self.assertFalse(
+            tidy(sim, create_missing_properties=CreateMissingProperties.SM5)
+        )
+
+    def test_sm5_sm_create_missing_properties(self):
+        sim = SMSimfile()
+        sim.title = "test"
+
+        self.assertTrue(
+            tidy(sim, create_missing_properties=CreateMissingProperties.SM5)
+        )
+
+        self.assertEqual("test", sim.title)
+        self.assertEqual("", sim.subtitle)
+        self.assertEqual(SMSimfile.blank().offset, sim.offset)
+        # Not a default property (only present if specified):
+        self.assertIsNone(sim.displaybpm)
+
+    def test_sm5_ssc_no_missing_properties(self):
+        sim = simfile.open("testdata/backup/backup.sm")
+
+        self.assertFalse(
+            tidy(sim, create_missing_properties=CreateMissingProperties.SM5)
+        )
+
+    def test_sm5_ssc_chart_missing_timing_properties(self):
+        sim = simfile.open("testdata/backup/backup.ssc")
+        assert isinstance(sim, SSCSimfile)
+
+        chart = sim.charts[0]
+        chart.offset = "0.000"
+
+        self.assertTrue(
+            tidy(sim, create_missing_properties=CreateMissingProperties.SM5)
+        )
+
+        self.assertEqual("0.000", chart.offset)
+        self.assertEqual("0.000=60.000", chart.bpms)
+        self.assertEqual("", chart.warps)
+
+    def test_sm5_ssc_simfile_missing_properties(self):
+        sim = SSCSimfile()
+        sim.title = "test"
+
+        self.assertTrue(
+            tidy(sim, create_missing_properties=CreateMissingProperties.SM5)
+        )
+
+        self.assertEqual("test", sim.title)
+        self.assertEqual("", sim.subtitle)
+        self.assertEqual(SSCSimfile.blank().offset, sim.offset)
+        # SSC-specific property:
+        self.assertEqual(SSCSimfile.blank().labels, sim.labels)
+        # Not a default property (only present if specified):
+        self.assertIsNone(sim.displaybpm)

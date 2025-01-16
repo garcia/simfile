@@ -10,7 +10,8 @@ import simfile
 from simfile._private.msd_serializable import MSDSerializable
 from simfile._private.ordered_dict_forwarder import Property
 from simfile.sm import SMChart, SMSimfile
-from simfile.ssc import SSCChart
+from simfile.ssc import SSCChart, SSCSimfile
+from simfile.timing._private.timingsource import timing_source, CHART_TIMING_DEFAULTS
 from simfile.types import Chart, Simfile
 
 
@@ -727,7 +728,7 @@ class CreateMissingProperties(enum.Enum):
     Fill in any missing properties in the simfile with a default value.
     """
 
-    SM5_DEFAULT = enum.auto()
+    SM5 = enum.auto()
     """
     Create the same default properties that the StepMania 5 editor creates,
     if they don't already exist.
@@ -736,15 +737,29 @@ class CreateMissingProperties(enum.Enum):
     specific non-empty default value, such as ``OFFSET`` and ``BPMS``.
     """
 
-    SM5_ALL = enum.auto()
-    """
-    Like :data:`.SM5_DEFAULT`, but also creates some default properties
-    that the StepMania 5 editor leaves out when blank, such as
-    ``DISPLAYBPM``.
-    """
-
     def run(self, sim: Simfile) -> bool:
-        return False
+        changed = False
+
+        if self is CreateMissingProperties.SM5:
+            SimfileType = type(sim)
+            blank = SimfileType.blank()
+            for key in blank._properties.keys():
+                if key not in sim:
+                    sim[key] = blank[key] or ""
+                    changed = True
+
+            if SimfileType is SSCSimfile:
+                for chart in sim.charts:
+                    if timing_source(chart) is chart:
+                        for prop, default_value in CHART_TIMING_DEFAULTS.items():
+                            if prop.__get__(chart) is None:
+                                prop.__set__(chart, default_value)
+                                changed = True
+
+        else:
+            assert_never(self)
+
+        return changed
 
 
 class DestructivelyRemoveProperties(enum.Enum):
