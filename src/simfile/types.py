@@ -20,5 +20,6 @@ Charts = Union[SSCCharts, SMCharts]
 Chart = Union[SSCChart, SMChart]
 """Union of :class:`.SSCChart` and :class:`.SMChart`."""
 
+
 AttachedChart = Union[AttachedSMChart, AttachedSSCChart]
 """Union of :class:`.AttachedSMChart` and :class:`.AttachedSSCChart`."""
