@@ -1,3 +1,4 @@
+from collections import OrderedDict
 from dataclasses import replace
 import functools
 import itertools
@@ -12,8 +13,10 @@ from simfile._private.dedent import dedent_and_trim
 from simfile.tidy.behaviors import (
     CreateComments,
     CreateMissingProperties,
+    DestructivelyRemoveProperties,
     LineEndings,
     RemoveComments,
+    SortProperties,
     Whitespace,
 )
 from simfile.types import Simfile
@@ -501,7 +504,7 @@ class TestCreateComments(SimfileTestCase):
                 self.assertEqual(expected, str(sim))
 
                 # Validity check
-                self.assertEqual(sim, simfile.loads(str(sim)))
+                self.assertSimfilesEqual(sim, simfile.loads(str(sim)))
 
                 # Idempotency check
                 self.assertFalse(
@@ -539,7 +542,7 @@ class TestCreateComments(SimfileTestCase):
                 self.assertEqual(expected, str(sim))
 
                 # Validity check
-                self.assertEqual(sim, simfile.loads(str(sim)))
+                self.assertSimfilesEqual(sim, simfile.loads(str(sim)))
 
                 # Idempotency check
                 self.assertFalse(
@@ -570,7 +573,7 @@ class TestCreateComments(SimfileTestCase):
                 self.assertEqual(expected, str(sim))
 
                 # Validity check
-                self.assertEqual(sim, simfile.loads(str(sim)))
+                self.assertSimfilesEqual(sim, simfile.loads(str(sim)))
 
                 # Idempotency check
                 self.assertFalse(
@@ -609,7 +612,7 @@ class TestCreateComments(SimfileTestCase):
         self.assertEqual(expected, str(sim))
 
         # Validity check
-        self.assertEqual(sim, simfile.loads(str(sim)))
+        self.assertSimfilesEqual(sim, simfile.loads(str(sim)))
 
         # Idempotency check
         self.assertFalse(tidy(sim, create_comments=CreateComments.CHART_PREAMBLE))
@@ -674,7 +677,7 @@ class TestCreateComments(SimfileTestCase):
         self.assertEqual(expected, str(sim))
 
         # Validity check
-        self.assertEqual(sim, simfile.loads(str(sim)))
+        self.assertSimfilesEqual(sim, simfile.loads(str(sim)))
 
         # Idempotency check
         self.assertFalse(tidy(sim, create_comments=CreateComments.CHART_PREAMBLE))
@@ -713,7 +716,7 @@ class TestCreateComments(SimfileTestCase):
         self.assertEqual(expected, str(sim))
 
         # Validity check
-        self.assertEqual(sim, simfile.loads(str(sim)))
+        self.assertSimfilesEqual(sim, simfile.loads(str(sim)))
 
         # Idempotency check
         self.assertFalse(tidy(sim, create_comments=CreateComments.CHART_PREAMBLE))
@@ -782,7 +785,7 @@ class TestCreateComments(SimfileTestCase):
         self.assertEqual(expected, str(sim))
 
         # Validity check
-        self.assertEqual(sim, simfile.loads(str(sim)))
+        self.assertSimfilesEqual(sim, simfile.loads(str(sim)))
 
         # Idempotency check
         self.assertFalse(tidy(sim, create_comments=CreateComments.CHART_PREAMBLE))
@@ -931,3 +934,94 @@ class TestCreateMissingProperties(SimfileTestCase):
         self.assertEqual(SSCSimfile.blank().labels, sim.labels)
         # Not a default property (only present if specified):
         self.assertIsNone(sim.displaybpm)
+
+
+class TestDestructivelyRemoveProperties(SimfileTestCase):
+    def test_sm5_no_unknown_properties(self):
+        sim = simfile.open("testdata/backup/backup.sm")
+        self.assertFalse(
+            tidy(sim, destructively_remove_properties=DestructivelyRemoveProperties.SM5)
+        )
+
+        sim = simfile.open("testdata/backup/backup.ssc")
+        self.assertFalse(
+            tidy(sim, destructively_remove_properties=DestructivelyRemoveProperties.SM5)
+        )
+
+    def test_sm5_sm_unknown_properties(self):
+        sim = simfile.open("testdata/backup/backup.sm")
+        sim["FOO"] = "bar"
+        self.assertTrue(
+            tidy(sim, destructively_remove_properties=DestructivelyRemoveProperties.SM5)
+        )
+        assert "FOO" not in sim
+
+        # Validity check
+        self.assertSimfilesEqual(sim, simfile.loads(str(sim)))
+
+        # Idempotency check
+        self.assertFalse(
+            tidy(sim, destructively_remove_properties=DestructivelyRemoveProperties.SM5)
+        )
+
+    def test_sm5_ssc_unknown_properties(self):
+        sim = simfile.open("testdata/backup/backup.ssc")
+        sim["FOO"] = "bar"
+        self.assertTrue(
+            tidy(sim, destructively_remove_properties=DestructivelyRemoveProperties.SM5)
+        )
+        assert "FOO" not in sim
+
+        # Validity check
+        self.assertSimfilesEqual(sim, simfile.loads(str(sim)))
+
+        # Idempotency check
+        self.assertFalse(
+            tidy(sim, destructively_remove_properties=DestructivelyRemoveProperties.SM5)
+        )
+
+
+class TestSortProperties(SimfileTestCase):
+    def test_already_sorted(self):
+        sim = simfile.open("testdata/backup/backup.sm")
+        self.assertFalse(tidy(sim, sort_properties=SortProperties.SM5))
+
+        sim = simfile.open("testdata/backup/backup.ssc")
+        self.assertFalse(tidy(sim, sort_properties=SortProperties.SM5))
+
+    def test_already_sorted_with_unknown_props(self):
+        sim = simfile.open("testdata/backup/backup.sm")
+        sim["UNKNOWN1"] = "foo"
+        sim["UNKNOWN2"] = "bar"
+        self.assertFalse(tidy(sim, sort_properties=SortProperties.SM5))
+
+    def test_only_unknown_props_unsorted(self):
+        sim = simfile.open("testdata/backup/backup.sm")
+        sim["UNKNOWN2"] = "bar"
+        sim["UNKNOWN1"] = "foo"
+        original_keys = [*sim.keys()]
+
+        self.assertTrue(tidy(sim, sort_properties=SortProperties.SM5))
+
+        self.assertEqual([*sim.keys()], original_keys[:-2] + ["UNKNOWN1", "UNKNOWN2"])
+
+        # Validity check
+        self.assertSimfilesEqual(sim, simfile.loads(str(sim)))
+
+        # Idempotency check
+        self.assertFalse(tidy(sim, sort_properties=SortProperties.SM5))
+
+    def test_reversed(self):
+        sim = simfile.open("testdata/backup/backup.sm")
+        first_prop = next(iter(sim._properties.values()))
+        first_prop.msd_parameter = replace(first_prop.msd_parameter, preamble=None)
+        original_contents = str(sim)
+        sim._properties = OrderedDict(reversed(sim._properties.items()))
+        self.assertEqual("ATTACKS", next(iter(sim._properties.keys())))
+
+        self.assertTrue(tidy(sim, sort_properties=SortProperties.SM5))
+
+        self.assertEqual(str(sim), original_contents)
+
+        # Idempotency check
+        self.assertFalse(tidy(sim, sort_properties=SortProperties.SM5))

@@ -1,7 +1,7 @@
 from dataclasses import dataclass, replace
 import enum
 import re
-from typing import Iterator, Mapping, Optional
+from typing import Iterator, Optional, OrderedDict, Sequence
 from typing_extensions import assert_never
 
 from msdparser import MSDParameter, parse_msd
@@ -9,8 +9,14 @@ from msdparser import MSDParameter, parse_msd
 import simfile
 from simfile._private.msd_serializable import MSDSerializable
 from simfile._private.ordered_dict_forwarder import Property
-from simfile.sm import SMChart, SMSimfile
-from simfile.ssc import SSCChart, SSCSimfile
+from simfile.base import BaseObject
+from simfile.sm import SM_SIMFILE_PROPERTIES, SMChart, SMSimfile
+from simfile.ssc import (
+    SSC_CHART_PROPERTIES,
+    SSC_SIMFILE_PROPERTIES,
+    SSCChart,
+    SSCSimfile,
+)
 from simfile.timing._private.timingsource import timing_source, CHART_TIMING_DEFAULTS
 from simfile.types import Chart, Simfile
 
@@ -780,7 +786,36 @@ class DestructivelyRemoveProperties(enum.Enum):
     """
 
     def run(self, sim: Simfile) -> bool:
-        return False
+        changed = False
+
+        if isinstance(sim, SMSimfile):
+            for key in [*sim._properties.keys()]:
+                # Extract the real key from any duplicate keys
+                real_key = key.partition(":")[0]
+                if real_key not in SM_SIMFILE_PROPERTIES:
+                    del sim._properties[key]
+                    changed = True
+
+        elif isinstance(sim, SSCSimfile):
+            for key in [*sim._properties.keys()]:
+                # Extract the real key from any duplicate keys
+                real_key = key.partition(":")[0]
+                if real_key not in SSC_SIMFILE_PROPERTIES:
+                    del sim._properties[key]
+                    changed = True
+
+            for chart in sim.charts:
+                for chart_key in [*chart._properties.keys()]:
+                    # Extract the real key from any duplicate keys
+                    real_chart_key = chart_key.partition(":")[0]
+                    if real_chart_key not in SSC_CHART_PROPERTIES:
+                        del chart._properties[chart_key]
+                        changed = True
+
+        else:
+            assert_never(sim)
+
+        return changed
 
 
 class SortProperties(enum.Enum):
@@ -796,8 +831,57 @@ class SortProperties(enum.Enum):
     known properties.
     """
 
+    @staticmethod
+    def _sort_object_keys(obj: BaseObject, key_order: Sequence[str]) -> bool:
+
+        def sort_key(key: str):
+            # Extract the real key from any duplicate keys; keep them together
+            real_key, _, duplicate_index = key.partition(":")
+            try:
+                return (key_order.index(real_key), duplicate_index)
+            except ValueError:
+                return (len(key_order), key)
+
+        simfile_keys = [*obj._properties.keys()]
+        sorted_keys = sorted(simfile_keys, key=sort_key)
+        if sorted_keys == simfile_keys:
+            return False
+
+        # Make sure the preamble stays on the first key
+        first_prop = next(iter(obj._properties.values()))
+        preamble = first_prop.msd_parameter.preamble
+        first_prop.msd_parameter = replace(first_prop.msd_parameter, preamble=None)
+
+        # Make a new OrderedDict for the sorted props
+        new_properties: OrderedDict[str, Property] = OrderedDict()
+        for key in sorted_keys:
+            new_properties[key] = obj._properties[key]
+
+        new_first_prop = next(iter(new_properties.values()))
+        new_first_prop.msd_parameter = replace(
+            new_first_prop.msd_parameter, preamble=preamble
+        )
+
+        obj._properties = new_properties
+        return True
+
     def run(self, sim: Simfile) -> bool:
-        return False
+        changed = False
+
+        if isinstance(sim, SMSimfile):
+            key_order = SM_SIMFILE_PROPERTIES
+        elif isinstance(sim, SSCSimfile):
+            key_order = SSC_SIMFILE_PROPERTIES
+        else:
+            assert_never(sim)
+
+        changed |= SortProperties._sort_object_keys(sim, key_order)
+
+        if isinstance(sim, SSCSimfile):
+            for chart in sim.charts:
+                changed |= SortProperties._sort_object_keys(chart, SSC_CHART_PROPERTIES)
+
+        return changed
 
 
 @dataclass
