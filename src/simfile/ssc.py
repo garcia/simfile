@@ -26,6 +26,7 @@ __all__ = ["SSCChart", "AttachedSSCChart", "SSCCharts", "SSCSimfile"]
 
 
 SSC_CHART_PROPERTIES = (
+    "NOTEDATA",
     "CHARTNAME",
     "STEPSTYPE",
     "DESCRIPTION",
