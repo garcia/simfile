@@ -1,6 +1,6 @@
 from collections import OrderedDict
 from copy import deepcopy
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from typing import Optional, Sequence, Set, Union
 
 from msdparser import MSDParameter
@@ -81,7 +81,9 @@ class OrderedDictPropertyForwarder:
         try:
             property: Property = self._properties.__getitem__(key)
         except KeyError:
-            property = Property('', self._default_parameter)
+            property = Property(
+                value, replace(self._default_parameter, components=(key, value))
+            )
             self._properties.__setitem__(key, property)
         property.value = value
 
