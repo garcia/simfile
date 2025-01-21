@@ -203,6 +203,7 @@ class SMChart(BaseChart):
             ),
             preamble=real_param.preamble,
             comments=real_param.comments,
+            escape_positions=real_param.escape_positions,
             suffix=real_param.suffix,
         )
         file.write(param.stringify(exact=True))
