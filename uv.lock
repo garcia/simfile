@@ -554,7 +554,7 @@ wheels = [
 
 [[package]]
 name = "simfile"
-version = "3.0.0a3"
+version = "3.0.0a4"
 source = { editable = "." }
 dependencies = [
     { name = "msdparser" },

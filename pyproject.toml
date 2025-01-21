@@ -1,6 +1,6 @@
 [project]
 name = "simfile"
-version = "3.0.0a3"
+version = "3.0.0a4"
 description = "Simfile parsing & editing library"
 authors = [
     { name = "Ash Garcia", email = "github@garcia.sh" }
