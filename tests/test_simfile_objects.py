@@ -61,8 +61,8 @@ class TestSimfileObjects(unittest.TestCase):
 
                 sim_str = dedent_and_trim(
                     f"""
-                    {maybe_version
-                    }#TITLE:test;
+                    {maybe_version}
+                    #TITLE:test;
                     #SUBTITLE:;
                     #ARTIST:;
                     #ATTACKS:line 1;
@@ -101,8 +101,8 @@ class TestSimfileObjects(unittest.TestCase):
 
                 sim_str = dedent_and_trim(
                     f"""
-                    {maybe_version
-                    }#title:test;
+                    {maybe_version}
+                    #title:test;
                     #SUBTITLE:;
                     #ARTIST:;
                     #ATTACKS:line 1;
@@ -134,3 +134,29 @@ class TestSimfileObjects(unittest.TestCase):
                 stringified = str(sim)
                 self.assertEqual(sim_str, stringified)
                 self.assertEqual(sim, simfile.loads(stringified))
+
+    def test_changing_value_resets_ephemera(self):
+        for sim_type in (SMSimfile, SSCSimfile):
+            with self.subTest(sim_type):
+                maybe_version = "#VERSION:0.83;\n" if sim_type is SSCSimfile else ""
+
+                sim_str = dedent_and_trim(
+                    f"""
+                    {maybe_version}
+                    #TITLE:\\#Fairy_dancing_in_lake// test
+                    ;
+                    #SUBTITLE:;
+                    #ARTIST:;
+                    #ATTACKS:line 1;
+                    #ATTACKS:line 2;
+                    #ATTACKS:line 3;
+                    """
+                )
+                sim = simfile.loads(sim_str)
+                self.assertIsInstance(sim, sim_type)
+
+                self.assertIn("#TITLE:\\#Fairy_dancing_in_lake// test\n;\n", str(sim))
+
+                sim.title = "something else"
+
+                self.assertIn("#TITLE:something else;\n", str(sim))
