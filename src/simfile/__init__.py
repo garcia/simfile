@@ -1,10 +1,10 @@
 """
 Convenience functions for loading & modifying simfiles.
 
-All functions take a `strict` parameter that defaults to True. By
-default, the underlying parser will throw an exception if it finds any
-stray text between parameters. This behavior can be overridden by
-setting `strict` to False.
+All functions take a `strict` parameter that defaults to False (except
+:func:`~.mutate`, which defaults to True). When `strict` is set to True,
+the underlying parser will throw an exception if it finds any stray text
+between parameters.
 """
 
 from contextlib import contextmanager
@@ -38,7 +38,7 @@ __all__ = [
 ENCODINGS = ["utf-8", "cp1252", "cp932", "cp949"]
 
 
-def _detect_ssc(file: TextIO, strict: bool = True) -> Tuple[TextIO, bool]:
+def _detect_ssc(file: TextIO, strict: bool = False) -> Tuple[TextIO, bool]:
     # TODO(ash): this branch is probably a remnant of `file` being allowed
     # to be List[str], but I'm not sure how much of it is safe to remove
     if isinstance(file, TextIOWrapper) or isinstance(file, TextIO):
@@ -68,7 +68,7 @@ def _detect_ssc(file: TextIO, strict: bool = True) -> Tuple[TextIO, bool]:
     return (file, first_param.key is not None and first_param.key.upper() == "VERSION")
 
 
-def load(file: TextIO, strict: bool = True, errors: Optional[str] = None) -> Simfile:
+def load(file: TextIO, strict: bool = False, errors: Optional[str] = None) -> Simfile:
     """
     Load a text file object as a simfile.
 
@@ -85,7 +85,7 @@ def load(file: TextIO, strict: bool = True, errors: Optional[str] = None) -> Sim
         return SMSimfile(file=file, strict=strict)
 
 
-def loads(string: str, strict: bool = True) -> Simfile:
+def loads(string: str, strict: bool = False) -> Simfile:
     """
     Load a string containing simfile data as a simfile.
     """
@@ -93,7 +93,7 @@ def loads(string: str, strict: bool = True) -> Simfile:
 
 
 def open(
-    filename: str, strict: bool = True, filesystem: FS = NativeOSFS(), **kwargs
+    filename: str, strict: bool = False, filesystem: FS = NativeOSFS(), **kwargs
 ) -> Simfile:
     """
     Load a simfile by filename.
@@ -118,7 +118,7 @@ def open(
 def open_with_detected_encoding(
     filename: str,
     try_encodings: List[str] = ENCODINGS,
-    strict: bool = True,
+    strict: bool = False,
     filesystem: FS = NativeOSFS(),
     **kwargs,
 ) -> Tuple[Simfile, str]:

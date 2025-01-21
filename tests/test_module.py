@@ -72,7 +72,7 @@ class TestSimfileModule(TestCase):
 
     def test_load_with_stray_text(self):
         with open("straytext.sm", "r") as reader:
-            self.assertRaises(MSDParserError, simfile.load, reader)
+            self.assertRaises(MSDParserError, simfile.load, reader, strict=True)
 
     def test_load_with_stray_text_and_strict_false(self):
         with open("straytext.sm", "r") as reader:
@@ -94,7 +94,7 @@ class TestSimfileModule(TestCase):
         with open("straytext.sm", "r") as reader:
             straytext = reader.read()
 
-        self.assertRaises(MSDParserError, simfile.loads, straytext)
+        self.assertRaises(MSDParserError, simfile.loads, straytext, strict=True)
 
     def test_loads_with_stray_text_and_strict_false(self):
         with open("straytext.sm", "r") as reader:
@@ -137,7 +137,7 @@ class TestSimfileModule(TestCase):
         self.assertEqual(sm_bytes, open("output.tmp", "rb").read())
 
     def test_open_with_stray_text(self):
-        self.assertRaises(MSDParserError, simfile.open, "straytext.sm")
+        self.assertRaises(MSDParserError, simfile.open, "straytext.sm", strict=True)
 
     def test_open_with_stray_text_and_strict_false(self):
         self.assertEqual("Song", simfile.open("straytext.sm", strict=False).title)
@@ -154,10 +154,13 @@ class TestSimfileModule(TestCase):
             UnicodeDecodeError,
             simfile.open_with_detected_encoding,
             "invalid.sm",
+            strict=True,
         )
 
     def test_open_with_detected_encoding_with_try_encodings(self):
-        sm, enc = simfile.open_with_detected_encoding(f"utf-8.sm", ["utf-8"])
+        sm, enc = simfile.open_with_detected_encoding(
+            f"utf-8.sm", ["utf-8"], strict=True
+        )
         self.assertEqual("utf-8", enc)
         self.assertEqual(test_encoding_strings["utf-8"], sm.artist)
 
@@ -166,6 +169,7 @@ class TestSimfileModule(TestCase):
             simfile.open_with_detected_encoding,
             "utf-8.sm",
             ["cp949"],
+            strict=True,
         )
 
     def test_open_with_detected_encoding_with_encoding_kwarg(self):
@@ -174,6 +178,7 @@ class TestSimfileModule(TestCase):
             simfile.open_with_detected_encoding,
             "utf-8.sm",
             encoding="cp949",
+            strict=True,
         )
 
     def test_open_with_detected_encoding_with_stray_text(self):
@@ -181,6 +186,7 @@ class TestSimfileModule(TestCase):
             MSDParserError,
             simfile.open_with_detected_encoding,
             "straytext.sm",
+            strict=True,
         )
 
     def test_open_with_detected_encoding_with_stray_text_and_strict_false(self):
