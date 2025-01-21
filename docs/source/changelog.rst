@@ -3,6 +3,40 @@
 Changelog
 =========
 
+v3.0.0-alpha.2
+--------------
+
+New features
+~~~~~~~~~~~~
+
+A new module, :mod:`simfile.tidy`, is now available.
+This module offers one function, :func:`~.tidy`,
+that acts as the interface to various *behaviors*
+which normalize a chart's serialized representation.
+It also offers some presets that package these behaviors together.
+
+Miscellaneous
+~~~~~~~~~~~~~
+
+* Duplicate keys are now preserved,
+  although they are not accessible through simfile / chart attributes.
+  They are stored in the underlying ``OrderedDict`` with keys like ``PROP:n``,
+  where ``PROP`` is the uppercase property name and ``n`` is a 1-indexed count
+  of how many duplicates have appeared so far.
+  These keys are purely an implementation detail;
+  aforementioned ``:n`` suffix is removed during serialization.
+* Key casing is now preserved during serialization.
+  Note that keys are still coerced to uppercase for the ``OrderedDict`` interface.
+  For example, if a simfile's title is declared using ``#Title:MAX 300;``,
+  the title will be accessible via :attr:`~.BaseSimfile.title` and ``sim["TITLE"]``,
+  but it will serialize back to disk with the same case seen during parsing.
+* Ephemeral details such as whitespace & comments
+  are now preserved more intelligently than before.
+  In particular, any comment above a chart definition
+  is now considered attached to the chart;
+  new simfile-level properties will appear above the comment,
+  instead of below it.
+
 v3.0.0-alpha.1
 --------------
 

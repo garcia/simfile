@@ -22,7 +22,7 @@ from .sm import SMSimfile
 from .types import Simfile
 
 
-__version__ = "3.0.0-alpha.1"
+__version__ = "3.0.0a2"
 __all__ = [
     "load",
     "loads",
