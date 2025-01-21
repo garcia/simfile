@@ -106,7 +106,7 @@ def tidy(
     # appear to no longer reflect idempotency!
     # (CreateComments and RemoveComments are the only pair of behaviors where
     #  one can "undo" the other's work)
-    # TODO: find a broader fix for this
+    # TODO: find a broader fix for this - there are still issues here
     if (
         behaviors.create_comments
         and behaviors.remove_comments
