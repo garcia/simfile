@@ -514,7 +514,7 @@ class RemoveComments(enum.Flag):
                         elif field is MsdFieldForComments.COMMENTS:
                             if prop.msd_parameter.comments:
                                 prop.msd_parameter = replace(
-                                    prop.msd_parameter, comments={}
+                                    prop.msd_parameter, comments=()
                                 )
                                 changed = True
 
@@ -567,6 +567,11 @@ class CreateComments(enum.Flag):
         (etc.)
     """
 
+    ALL = LIBRARY_VERSION_PREAMBLE | CHART_PREAMBLE | CHART_MEASURES
+    """
+    Create all available types of supported comments.
+    """
+
     @staticmethod
     def _update_or_create_preamble_line(
         prop: Property, comment_pattern: str, comment_text: str
@@ -599,7 +604,9 @@ class CreateComments(enum.Flag):
         return changed
 
     @staticmethod
-    def _generate_measure_comments(chart: Chart, *, line_offset=0):
+    def _generate_measure_comments(
+        chart: Chart, *, line_offset=0
+    ) -> Sequence[tuple[int, str]]:
         comments: dict[int, str] = {}
         notes_with_preamble = (
             chart._properties["NOTES"].msd_parameter.preamble or ""
@@ -624,7 +631,8 @@ class CreateComments(enum.Flag):
                 add_trailing_spaces = " " * max(0, 2 - trailing_spaces)
                 comments[ln + line_offset] = f"{add_trailing_spaces}// measure {mn}"
                 mn += 1
-        return comments
+
+        return tuple(comments.items())
 
     def run(self, sim: Simfile) -> bool:
         changed = False
