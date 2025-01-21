@@ -3,8 +3,18 @@
 Changelog
 =========
 
-v3.0.0-alpha.2
---------------
+v3.0.0a3
+--------
+
+* msdparser was upgraded to version 3.0.0a7,
+  which fixes some bugs related to comments & escape sequences.
+* :func:`~.tidy` presets now work;
+  their behaviors were implemented,
+  but the :func:`~.tidy` function did nothing with them.
+  Whoops!
+
+v3.0.0a2
+--------
 
 New features
 ~~~~~~~~~~~~
@@ -37,8 +47,8 @@ Miscellaneous
   new simfile-level properties will appear above the comment,
   instead of below it.
 
-v3.0.0-alpha.1
---------------
+v3.0.0a1
+--------
 
 Breaking changes
 ~~~~~~~~~~~~~~~~

@@ -317,11 +317,11 @@ wheels = [
 
 [[package]]
 name = "msdparser"
-version = "3.0.0a4"
+version = "3.0.0a7"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/86/4f/e081cff9861f87f3c9850b0ca727924ea087aa0d548808a68640a01e36fc/msdparser-3.0.0a4.tar.gz", hash = "sha256:388717e50db998c43a9b08b2399751d7c4ace9f12dd6cbb1c7fe07969da6e6c5", size = 13971 }
+sdist = { url = "https://files.pythonhosted.org/packages/6a/4a/0ff937272ad32cb923667e3e476433cd8606f654fa22d9e1b37dec697cb3/msdparser-3.0.0a7.tar.gz", hash = "sha256:797bc6a99ae491cf2712483d2e0fb086ac4e047354cc8f8e4712bce95833c6c6", size = 14503 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/c7/3c/ac94d10d736ed525ff3e21630564bc9f4c120bfcbb2b37f97b6c42c746c2/msdparser-3.0.0a4-py3-none-any.whl", hash = "sha256:123738740801e1564b47ef026bee295c0e59ab1276226d4c39557d74dd6b31fb", size = 10872 },
+    { url = "https://files.pythonhosted.org/packages/77/d7/6c0fec5bb3177e6fa157fc7fef01c3d1f016b9168bb22fb8cc0809181617/msdparser-3.0.0a7-py3-none-any.whl", hash = "sha256:ef324aa943e325bc1c1ef6b363bf55433def3deb8a9f2fa608b14eff828ccf64", size = 11222 },
 ]
 
 [[package]]
@@ -554,7 +554,7 @@ wheels = [
 
 [[package]]
 name = "simfile"
-version = "3.0.0a2"
+version = "3.0.0a3"
 source = { editable = "." }
 dependencies = [
     { name = "msdparser" },
@@ -587,7 +587,7 @@ dev = [
 requires-dist = [
     { name = "fs", marker = "extra == 'all'" },
     { name = "fs", marker = "extra == 'fs'" },
-    { name = "msdparser", specifier = "~=3.0.0a4" },
+    { name = "msdparser", specifier = "~=3.0.0a7" },
     { name = "pillow", marker = "extra == 'all'" },
     { name = "pillow", marker = "extra == 'assets'" },
     { name = "pyfakefs", specifier = "==4.5.6" },

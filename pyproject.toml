@@ -1,6 +1,6 @@
 [project]
 name = "simfile"
-version = "3.0.0a2"
+version = "3.0.0a3"
 description = "Simfile parsing & editing library"
 authors = [
     { name = "Ash Garcia", email = "github@garcia.sh" }
@@ -8,7 +8,7 @@ authors = [
 license = { text = "MIT License" }
 readme = "README.md"
 dependencies = [
-    "msdparser~=3.0.0a4",
+    "msdparser~=3.0.0a7",
     "pyfakefs==4.5.6",
 ]
 classifiers = [
