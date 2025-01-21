@@ -1,8 +1,9 @@
 from dataclasses import replace
-from typing import Optional
+from typing import Literal, Optional
 
 from simfile.types import Simfile
 from .behaviors import *
+from .behaviors import DefaultBehaviors
 
 
 __all__ = [
@@ -22,13 +23,17 @@ def tidy(
     sim: Simfile,
     preset: Optional[Preset] = None,
     *,
-    whitespace: Optional[Whitespace] = None,
-    line_endings: Optional[LineEndings] = None,
-    remove_comments: Optional[RemoveComments] = None,
-    create_comments: Optional[CreateComments] = None,
-    create_missing_properties: Optional[CreateMissingProperties] = None,
-    destructively_remove_properties: Optional[DestructivelyRemoveProperties] = None,
-    sort_properties: Optional[SortProperties] = None,
+    whitespace: Optional[Whitespace | Literal[False]] = None,
+    line_endings: Optional[LineEndings | Literal[False]] = None,
+    remove_comments: Optional[RemoveComments | Literal[False]] = None,
+    create_comments: Optional[CreateComments | Literal[False]] = None,
+    create_missing_properties: Optional[
+        CreateMissingProperties | Literal[False]
+    ] = None,
+    destructively_remove_properties: Optional[
+        DestructivelyRemoveProperties | Literal[False]
+    ] = None,
+    sort_properties: Optional[SortProperties | Literal[False]] = None,
 ):
     """
     Tidy up a simfile for future serialization, mutating it in-memory.
@@ -77,20 +82,54 @@ def tidy(
 
     changed = False
 
-    if whitespace:
-        changed |= whitespace.run(sim)
-    if line_endings:
-        changed |= line_endings.run(sim)
-    if remove_comments:
-        changed |= remove_comments.run(sim)
-    if create_comments:
-        changed |= create_comments.run(sim)
-    if create_missing_properties:
-        changed |= create_missing_properties.run(sim)
-    if destructively_remove_properties:
-        changed |= destructively_remove_properties.run(sim)
-    if sort_properties:
-        changed |= sort_properties.run(sim)
+    # Override preset behaviors with manually specified behaviors
+    behaviors = preset.behaviors() if preset else Preset.NO_OP.behaviors()
+    if whitespace is not None:
+        behaviors.whitespace = whitespace or None
+    if line_endings is not None:
+        behaviors.line_endings = line_endings or None
+    if remove_comments is not None:
+        behaviors.remove_comments = remove_comments or None
+    if create_comments is not None:
+        behaviors.create_comments = create_comments or None
+    if create_missing_properties is not None:
+        behaviors.create_missing_properties = create_missing_properties or None
+    if destructively_remove_properties is not None:
+        behaviors.destructively_remove_properties = (
+            destructively_remove_properties or None
+        )
+    if sort_properties is not None:
+        behaviors.sort_properties = sort_properties or None
+
+    # Creating chart measure comments implicitly removes chart inner comments,
+    # so don't explicitly remove the comments, or else the return value will
+    # appear to no longer reflect idempotency!
+    # (CreateComments and RemoveComments are the only pair of behaviors where
+    #  one can "undo" the other's work)
+    # TODO: find a broader fix for this
+    if (
+        behaviors.create_comments
+        and behaviors.remove_comments
+        and CreateComments.CHART_MEASURES in behaviors.create_comments
+    ):
+        behaviors.remove_comments &= ~RemoveComments.CHART_INNER
+
+    if behaviors.create_missing_properties:
+        changed |= behaviors.create_missing_properties.run(sim)
+    if behaviors.destructively_remove_properties:
+        changed |= behaviors.destructively_remove_properties.run(sim)
+    if behaviors.sort_properties:
+        changed |= behaviors.sort_properties.run(sim)
+    if behaviors.remove_comments:
+        changed |= behaviors.remove_comments.run(sim)
+    if behaviors.whitespace:
+        changed |= behaviors.whitespace.run(sim)
+    if behaviors.create_comments:
+        changed |= behaviors.create_comments.run(sim)
+    if behaviors.line_endings:
+        changed |= behaviors.line_endings.run(sim)
+
+    new_contents = str(sim)
 
     return changed
 
