@@ -272,23 +272,23 @@ Robust parsing of arbitrary simfiles
 ------------------------------------
 
 The real world is messy, and many simfiles on the Internet are technically
-malformed despite appearing to function correctly in StepMania. This library
-aims to be **strict by default**, both for input and output, but allow more
-permissive input handling on an opt-in basis.
+malformed despite appearing to function correctly in StepMania. Because this
+library's primary goal is to parse **any simfile that StepMania accepts**,
+it should work with all of these files by default.
 
 The functions exposed by the top-level :mod:`simfile` module accept a `strict`
-parameter that can be set to False to suppress MSD parser errors:
+parameter that can be set to True to opt into MSD parser errors:
 
     >>> import simfile
-    >>> springtime = simfile.open('testdata/Springtime/Springtime.ssc', strict=False)
+    >>> springtime = simfile.open('testdata/Springtime/Springtime.ssc', strict=True)
 
 .. warning::
 
     Due to the simplicity of the MSD format, there's only one error condition
-    at the data layer - stray text between parameters - which setting `strict`
-    to False suppresses. Almost any text file will successfully parse as a
-    "simfile" with this check disabled, so exercise caution when applying this
-    feature to arbitrary files.
+    at the data layer - stray text between parameters - which leaving `strict`
+    set to False suppresses. Almost any text file will successfully parse as a
+    "simfile" with this check disabled, so exercise caution when parsing
+    arbitrary files.
 
 While most modern simfiles are encoded in UTF-8, many older simfiles use dated
 encodings (perhaps resembling Latin-1 or Shift-JIS). This was a pain to handle

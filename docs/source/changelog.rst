@@ -3,6 +3,13 @@
 Changelog
 =========
 
+v3.0.0a4
+--------
+
+* :class:`~.LineEndings` no longer clobbers newly-written values to simfiles.
+  Previously, it treated the original MSD parameter as canonical (it is not).
+* The ``strict`` parameter finally defaults to ``False`` as originally planned.
+
 v3.0.0a3
 --------
 
