@@ -665,7 +665,7 @@ class TestRemoveComments(SimfileTestCase):
             permutation_count += 1
 
             for test_file in (self.sm_test_file(), self.ssc_test_file()):
-                with self.subTest((combination, type(test_file))):
+                with self.subTest((filter(None, combination), type(test_file))):
                     original = str(test_file)
 
                     self.assertTrue(tidy(test_file, remove_comments=remove_comments))
