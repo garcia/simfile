@@ -254,7 +254,7 @@ class BaseSimfile(BaseObject, metaclass=ABCMeta):
     ):
         self._properties = OrderedDict()
         self._default_parameter = MSDParameter(
-            ("",), suffix=";\n", comments={}, escape_positions=[]
+            ("",), suffix=";\n", comments=(), escape_positions=()
         )
         self._strict = strict
 
