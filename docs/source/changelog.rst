@@ -146,12 +146,14 @@ For example,
 if you open a simfile with :func:`simfile.mutate`
 and don't make any changes,
 the output file should exactly match the input file.
-This includes whitespace, comments, and any other ephemeral details.
+This includes whitespace, comments, duplicate & lowercase keys,
+and any other ephemeral details.
 
 .. note::
   
-  **Known exceptions:** Duplicate and lowercase keys currently break this claim.
-  These are both slated to be resolved before the stable 3.0 release.
+  **Known exceptions:**
+  Non-chart keys found after the first chart will be moved before the first chart.
+  This is unlikely to change.
 
 Similarly,
 newly created properties on :data:`.Simfile` objects
