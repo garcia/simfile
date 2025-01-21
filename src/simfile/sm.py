@@ -192,18 +192,26 @@ class SMChart(BaseChart):
 
         real_param = self._real_parameter
 
-        param = MSDParameter(
-            components=(
-                "NOTES",
-                *(
-                    serialize_field(self._properties[field])
-                    for field in SM_CHART_PROPERTIES
-                ),
-                *(self.extradata or ()),
+        components = (
+            "NOTES",
+            *(
+                serialize_field(self._properties[field])
+                for field in SM_CHART_PROPERTIES
             ),
+            *(self.extradata or ()),
+        )
+
+        # Check whether any of the (stripped) values have changed;
+        # if so, wipe the comments & regenerate escapes
+        use_ephemera = [self[field] for field in SM_CHART_PROPERTIES] == [
+            c.strip() for c in real_param.components[1:]
+        ]
+
+        param = MSDParameter(
+            components=components,
             preamble=real_param.preamble,
-            comments=real_param.comments,
-            escape_positions=real_param.escape_positions,
+            comments=real_param.comments if use_ephemera else (),
+            escape_positions=real_param.escape_positions if use_ephemera else None,
             suffix=real_param.suffix,
         )
         file.write(param.stringify(exact=True))

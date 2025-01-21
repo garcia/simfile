@@ -160,3 +160,42 @@ class TestSimfileObjects(unittest.TestCase):
                 sim.title = "something else"
 
                 self.assertIn("#TITLE:something else;\n", str(sim))
+
+    def test_changing_value_in_sm_chart_resets_ephemera(self):
+        sim_str = dedent_and_trim(
+            """
+            #NOTES:
+                    dance-single:
+                    http\\:\\//stepartist.example:
+                    Beginner:
+                    1:
+                    0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000:
+            // measure 0
+            0000
+            0000
+            0000
+            0000
+            ;
+            """
+        )
+        expected = dedent_and_trim(
+            """
+            #NOTES:
+                    dance-single:
+                    A more normal description:
+                    Beginner:
+                    1:
+                    0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000:
+            
+            0000
+            0000
+            0000
+            0000
+            ;
+            """
+        )
+
+        sim = simfile.loads(sim_str)
+        sim.charts[0].description = "A more normal description"
+
+        self.assertEqual(expected, str(sim))
