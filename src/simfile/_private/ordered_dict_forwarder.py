@@ -1,4 +1,4 @@
-from collections import OrderedDict
+from collections import Counter, OrderedDict
 from copy import deepcopy
 from dataclasses import dataclass, replace
 from typing import Optional, Sequence, Set, Union
@@ -111,3 +111,28 @@ class OrderedDictPropertyForwarder:
 
     def pop(self, key: str) -> str:
         return self._properties.pop(key).value
+
+    # Extra methods for handling duplicate keys:
+
+    def _change_key(self, old: str, new: str):
+        # https://stackoverflow.com/a/17747040
+        for _ in range(len(self._properties)):
+            k, v = self._properties.popitem(False)
+            self._properties[new if old == k else k] = v
+
+    @staticmethod
+    def _rename_duplicate_key(key: str, count: int) -> str:
+        return f"{key}:{count}"
+
+    @staticmethod
+    def _get_real_key(key: str) -> str:
+        return key.partition(":")[0]
+
+    def _set_property(self, key: str, prop: Property, *, seen_keys: Counter[str]):
+        if key in seen_keys:
+            count = seen_keys[key]
+            deduplicated_key = self._rename_duplicate_key(key, count)
+            self._change_key(key, deduplicated_key)
+
+        self._properties[key] = prop
+        seen_keys[key] += 1

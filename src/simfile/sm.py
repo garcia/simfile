@@ -2,6 +2,7 @@
 Simfile & chart classes for SM files.
 """
 
+from collections import Counter
 from copy import deepcopy
 from dataclasses import replace
 from typing import Iterable, Iterator, List, Optional, Sequence, TextIO, Tuple, Type
@@ -349,6 +350,7 @@ class SMSimfile(BaseSimfile):
     def _parse(self, parser: MSDIterator):
         suffix_heuristic = ";\n"
         suffix_heuristic_match = False
+        seen_keys: Counter[str] = Counter()
 
         for param in self._move_suffix_to_next_preamble(parser, ("NOTES",)):
             # Determine a default parameter suffix from the input
@@ -364,14 +366,16 @@ class SMSimfile(BaseSimfile):
             upper_key = param.key.upper()
             if upper_key == "NOTES":
                 self.charts.append(SMChart.from_msd_parameter(param))
-            elif upper_key in BaseSimfile.MULTI_VALUE_PROPERTIES:
-                self._properties[upper_key] = Property(
-                    value=":".join(param.components[1:]),
-                    msd_parameter=param,
-                )
             else:
-                self._properties[upper_key] = Property(
-                    value=param.value, msd_parameter=param
+                if upper_key in BaseSimfile.MULTI_VALUE_PROPERTIES:
+                    value = ":".join(param.components[1:])
+                else:
+                    value = param.value
+
+                self._set_property(
+                    upper_key,
+                    Property(value=value, msd_parameter=param),
+                    seen_keys=seen_keys,
                 )
 
     @classmethod

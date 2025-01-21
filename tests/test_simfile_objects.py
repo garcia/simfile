@@ -4,7 +4,7 @@ import simfile
 from simfile._private.dedent import dedent_and_trim
 from simfile.dir import SimfileDirectory
 from simfile.sm import SMChart, SMSimfile
-from simfile.ssc import SSCChart
+from simfile.ssc import SSCChart, SSCSimfile
 from .helpers.fake_simfile import FakeChart, FakeSimfile
 
 
@@ -53,3 +53,84 @@ class TestSimfileObjects(unittest.TestCase):
                     #NOTE"""  # NOTES or NOTEDATA
                 )
                 self.assertIn(expected_fragment, str(sim))
+
+    def test_duplicate_keys_preserved(self):
+        for sim_type in (SMSimfile, SSCSimfile):
+            with self.subTest(sim_type):
+                maybe_version = "#VERSION:0.83;\n" if sim_type is SSCSimfile else ""
+
+                sim_str = dedent_and_trim(
+                    f"""
+                    {maybe_version
+                    }#TITLE:test;
+                    #SUBTITLE:;
+                    #ARTIST:;
+                    #ATTACKS:line 1;
+                    #ATTACKS:line 2;
+                    #ATTACKS:line 3;
+                    """
+                )
+                sim = simfile.loads(sim_str)
+                self.assertIsInstance(sim, sim_type)
+
+                self.assertEqual("line 1", sim["ATTACKS:1"])
+                self.assertEqual("line 2", sim["ATTACKS:2"])
+                self.assertEqual("line 3", sim["ATTACKS"])
+                self.assertEqual(sim.attacks, "line 3")
+                self.assertEqual(
+                    [
+                        *(["VERSION"] if maybe_version else []),
+                        "TITLE",
+                        "SUBTITLE",
+                        "ARTIST",
+                        "ATTACKS:1",
+                        "ATTACKS:2",
+                        "ATTACKS",
+                    ],
+                    list(sim.keys()),
+                )
+
+                stringified = str(sim)
+                self.assertEqual(sim_str, stringified)
+                self.assertEqual(sim, simfile.loads(stringified))
+
+    def test_key_case_preserved(self):
+        for sim_type in (SMSimfile, SSCSimfile):
+            with self.subTest(sim_type):
+                maybe_version = "#Version:0.83;\n" if sim_type is SSCSimfile else ""
+
+                sim_str = dedent_and_trim(
+                    f"""
+                    {maybe_version
+                    }#title:test;
+                    #SUBTITLE:;
+                    #ARTIST:;
+                    #ATTACKS:line 1;
+                    #Attacks:line 2;
+                    #attacks:line 3;
+                    """
+                )
+                sim = simfile.loads(sim_str)
+                self.assertIsInstance(sim, sim_type)
+
+                self.assertEqual("test", sim.title)
+                self.assertEqual("line 1", sim["ATTACKS:1"])
+                self.assertEqual("line 2", sim["ATTACKS:2"])
+                self.assertEqual("line 3", sim["ATTACKS"])
+                self.assertEqual(sim.attacks, "line 3")
+                self.assertEqual(
+                    [
+                        *(["VERSION"] if maybe_version else []),
+                        "TITLE",
+                        "SUBTITLE",
+                        "ARTIST",
+                        "ATTACKS:1",
+                        "ATTACKS:2",
+                        "ATTACKS",
+                    ],
+                    list(sim.keys()),
+                )
+
+                stringified = str(sim)
+                self.assertEqual(sim_str, stringified)
+                self.assertEqual(sim, simfile.loads(stringified))

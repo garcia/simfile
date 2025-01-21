@@ -791,7 +791,7 @@ class DestructivelyRemoveProperties(enum.Enum):
         if isinstance(sim, SMSimfile):
             for key in [*sim._properties.keys()]:
                 # Extract the real key from any duplicate keys
-                real_key = key.partition(":")[0]
+                real_key = sim._get_real_key(key)
                 if real_key not in SM_SIMFILE_PROPERTIES:
                     del sim._properties[key]
                     changed = True
@@ -799,7 +799,7 @@ class DestructivelyRemoveProperties(enum.Enum):
         elif isinstance(sim, SSCSimfile):
             for key in [*sim._properties.keys()]:
                 # Extract the real key from any duplicate keys
-                real_key = key.partition(":")[0]
+                real_key = sim._get_real_key(key)
                 if real_key not in SSC_SIMFILE_PROPERTIES:
                     del sim._properties[key]
                     changed = True
@@ -807,7 +807,7 @@ class DestructivelyRemoveProperties(enum.Enum):
             for chart in sim.charts:
                 for chart_key in [*chart._properties.keys()]:
                     # Extract the real key from any duplicate keys
-                    real_chart_key = chart_key.partition(":")[0]
+                    real_chart_key = chart._get_real_key(chart_key)
                     if real_chart_key not in SSC_CHART_PROPERTIES:
                         del chart._properties[chart_key]
                         changed = True

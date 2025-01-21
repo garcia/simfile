@@ -253,7 +253,9 @@ class BaseSimfile(BaseObject, metaclass=ABCMeta):
         strict: bool = True,
     ):
         self._properties = OrderedDict()
-        self._default_parameter = MSDParameter(("",), suffix=";\n")
+        self._default_parameter = MSDParameter(
+            ("",), suffix=";\n", comments={}, escape_positions=[]
+        )
         self._strict = strict
 
         provided_inputs = [inp for inp in [file, string, tokens] if inp is not None]
@@ -328,12 +330,13 @@ class BaseSimfile(BaseObject, metaclass=ABCMeta):
 
     def serialize(self, file: TextIO):
         for key, property in self._properties.items():
-            if key in BaseSimfile.MULTI_VALUE_PROPERTIES:
-                components = (key, *property.value.split(":"))
+            original_key = property.msd_parameter.key
+            if original_key.upper() in BaseSimfile.MULTI_VALUE_PROPERTIES:
+                components = (original_key, *property.value.split(":"))
             elif len(property.msd_parameter.components) == 1 and not property.value:
-                components = (key,)
+                components = (original_key,)
             else:
-                components = (key, property.value)
+                components = (original_key, property.value)
 
             # Don't try to preserve comments & exact escapes if the value changed
             preserve_ephemera = property.value == property.msd_parameter.value

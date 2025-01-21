@@ -2,6 +2,7 @@
 Simfile & chart classes for SSC files.
 """
 
+from collections import Counter
 from dataclasses import replace
 from typing import Iterable, Optional, Sequence, TextIO, Tuple, Type
 
@@ -141,6 +142,7 @@ class SSCChart(BaseChart):
     def _parse(self, parser: MSDIterator) -> None:
         iterator = iter(parser)
         first_key = True
+        seen_keys: Counter[str] = Counter()
 
         for param in iterator:
             upper_key = param.key.upper()
@@ -150,14 +152,15 @@ class SSCChart(BaseChart):
             first_key = False
 
             if upper_key in BaseSimfile.MULTI_VALUE_PROPERTIES:
-                self._properties[upper_key] = Property(
-                    value=":".join(param.components[1:]),
-                    msd_parameter=param,
-                )
+                value = ":".join(param.components[1:])
             else:
-                self._properties[upper_key] = Property(
-                    value=param.value, msd_parameter=param
-                )
+                value = param.value
+
+            self._set_property(
+                upper_key,
+                Property(value=value, msd_parameter=param),
+                seen_keys=seen_keys,
+            )
 
             if param.value is self.notes:
                 break
@@ -388,6 +391,7 @@ class SSCSimfile(BaseSimfile):
         partial_chart: Optional[SSCChart] = None
         suffix_heuristic = ";\n"
         suffix_heuristic_match = False
+        seen_keys: Counter[str] = Counter()
 
         for param in self._move_suffix_to_next_preamble(parser, ("NOTEDATA",)):
             # Determine a default parameter suffix from the input
@@ -412,14 +416,12 @@ class SSCSimfile(BaseSimfile):
                     self.charts.append(partial_chart)
                 partial_chart = SSCChart()
 
-            if partial_chart is not None:
-                partial_chart._properties[upper_key] = Property(
-                    value=value, msd_parameter=param
-                )
-            else:
-                self._properties[upper_key] = Property(
-                    value=value or "", msd_parameter=param
-                )
+            obj = partial_chart if partial_chart is not None else self
+            obj._set_property(
+                upper_key,
+                Property(value=value, msd_parameter=param),
+                seen_keys=seen_keys,
+            )
 
         if partial_chart is not None:
             self.charts.append(partial_chart)
