@@ -15,6 +15,7 @@ from simfile.tidy.behaviors import (
     CreateMissingProperties,
     DestructivelyRemoveProperties,
     LineEndings,
+    Preset,
     RemoveComments,
     SortProperties,
     Whitespace,
@@ -36,6 +37,272 @@ class SimfileTestCase(unittest.TestCase):
             #     self.assertEqual(ca._real_parameter, cb._real_parameter)
 
         self.assertEqual(a, b)
+
+
+class TestPresets(SimfileTestCase):
+    sm_string = dedent_and_trim(
+        """
+            #TITLE:Song title;
+            #SUBTITLE:Song subtitle;
+            #ARTIST:Song artist;
+            #TITLETRANSLIT:;\r
+            #SUBTITLETRANSLIT:;\r
+                #ARTISTTRANSLIT:;\r
+
+            #UNKNOWN:field;
+            #NOTES:
+            dance-single:
+
+            http\\:\\//stepartist.example: // contrived use of escapes
+            Beginner:
+            1:
+            0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000:
+            0000
+            0000
+            0000
+            0000;
+            // comment
+                        #NOTES:
+                    dance-single:
+                    :
+                    Easy:
+                    3:
+                    0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000:
+            // measure 0
+            1000
+            0100
+            0010
+            0001
+            , // measure 1
+            0100
+            0010
+            1000
+            0001
+            ; // trailing comment SM"""
+    )
+
+    def test_no_op_preset(self):
+        sim = simfile.loads(self.sm_string)
+        self.assertFalse(tidy(sim, Preset.NO_OP))
+
+    def test_sm5_preset(self):
+        sim = simfile.loads(self.sm_string)
+        expected = dedent_and_trim(
+            """
+            #TITLE:Song title;
+            #SUBTITLE:Song subtitle;
+            #ARTIST:Song artist;
+            #TITLETRANSLIT:;
+            #SUBTITLETRANSLIT:;
+            #ARTISTTRANSLIT:;
+            #GENRE:;
+            #CREDIT:;
+            #BANNER:;
+            #BACKGROUND:;
+            #LYRICSPATH:;
+            #CDTITLE:;
+            #MUSIC:;
+            #OFFSET:0.000000;
+            #SAMPLESTART:100.000000;
+            #SAMPLELENGTH:12.000000;
+            #SELECTABLE:YES;
+            #BPMS:0.000000=60.000000;
+            #STOPS:;
+            #BGCHANGES:;
+            #KEYSOUNDS:;
+            #ATTACKS:;
+            #UNKNOWN:field;
+
+            //---------------dance-single - http://stepartist.example----------------
+            #NOTES:
+                 dance-single:
+                 http\\:\\//stepartist.example:
+                 Beginner:
+                 1:
+                 0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000:
+            // measure 0
+            0000
+            0000
+            0000
+            0000
+            ;
+
+            //---------------dance-single - ----------------
+            #NOTES:
+                 dance-single:
+                 :
+                 Easy:
+                 3:
+                 0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000:
+            // measure 0
+            1000
+            0100
+            0010
+            0001
+            ,  // measure 1
+            0100
+            0010
+            1000
+            0001
+            ;
+            """
+        )
+
+        self.assertTrue(tidy(sim, Preset.SM5))
+        self.assertEqual(expected, str(sim))
+
+        # Validity check
+        self.assertSimfilesEqual(sim, simfile.loads(str(sim)))
+
+        # Idempotency check:
+        # TODO(ash): fix Create/RemoveComments clobbering idempotency flag
+        # self.assertFalse(tidy(sim, Preset.SM5))
+
+    def test_sm5_destructive_preset(self):
+        sim = simfile.loads(self.sm_string)
+        expected = dedent_and_trim(
+            """
+            #TITLE:Song title;
+            #SUBTITLE:Song subtitle;
+            #ARTIST:Song artist;
+            #TITLETRANSLIT:;
+            #SUBTITLETRANSLIT:;
+            #ARTISTTRANSLIT:;
+            #GENRE:;
+            #CREDIT:;
+            #BANNER:;
+            #BACKGROUND:;
+            #LYRICSPATH:;
+            #CDTITLE:;
+            #MUSIC:;
+            #OFFSET:0.000000;
+            #SAMPLESTART:100.000000;
+            #SAMPLELENGTH:12.000000;
+            #SELECTABLE:YES;
+            #BPMS:0.000000=60.000000;
+            #STOPS:;
+            #BGCHANGES:;
+            #KEYSOUNDS:;
+            #ATTACKS:;
+
+            //---------------dance-single - http://stepartist.example----------------
+            #NOTES:
+                 dance-single:
+                 http\\:\\//stepartist.example:
+                 Beginner:
+                 1:
+                 0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000:
+            // measure 0
+            0000
+            0000
+            0000
+            0000
+            ;
+
+            //---------------dance-single - ----------------
+            #NOTES:
+                 dance-single:
+                 :
+                 Easy:
+                 3:
+                 0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000:
+            // measure 0
+            1000
+            0100
+            0010
+            0001
+            ,  // measure 1
+            0100
+            0010
+            1000
+            0001
+            ;
+            """
+        )
+
+        self.assertTrue(tidy(sim, Preset.SM5_DESTRUCTIVE))
+        self.assertEqual(expected, str(sim))
+
+        # Validity check
+        self.assertSimfilesEqual(sim, simfile.loads(str(sim)))
+
+        # Idempotency check:
+        # TODO(ash): fix Create/RemoveComments clobbering idempotency flag
+        # self.assertFalse(tidy(sim, Preset.SM5))
+
+    def test_recommended_preset(self):
+        sim = simfile.loads(self.sm_string)
+        expected = dedent_and_trim(
+            f"""
+            // Generated by simfile {simfile.__version__} for Python
+            #TITLE:Song title;
+            #SUBTITLE:Song subtitle;
+            #ARTIST:Song artist;
+            #TITLETRANSLIT:;
+            #SUBTITLETRANSLIT:;
+            #ARTISTTRANSLIT:;
+            #GENRE:;
+            #CREDIT:;
+            #BANNER:;
+            #BACKGROUND:;
+            #LYRICSPATH:;
+            #CDTITLE:;
+            #MUSIC:;
+            #OFFSET:0.000000;
+            #SAMPLESTART:100.000000;
+            #SAMPLELENGTH:12.000000;
+            #SELECTABLE:YES;
+            #BPMS:0.000000=60.000000;
+            #STOPS:;
+            #BGCHANGES:;
+            #KEYSOUNDS:;
+            #ATTACKS:;
+            #UNKNOWN:field;
+
+            //---------------dance-single - http://stepartist.example----------------
+            #NOTES:
+                 dance-single:
+                 http\\:\\//stepartist.example:
+                 Beginner:
+                 1:
+                 0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000:
+            // measure 0
+            0000
+            0000
+            0000
+            0000
+            ;
+
+            //---------------dance-single - ----------------
+            #NOTES:
+                 dance-single:
+                 :
+                 Easy:
+                 3:
+                 0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000:
+            // measure 0
+            1000
+            0100
+            0010
+            0001
+            ,  // measure 1
+            0100
+            0010
+            1000
+            0001
+            ;
+            """
+        )
+
+        self.assertTrue(tidy(sim, Preset.RECOMMENDED))
+        self.assertEqual(expected, str(sim))
+
+        # Validity check
+        self.assertSimfilesEqual(sim, simfile.loads(str(sim)))
+
+        # Idempotency check:
+        # TODO(ash): fix Create/RemoveComments clobbering idempotency flag
+        # self.assertFalse(tidy(sim, Preset.SM5))
 
 
 class TestWhitespace(SimfileTestCase):
@@ -805,7 +1072,11 @@ class TestCreateComments(SimfileTestCase):
         sim.charts.clear()
         sim.charts.append(chart)
 
+        original = simfile.loads(str(sim))
+
         self.assertFalse(tidy(sim, create_comments=CreateComments.CHART_MEASURES))
+
+        self.assertSimfilesEqual(original, sim)
 
     def test_sm_chart_measures_added_without_existing_chart_measures(self):
         sim = simfile.open("testdata/backup/backup.sm")
