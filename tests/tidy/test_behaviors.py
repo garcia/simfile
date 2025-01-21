@@ -556,6 +556,12 @@ class TestLineEndings(SimfileTestCase):
                     sim._properties["TITLE"].msd_parameter.suffix, f";{nl}"
                 )
 
+    def test_with_changed_file(self):
+        sim = simfile.open("testdata/Backup/backup.ssc")
+        sim.credit = "test"
+        tidy(sim, line_endings=LineEndings.LF)
+        self.assertEqual("test", sim.credit)
+
 
 class TestRemoveComments(SimfileTestCase):
     def sm_test_file(self):

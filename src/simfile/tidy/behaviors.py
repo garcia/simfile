@@ -278,7 +278,7 @@ class LineEndings(enum.Enum):
             )
 
             for property in sim._properties.values():
-                changed |= self._normalize_property(nl, property)
+                changed |= LineEndings._normalize_property(nl, property)
 
             for chart in sim.charts:
 
@@ -288,7 +288,7 @@ class LineEndings(enum.Enum):
                 if isinstance(chart, SMChart):
                     parameter = reencode_msd(chart)
                     fake_property = Property("", parameter)
-                    self._normalize_property(nl, fake_property)
+                    LineEndings._normalize_property(nl, fake_property)
                     normalized_chart = SMChart.from_msd_parameter(
                         fake_property.msd_parameter
                     )
@@ -297,7 +297,7 @@ class LineEndings(enum.Enum):
 
                 elif isinstance(chart, SSCChart):
                     for property in chart._properties.values():
-                        changed |= self._normalize_property(nl, property)
+                        changed |= LineEndings._normalize_property(nl, property)
 
                 else:
                     assert_never(chart)
@@ -314,18 +314,13 @@ class LineEndings(enum.Enum):
         else:
             assert_never(self)
 
-    def _normalize_property(self, nl, property: Property) -> bool:
-        # Serialize using msdparser so that we can perform the newline swap
-        # on everything (preamble, key, value(s), suffix) at once.
-        # This also means we get correct escape_positions for free.
-        stringified = property.msd_parameter.stringify(exact=True)
-        changed = False
-
+    @staticmethod
+    def _normalize_string(nl, string: str) -> str:
         # Short-circuit if no newlines to change
-        if "\r" not in stringified and "\n" not in stringified:
-            return False
+        if "\r" not in string and "\n" not in string:
+            return string
 
-        split = stringified.splitlines(keepends=True)
+        split = string.splitlines(keepends=True)
         normalized = []
         for line in split:
             if line.endswith("\n") or line.endswith("\r"):
@@ -333,7 +328,17 @@ class LineEndings(enum.Enum):
             else:
                 normalized.append(line)
 
-        normalized_string = "".join(normalized)
+        return "".join(normalized)
+
+    @staticmethod
+    def _normalize_property(nl, property: Property) -> bool:
+        # Serialize using msdparser so that we can perform the newline swap
+        # on everything (preamble, key, value(s), suffix) at once.
+        # This also means we get correct escape_positions for free.
+        stringified = property.msd_parameter.stringify(exact=True)
+        changed = False
+
+        normalized_string = LineEndings._normalize_string(nl, stringified)
         normalized_param = reencode_msd(
             normalized_string,
             # parse_msd always outputs a (possibly empty) preamble for the
@@ -344,8 +349,11 @@ class LineEndings(enum.Enum):
 
         if normalized_param != property.msd_parameter:
             property.msd_parameter = normalized_param
-            # TODO: handle multi-value properties
-            property.value = normalized_param.value
+            changed = True
+
+        normalized_value = LineEndings._normalize_string(nl, property.value)
+        if property.value != normalized_value:
+            property.value = normalized_value
             changed = True
 
         return changed
