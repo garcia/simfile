@@ -175,7 +175,7 @@ Simfile (de)serialization is now exact
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Deserializing and serializing a :data:`.Simfile` is now byte-for-byte symmetric
-_in most cases_.
+*in most cases.*
 For example,
 if you open a simfile with :func:`simfile.mutate`
 and don't make any changes,
