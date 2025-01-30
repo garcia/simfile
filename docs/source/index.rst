@@ -73,6 +73,7 @@ Further reading
    about-simfiles
    reading-writing
    known-properties
+   timing
    timing-note-data
    examples
    changelog
