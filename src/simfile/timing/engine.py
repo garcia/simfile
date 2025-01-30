@@ -301,14 +301,14 @@ class TimingEngine:
         """
         Determine if a note on the given beat would be hittable.
 
-        A note is considered "unhittable" if and only if:
+        A beat is considered "unhittable" only if it's inside a warp or
+        fake segment (including the segment's start beat, excluding its
+        end beat) and it doesn't coincide with a stop or delay.
 
-        * It takes place inside a warp segment (inclusive of the warp's
-          start, exclusive of the warp's end).
-        * It doesn't coincide with a stop or delay.
-
-        StepMania internally converts unhittable notes to fake notes so
-        that the player's score isn't affected by them.
+        Note that there is also a fake *note type* (``F`` in note data)
+        that this function is unaware of. Consider using the
+        :func:`~.time_chart` function to handle both fake regions and
+        note types.
         """
         tagged_beat = (beat, EventTag.STOP_END)
         prior_state_index = max(0, bisect(self._tagged_beats, tagged_beat) - 1)
@@ -341,7 +341,7 @@ class TimingEngine:
           the stop ends.
         * On delays, providing a value of :data:`EventTag.DELAY` or
           lower will return the time at which the delay is reached,
-          whereas providing :data:`EventTag.DELAY_END` or later will
+          whereas providing :data:`EventTag.DELAY_END` or higher will
           return the time when the delay ends.
 
         The default value of :data:`EventTag.STOP` effectively matches
@@ -373,14 +373,15 @@ class TimingEngine:
         The only time it matters is when the time lands exactly on a
         warp segment:
 
-        * Providing :data:`EventTag.WARP` will return the beat where
-          the warp starts.
-        * Providing :data:`EventTag.WARP_END` or later will return the
+        * Providing :data:`EventTag.WARP` or lower will return the
+          beat where the warp starts.
+        * Providing :data:`EventTag.WARP_END` or higher will return the
           beat where the warp ends (or is interrupted by a stop or
           delay).
 
-        Keep in mind that this situation is floating-point precise, so
-        it's unlikely for the `event_tag` to ever make a difference.
+        Note that the above scenario is floating-point precise. It will
+        likely require a song time obtained from :meth:`~.time_at` in
+        order for the event tag to make a difference.
         """
         # Event tags can be out-of-order within a given instant of time,
         # so the beat must be stored before the event tag

@@ -89,7 +89,7 @@ def count_jumps(chart: AttachedChart):
 def count_hands(chart: AttachedChart):
     """
     Reproduce StepMania's hand count.
-    Hands consist of 3 or more _active notes_ on a given step,
+    Hands consist of 3 or more *active notes* on a given step,
     where active notes consist of steps and active hold/roll notes
     (whether their bodies or tails).
     """
@@ -154,6 +154,6 @@ def count_fakes(chart: AttachedChart):
     Reproduce the StepMania editor's fake count.
     Fakes consist of all notes that aren't hittable,
     whether due to a warp region, fake segment,
-    or being a literal fake note type ("F" in note data).
+    or being a literal fake note type (``F`` in note data).
     """
     return sum(1 if not note.hittable else 0 for note in time_chart(chart))

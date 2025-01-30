@@ -26,8 +26,8 @@ class Beat(Fraction):
 
     The constructor the same arguments as Python's :code:`Fraction`:
 
-      Takes a string like '3/2' or '1.5', another Rational instance, a
-      numerator/denominator pair, or a float.
+        Takes a string like '3/2' or '1.5', another Rational instance,
+        a numerator/denominator pair, or a float.
 
     If the input is a float or string, the resulting fraction will be
     rounded to the nearest :meth:`tick`.
@@ -165,12 +165,10 @@ class BeatValues(ListWithRepr[BeatValue]):
         cls: Type["BeatValues"], string: Optional[str], strict: bool = True
     ) -> "BeatValues":
         """
-        Parse the MSD value component of a timing data list:
+        Parse the MSD value component of a timing data list::
 
-        ```
-        #BPMS:0.000=128.000,64.000=140.000;
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-        ```
+            #BPMS:0.000=128.000,64.000=140.000;
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
         The timing data lists supported by this class include
         `BPMS`, `STOPS`, `DELAYS`, and `WARPS`.

@@ -9,7 +9,7 @@ from ..timing._private.timingsource import timing_source
 from ..timing.engine import SongTime, TimingEngine
 
 
-__all__ = ["TimedNote", "time_notes"]
+__all__ = ["TimedNote", "time_notes", "time_chart"]
 
 
 class TimedNote(NamedTuple):
@@ -41,4 +41,7 @@ def time_notes(
 
 
 def time_chart(chart: AttachedChart) -> Iterator[TimedNote]:
+    """
+    Generate a stream of timed notes from the supplied chart.
+    """
     return time_notes(note_data=NoteData(chart), timing_data=TimingData(chart))
