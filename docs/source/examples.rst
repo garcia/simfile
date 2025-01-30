@@ -111,15 +111,15 @@ Remove all but one chart from a simfile
             if chart.stepstype == stepstype and chart.difficulty == difficulty:
                 return chart
 
-    def remove_other_charts(sf: Simfile, *, stepstype='dance-single', difficulty='Challenge'):
-        the_chart = find_chart(sf.charts, stepstype=stepstype, difficulty=difficulty)
+    def remove_other_charts(sim: Simfile, *, stepstype='dance-single', difficulty='Challenge'):
+        the_chart = find_chart(sim.charts, stepstype=stepstype, difficulty=difficulty)
         if the_chart:
             # Replace the simfile's charts with a list of one
-            sf.charts = [the_chart]  # type: ignore
+            sim.charts = [the_chart]  # type: ignore
         else:
             # You could alternatively raise an exception, pick a different chart,
-            # set sf.charts to an empty list, etc.
-            print(f"No {stepstype} {difficulty} chart found for {repr(sf)}")
+            # set sim.charts to an empty list, etc.
+            print(f"No {stepstype} {difficulty} chart found for {repr(sim)}")
 
 Full scripts
 ~~~~~~~~~~~~
@@ -159,7 +159,10 @@ change_sync_bias.py
     from typing import Union
 
     import simfile
-    import simfile.dir
+    from simfile.dir import SimfilePack
+    from simfile.ssc import SSCSimfile, SSCChart
+    from simfile.tidy import tidy, Preset
+    from simfile.types import Simfile
 
 
     class ChangeSyncBiasArgs:
@@ -185,7 +188,7 @@ change_sync_bias.py
 
 
     def adjust_offset(
-        obj: Union[simfile.types.Simfile, simfile.ssc.SSCChart],
+        obj: Union[Simfile, SSCChart],
         delta: Decimal,
     ):
         """Add the delta to the simfile or SSC chart's offset, if present."""
@@ -212,17 +215,19 @@ change_sync_bias.py
         with simfile.mutate(
             input_filename=f"{simfile_path}",
             backup_filename=f"{simfile_path}~",
-        ) as sf:
+        ) as sim:
             print(f"Processing {simfile_path}")
 
             # Always adjust the simfile's offset
-            adjust_offset(sf, delta)
+            adjust_offset(sim, delta)
 
             # Additionally try to adjust SSC charts' offsets.
             # This won't do anything unless the chart has its own timing data.
-            if isinstance(sf, simfile.ssc.SSCSimfile):
-                for chart in sf.charts:
+            if isinstance(sim, SSCSimfile):
+                for chart in sim.charts:
                     adjust_offset(chart, delta)
+            
+            tidy(sim, Preset.RECOMMENDED)
 
 
     def main(argv):
@@ -231,7 +236,7 @@ change_sync_bias.py
 
         # Iterate over SimfileDirectory objects from the pack
         # so that we can easily get the .sm and/or .ssc paths
-        for simfile_dir in simfile.dir.SimfilePack(args.pack).simfile_dirs():
+        for simfile_dir in SimfilePack(args.pack).simfile_dirs():
 
             # Try to update whichever formats exist
             for simfile_path in [simfile_dir.sm_path, simfile_dir.ssc_path]:
@@ -265,14 +270,15 @@ sort_by_difficulty.py
         python sort_by_difficulty.py -r "C:\StepMania\Songs\My Pack"
 
         # Customize stepstype and digits
-        python sort_by_difficulty.py -s dance-double -d 3 "C:\StepMania\My Pack"
+        python sort_by_difficulty.py -s dance-double -d 3 "C:\StepMania\Songs\My Pack"
     """
     import argparse
     import sys
     from typing import Optional, Sequence
 
     import simfile
-    import simfile.dir
+    from simfile.dir import SimfilePack
+    from simfile.types import Chart
 
 
     class SortByDifficultyArgs:
@@ -306,8 +312,8 @@ sort_by_difficulty.py
 
 
     def hardest_chart(
-        charts: Sequence[simfile.types.Chart], stepstype: str
-    ) -> Optional[simfile.types.Chart]:
+        charts: Sequence[Chart], stepstype: str
+    ) -> Optional[Chart]:
         """
         Find & return the hardest chart (numerically) of a given stepstype.
 
@@ -331,13 +337,13 @@ sort_by_difficulty.py
         with simfile.mutate(
             input_filename=f"{simfile_path}",
             backup_filename=f"{simfile_path}~",
-        ) as sf:
+        ) as sim:
             print(f"Processing {simfile_path}")
 
             # It's very unlikely for the title property to be blank or missing.
             # This is mostly to satisfy type-checkers.
-            current_title = sf.title or ""
-            current_titletranslit = sf.titletranslit or ""
+            current_title = sim.title or ""
+            current_titletranslit = sim.titletranslit or ""
 
             if args.remove:
                 def remove_starting_brackets(current_text: str) -> str:
@@ -356,12 +362,12 @@ sort_by_difficulty.py
                             # Remove the bracketed number from the text
                             return current_title[close_bracket_index + 1 :].lstrip(" ")
                     return current_title
-                sf.title = remove_starting_brackets(sf.title)
-                sf.titletranslit = remove_starting_brackets(sf.titletranslit)
+                sim.title = remove_starting_brackets(sim.title)
+                sim.titletranslit = remove_starting_brackets(sim.titletranslit)
             else:
                 # Find the hardest chart (numerically) within a stepstype
                 # and use it to prefix the title
-                chart = hardest_chart(sf.charts, args.stepstype)
+                chart = hardest_chart(sim.charts, args.stepstype)
 
                 # Skip this simfile if there were no charts for the stepstype.
                 # Nothing will be written to disk in this case.
@@ -374,8 +380,8 @@ sort_by_difficulty.py
 
                 # Put the meter at the start of the title,
                 # filling in leading zeros per arguments
-                sf.title = f"[{meter.zfill(args.digits)}] {current_title}"
-                sf.titletranslit = f"[{meter.zfill(args.digits)}] {current_titletranslit}"
+                sim.title = f"[{meter.zfill(args.digits)}] {current_title}"
+                sim.titletranslit = f"[{meter.zfill(args.digits)}] {current_titletranslit}"
 
 
     def main(argv):
@@ -384,7 +390,7 @@ sort_by_difficulty.py
 
         # Iterate over SimfileDirectory objects from the pack
         # so that we can easily get the .sm and/or .ssc paths
-        for simfile_dir in simfile.dir.SimfilePack(args.pack).simfile_dirs():
+        for simfile_dir in SimfilePack(args.pack).simfile_dirs():
 
             # Try to update whichever formats exist
             for simfile_path in [simfile_dir.sm_path, simfile_dir.ssc_path]:

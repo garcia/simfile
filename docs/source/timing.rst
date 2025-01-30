@@ -27,7 +27,7 @@ that overrides the simfile timing data.
 Working with timing data
 ------------------------
 
-Import :class:`simfile.timing.TimingData`
+Import :class:`.TimingData`
 and pass it a :data:`.Simfile` or an :data:`.AttachedChart`
 to parse its timing data:
 
@@ -69,7 +69,7 @@ Use :meth:`.TimingData.write_to` to update the source object:
 
 .. code:: python
 
-    >>> import decimal
+    >>> from decimal import Decimal
     >>> timing_data.offset += Decimal('0.009')
     >>> timing_data.write_to(sim)
     >>> sim.offset
@@ -78,7 +78,7 @@ Use :meth:`.TimingData.write_to` to update the source object:
 Converting between beats and time
 ---------------------------------
 
-Import :class:`~.TimingEngine` and pass it a :class:`.TimingData` object
+Import :class:`.TimingEngine` and pass it a :class:`.TimingData` object
 to convert between beats and time:
 
 .. code:: python
@@ -104,7 +104,7 @@ you can also use it to determine whether a regular note on a given beat would be
     True
 
 However, this doesn't account for the fake *note type* (``F`` in note data).
-So, you may prefer to import the :func:`~.time_chart` function
+So, you may prefer to import the :func:`.time_chart` function
 and pass it an :data:`.AttachedChart`.
 This function yields :class:`.TimedNote` objects
 that have :attr:`~.TimedNote.time` and :attr:`~.TimedNote.hittable` fields,
