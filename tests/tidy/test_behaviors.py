@@ -1064,7 +1064,7 @@ class TestCreateComments(SimfileTestCase):
         self.assertFalse(tidy(sim, create_comments=CreateComments.CHART_PREAMBLE))
 
     def test_sm_chart_measures_already_exist(self):
-        sim = simfile.open("testdata/backup/backup.sm")
+        sim = simfile.open("testdata/Backup/backup.sm")
         assert isinstance(sim, SMSimfile)
 
         # Pare down charts to just the one that has measure comments
@@ -1085,7 +1085,7 @@ class TestCreateComments(SimfileTestCase):
         self.assertSimfilesEqual(original, sim)
 
     def test_sm_chart_measures_added_without_existing_chart_measures(self):
-        sim = simfile.open("testdata/backup/backup.sm")
+        sim = simfile.open("testdata/Backup/backup.sm")
         assert isinstance(sim, SMSimfile)
 
         # Pare down charts to just one that doesn't have measure comments
@@ -1110,7 +1110,7 @@ class TestCreateComments(SimfileTestCase):
                 mn += 1
 
     def test_ssc_chart_measures_already_exist(self):
-        sim = simfile.open("testdata/backup/backup.ssc")
+        sim = simfile.open("testdata/Backup/backup.ssc")
         assert isinstance(sim, SSCSimfile)
 
         # Pare down charts to just the one that has measure comments
@@ -1127,7 +1127,7 @@ class TestCreateComments(SimfileTestCase):
         self.assertFalse(tidy(sim, create_comments=CreateComments.CHART_MEASURES))
 
     def test_ssc_chart_measures_added_without_existing_chart_measures(self):
-        sim = simfile.open("testdata/backup/backup.ssc")
+        sim = simfile.open("testdata/Backup/backup.ssc")
         assert isinstance(sim, SSCSimfile)
 
         # Pare down charts to just one that doesn't have measure comments
@@ -1154,7 +1154,7 @@ class TestCreateComments(SimfileTestCase):
 
 class TestCreateMissingProperties(SimfileTestCase):
     def test_sm5_sm_no_missing_properties(self):
-        sim = simfile.open("testdata/backup/backup.sm")
+        sim = simfile.open("testdata/Backup/backup.sm")
 
         self.assertFalse(
             tidy(sim, create_missing_properties=CreateMissingProperties.SM5)
@@ -1175,14 +1175,14 @@ class TestCreateMissingProperties(SimfileTestCase):
         self.assertIsNone(sim.displaybpm)
 
     def test_sm5_ssc_no_missing_properties(self):
-        sim = simfile.open("testdata/backup/backup.sm")
+        sim = simfile.open("testdata/Backup/backup.sm")
 
         self.assertFalse(
             tidy(sim, create_missing_properties=CreateMissingProperties.SM5)
         )
 
     def test_sm5_ssc_chart_missing_timing_properties(self):
-        sim = simfile.open("testdata/backup/backup.ssc")
+        sim = simfile.open("testdata/Backup/backup.ssc")
         assert isinstance(sim, SSCSimfile)
 
         chart = sim.charts[0]
@@ -1215,18 +1215,18 @@ class TestCreateMissingProperties(SimfileTestCase):
 
 class TestDestructivelyRemoveProperties(SimfileTestCase):
     def test_sm5_no_unknown_properties(self):
-        sim = simfile.open("testdata/backup/backup.sm")
+        sim = simfile.open("testdata/Backup/backup.sm")
         self.assertFalse(
             tidy(sim, destructively_remove_properties=DestructivelyRemoveProperties.SM5)
         )
 
-        sim = simfile.open("testdata/backup/backup.ssc")
+        sim = simfile.open("testdata/Backup/backup.ssc")
         self.assertFalse(
             tidy(sim, destructively_remove_properties=DestructivelyRemoveProperties.SM5)
         )
 
     def test_sm5_sm_unknown_properties(self):
-        sim = simfile.open("testdata/backup/backup.sm")
+        sim = simfile.open("testdata/Backup/backup.sm")
         sim["FOO"] = "bar"
         self.assertTrue(
             tidy(sim, destructively_remove_properties=DestructivelyRemoveProperties.SM5)
@@ -1242,7 +1242,7 @@ class TestDestructivelyRemoveProperties(SimfileTestCase):
         )
 
     def test_sm5_ssc_unknown_properties(self):
-        sim = simfile.open("testdata/backup/backup.ssc")
+        sim = simfile.open("testdata/Backup/backup.ssc")
         sim["FOO"] = "bar"
         self.assertTrue(
             tidy(sim, destructively_remove_properties=DestructivelyRemoveProperties.SM5)
@@ -1260,20 +1260,20 @@ class TestDestructivelyRemoveProperties(SimfileTestCase):
 
 class TestSortProperties(SimfileTestCase):
     def test_already_sorted(self):
-        sim = simfile.open("testdata/backup/backup.sm")
+        sim = simfile.open("testdata/Backup/backup.sm")
         self.assertFalse(tidy(sim, sort_properties=SortProperties.SM5))
 
-        sim = simfile.open("testdata/backup/backup.ssc")
+        sim = simfile.open("testdata/Backup/backup.ssc")
         self.assertFalse(tidy(sim, sort_properties=SortProperties.SM5))
 
     def test_already_sorted_with_unknown_props(self):
-        sim = simfile.open("testdata/backup/backup.sm")
+        sim = simfile.open("testdata/Backup/backup.sm")
         sim["UNKNOWN1"] = "foo"
         sim["UNKNOWN2"] = "bar"
         self.assertFalse(tidy(sim, sort_properties=SortProperties.SM5))
 
     def test_only_unknown_props_unsorted(self):
-        sim = simfile.open("testdata/backup/backup.sm")
+        sim = simfile.open("testdata/Backup/backup.sm")
         sim["UNKNOWN2"] = "bar"
         sim["UNKNOWN1"] = "foo"
         original_keys = [*sim.keys()]
@@ -1289,7 +1289,7 @@ class TestSortProperties(SimfileTestCase):
         self.assertFalse(tidy(sim, sort_properties=SortProperties.SM5))
 
     def test_reversed(self):
-        sim = simfile.open("testdata/backup/backup.sm")
+        sim = simfile.open("testdata/Backup/backup.sm")
         first_prop = next(iter(sim._properties.values()))
         first_prop.msd_parameter = replace(first_prop.msd_parameter, preamble=None)
         original_contents = str(sim)
