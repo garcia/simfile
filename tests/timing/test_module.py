@@ -89,9 +89,15 @@ class TestBeatValues(unittest.TestCase):
         )
 
     def test_serialize(self):
-        events = BeatValues.from_str("0.000=128.000,\n132.000=64.000,\n147.500=128.000")
+        bpm_values = BeatValues.from_str("0.000=128.000,\n132.000=64.000,\n147.500=128.000")
+        bpm_values.append(
+            BeatValue(
+                beat=Beat(180) + 4,
+                value=Decimal("128.000") + Decimal("0.001"),
+            )
+        )
         self.assertEqual(
-            "0.000=128.000,\n132.000=64.000,\n147.500=128.000", str(events)
+            "0.000=128.000,\n132.000=64.000,\n147.500=128.000,\n184.000=128.001", str(bpm_values)
         )
 
 

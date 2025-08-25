@@ -24,7 +24,7 @@ class Beat(Fraction):
     """
     A fractional beat value, denoting vertical position in a simfile.
 
-    The constructor the same arguments as Python's :code:`Fraction`:
+    The constructor takes the same arguments as Python's :code:`Fraction`:
 
         Takes a string like '3/2' or '1.5', another Rational instance,
         a numerator/denominator pair, or a float.
@@ -83,6 +83,12 @@ class Beat(Fraction):
             return f"Beat({str(self).rstrip('0').rstrip('.')})"
         else:
             return super().__repr__()
+
+    def __format__(self, format_spec, /):
+        if not format_spec:
+            return str(self)
+        else:
+            return float(self).__format__(format_spec)
 
     # Preserve type for methods inherited from Fraction
 
