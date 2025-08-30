@@ -11,8 +11,7 @@ __all__ = [
     "Preset",
     "Whitespace",
     "LineEndings",
-    "RemoveComments",
-    "CreateComments",
+    "ChangeComments",
     "CreateMissingProperties",
     "DestructivelyRemoveProperties",
     "SortProperties",
@@ -25,8 +24,7 @@ def tidy(
     *,
     whitespace: Optional[Whitespace | Literal[False]] = None,
     line_endings: Optional[LineEndings | Literal[False]] = None,
-    remove_comments: Optional[RemoveComments | Literal[False]] = None,
-    create_comments: Optional[CreateComments | Literal[False]] = None,
+    change_comments: Optional[ChangeComments | Literal[False]] = None,
     create_missing_properties: Optional[
         CreateMissingProperties | Literal[False]
     ] = None,
@@ -52,13 +50,11 @@ def tidy(
     Each optional behavior has an associated enum. Some behaviors' enums
     are flags that can be combined using bitwise operators, for example::
 
-        import tidy, RemoveComments from simfile.tidy
+        import tidy, ChangeComments from simfile.tidy
         tidy(
             sim,
-            remove_comments=RemoveComments.PREAMBLE | RemoveComments.CHART_PREAMBLE,
+            change_comments=ChangeComments.REMOVE_PREAMBLE | ChangeComments.REMOVE_CHART_PREAMBLE,
         )
-
-    All flag enums include an ``ALL`` alias, a union of all the other fields.
 
     Returns `True` only if changes were made to the simfile.
     Raises `ValueError` if no preset or behaviors are specified.
@@ -68,8 +64,7 @@ def tidy(
             preset,
             whitespace,
             line_endings,
-            remove_comments,
-            create_comments,
+            change_comments,
             create_missing_properties,
             destructively_remove_properties,
             sort_properties,
@@ -88,10 +83,8 @@ def tidy(
         behaviors.whitespace = whitespace or None
     if line_endings is not None:
         behaviors.line_endings = line_endings or None
-    if remove_comments is not None:
-        behaviors.remove_comments = remove_comments or None
-    if create_comments is not None:
-        behaviors.create_comments = create_comments or None
+    if change_comments is not None:
+        behaviors.change_comments = change_comments or None
     if create_missing_properties is not None:
         behaviors.create_missing_properties = create_missing_properties or None
     if destructively_remove_properties is not None:
@@ -101,31 +94,16 @@ def tidy(
     if sort_properties is not None:
         behaviors.sort_properties = sort_properties or None
 
-    # Creating chart measure comments implicitly removes chart inner comments,
-    # so don't explicitly remove the comments, or else the return value will
-    # appear to no longer reflect idempotency!
-    # (CreateComments and RemoveComments are the only pair of behaviors where
-    #  one can "undo" the other's work)
-    # TODO: find a broader fix for this - there are still issues here
-    if (
-        behaviors.create_comments
-        and behaviors.remove_comments
-        and CreateComments.CHART_MEASURES in behaviors.create_comments
-    ):
-        behaviors.remove_comments &= ~RemoveComments.CHART_INNER
-
     if behaviors.create_missing_properties:
         changed |= behaviors.create_missing_properties.run(sim)
     if behaviors.destructively_remove_properties:
         changed |= behaviors.destructively_remove_properties.run(sim)
     if behaviors.sort_properties:
         changed |= behaviors.sort_properties.run(sim)
-    if behaviors.remove_comments:
-        changed |= behaviors.remove_comments.run(sim)
+    if behaviors.change_comments:
+        changed |= behaviors.change_comments.run(sim)
     if behaviors.whitespace:
         changed |= behaviors.whitespace.run(sim)
-    if behaviors.create_comments:
-        changed |= behaviors.create_comments.run(sim)
     if behaviors.line_endings:
         changed |= behaviors.line_endings.run(sim)
 

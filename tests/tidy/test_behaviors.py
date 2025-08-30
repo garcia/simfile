@@ -6,17 +6,16 @@ import operator
 import unittest
 
 import simfile
-from simfile.sm import AttachedSMChart, SMChart, SMSimfile
+from simfile.sm import SMSimfile
 from simfile.ssc import SSCSimfile
 from simfile.tidy import tidy
 from simfile._private.dedent import dedent_and_trim
 from simfile.tidy.behaviors import (
-    CreateComments,
+    ChangeComments,
     CreateMissingProperties,
     DestructivelyRemoveProperties,
     LineEndings,
     Preset,
-    RemoveComments,
     SortProperties,
     Whitespace,
 )
@@ -311,7 +310,7 @@ class TestWhitespace(SimfileTestCase):
         sim_string = dedent_and_trim(
             """
             #TITLE:Song title;#SUBTITLE:Song subtitle;
-                        
+
                 #ARTIST:Song artist;
             #NOTES:
             dance-single:
@@ -397,7 +396,7 @@ class TestWhitespace(SimfileTestCase):
             """
             #VERSION:0.83;
             #TITLE:Song title;#SUBTITLE:Song subtitle;
-                        
+
                 #ARTIST:Song artist;
             #NOTEDATA:;
             #STEPSTYPE:dance-single;#DIFFICULTY:Beginner;
@@ -413,10 +412,10 @@ class TestWhitespace(SimfileTestCase):
             ;
             // comment
 
-            
+
             #NOTEDATA:;
             #STEPSTYPE:dance-single;#DIFFICULTY:Easy;
-            
+
             #METER:3;
             #NOTES:
             // measure 0
@@ -563,7 +562,7 @@ class TestLineEndings(SimfileTestCase):
         self.assertEqual("test", sim.credit)
 
 
-class TestRemoveComments(SimfileTestCase):
+class TestChangeComments(SimfileTestCase):
     def sm_test_file(self):
         return simfile.loads(
             dedent_and_trim(
@@ -634,17 +633,17 @@ class TestRemoveComments(SimfileTestCase):
         )
 
     def naively_remove_comments(
-        self, original: str, remove_comments: RemoveComments
+        self, original: str, change_comments: ChangeComments
     ) -> str:
         result = original
-        if RemoveComments.PREAMBLE in remove_comments:
+        if ChangeComments.REMOVE_PREAMBLE in change_comments:
             result = result.replace("// Simfile preamble\n", "")
-        if RemoveComments.CHART_PREAMBLE in remove_comments:
+        if ChangeComments.REMOVE_CHART_PREAMBLE in change_comments:
             result = result.replace("// Chart preamble\n", "")
-        if RemoveComments.CHART_INNER in remove_comments:
+        if ChangeComments.REMOVE_CHART_INNER in change_comments:
             result = result.replace("// Chart inner", "")
             result = result.replace("// Chart inner", "")
-        if RemoveComments.OTHER in remove_comments:
+        if ChangeComments.REMOVE_OTHER in change_comments:
             result = result.replace("// Simfile inner", "")
             result = result.replace("// Simfile suffix", "")
             result = result.replace("// Chart suffix", "")
@@ -652,18 +651,18 @@ class TestRemoveComments(SimfileTestCase):
 
         return result
 
-    def test_permutations(self):
+    def test_removal_permutations(self):
         permutation_count = 0
         seen_outputs: set[str] = set()
 
         for combination in itertools.product(
-            (RemoveComments(0), RemoveComments.PREAMBLE),
-            (RemoveComments(0), RemoveComments.CHART_PREAMBLE),
-            (RemoveComments(0), RemoveComments.CHART_INNER),
-            (RemoveComments(0), RemoveComments.OTHER),
+            (ChangeComments(0), ChangeComments.REMOVE_PREAMBLE),
+            (ChangeComments(0), ChangeComments.REMOVE_CHART_PREAMBLE),
+            (ChangeComments(0), ChangeComments.REMOVE_CHART_INNER),
+            (ChangeComments(0), ChangeComments.REMOVE_OTHER),
         ):
             remove_comments = functools.reduce(
-                operator.or_, combination, RemoveComments(0)
+                operator.or_, combination, ChangeComments(0)
             )
             if not remove_comments:
                 continue
@@ -674,7 +673,7 @@ class TestRemoveComments(SimfileTestCase):
                 with self.subTest((filter(None, combination), type(test_file))):
                     original = str(test_file)
 
-                    self.assertTrue(tidy(test_file, remove_comments=remove_comments))
+                    self.assertTrue(tidy(test_file, change_comments=remove_comments))
 
                     self.assertEqual(
                         self.naively_remove_comments(original, remove_comments),
@@ -691,20 +690,19 @@ class TestRemoveComments(SimfileTestCase):
                     # Validity check
                     self.assertSimfilesEqual(test_file, simfile.loads(output))
                     # Idempotency check
-                    self.assertFalse(tidy(test_file, remove_comments=remove_comments))
+                    self.assertFalse(tidy(test_file, change_comments=remove_comments))
 
         # Ensure we got all the expected combinations;
         # otherwise, the combinations may not be exhaustive
-        # Subtract 1 from the exponent to ignore RemoveComments.ALL
+        # Subtract 1 from the exponent to ignore ChangeComments.REMOVE_ALL
         # and 1 from the result to ignore the empty combination
-        self.assertEqual(2 ** (len(RemoveComments) - 1) - 1, permutation_count)
+        # FIXME: no longer valid since RemoveComments and CreateComments were merged
+        self.assertEqual(2 ** (len(ChangeComments) - 1) - 1, permutation_count)
 
-
-class TestCreateComments(SimfileTestCase):
     def maybe_version(self, sim_type: type[SMSimfile] | type[SSCSimfile]):
         return "#VERSION:0.83;\n" if sim_type is SSCSimfile else ""
 
-    def test_library_version_preamble_already_exists_at_top(self):
+    def test_add_library_version_preamble_already_exists_at_top(self):
         for sim_type in (SMSimfile, SSCSimfile):
             with self.subTest(sim_type):
                 sim = simfile.loads(
@@ -721,10 +719,12 @@ class TestCreateComments(SimfileTestCase):
                 )
 
                 self.assertFalse(
-                    tidy(sim, create_comments=CreateComments.LIBRARY_VERSION_PREAMBLE)
+                    tidy(
+                        sim, change_comments=ChangeComments.ADD_LIBRARY_VERSION_PREAMBLE
+                    )
                 )
 
-    def test_library_version_preamble_updated_at_top(self):
+    def test_add_library_version_preamble_updated_at_top(self):
         for sim_type in (SMSimfile, SSCSimfile):
             with self.subTest(sim_type):
                 sim = simfile.loads(
@@ -742,7 +742,9 @@ class TestCreateComments(SimfileTestCase):
                 expected = str(sim).replace("3.0.0-dummy", simfile.__version__)
 
                 self.assertTrue(
-                    tidy(sim, create_comments=CreateComments.LIBRARY_VERSION_PREAMBLE)
+                    tidy(
+                        sim, change_comments=ChangeComments.ADD_LIBRARY_VERSION_PREAMBLE
+                    )
                 )
                 self.assertEqual(expected, str(sim))
 
@@ -751,10 +753,12 @@ class TestCreateComments(SimfileTestCase):
 
                 # Idempotency check
                 self.assertFalse(
-                    tidy(sim, create_comments=CreateComments.LIBRARY_VERSION_PREAMBLE)
+                    tidy(
+                        sim, change_comments=ChangeComments.ADD_LIBRARY_VERSION_PREAMBLE
+                    )
                 )
 
-    def test_library_version_preamble_updated_at_bottom(self):
+    def test_add_library_version_preamble_updated_at_bottom(self):
         for sim_type in (SMSimfile, SSCSimfile):
             with self.subTest(sim_type):
                 sim = simfile.loads(
@@ -772,7 +776,9 @@ class TestCreateComments(SimfileTestCase):
                 expected = str(sim).replace("3.0.0-dummy", simfile.__version__)
 
                 self.assertTrue(
-                    tidy(sim, create_comments=CreateComments.LIBRARY_VERSION_PREAMBLE)
+                    tidy(
+                        sim, change_comments=ChangeComments.ADD_LIBRARY_VERSION_PREAMBLE
+                    )
                 )
                 self.assertEqual(expected, str(sim))
 
@@ -781,10 +787,12 @@ class TestCreateComments(SimfileTestCase):
 
                 # Idempotency check
                 self.assertFalse(
-                    tidy(sim, create_comments=CreateComments.LIBRARY_VERSION_PREAMBLE)
+                    tidy(
+                        sim, change_comments=ChangeComments.ADD_LIBRARY_VERSION_PREAMBLE
+                    )
                 )
 
-    def test_library_version_preamble_added_after_existing_preamble(self):
+    def test_add_library_version_preamble_added_after_existing_preamble(self):
         for sim_type in (SMSimfile, SSCSimfile):
             with self.subTest(sim_type):
                 sim = simfile.loads(
@@ -810,7 +818,9 @@ class TestCreateComments(SimfileTestCase):
                 ).replace("\n\n", "\n")
 
                 self.assertTrue(
-                    tidy(sim, create_comments=CreateComments.LIBRARY_VERSION_PREAMBLE)
+                    tidy(
+                        sim, change_comments=ChangeComments.ADD_LIBRARY_VERSION_PREAMBLE
+                    )
                 )
                 self.assertEqual(expected, str(sim))
 
@@ -819,10 +829,12 @@ class TestCreateComments(SimfileTestCase):
 
                 # Idempotency check
                 self.assertFalse(
-                    tidy(sim, create_comments=CreateComments.LIBRARY_VERSION_PREAMBLE)
+                    tidy(
+                        sim, change_comments=ChangeComments.ADD_LIBRARY_VERSION_PREAMBLE
+                    )
                 )
 
-    def test_library_version_preamble_added_without_existing_preamble(self):
+    def test_add_library_version_preamble_added_without_existing_preamble(self):
         for sim_type in (SMSimfile, SSCSimfile):
             with self.subTest(sim_type):
                 sim = simfile.loads(
@@ -841,7 +853,9 @@ class TestCreateComments(SimfileTestCase):
                 )
 
                 self.assertTrue(
-                    tidy(sim, create_comments=CreateComments.LIBRARY_VERSION_PREAMBLE)
+                    tidy(
+                        sim, change_comments=ChangeComments.ADD_LIBRARY_VERSION_PREAMBLE
+                    )
                 )
                 self.assertEqual(expected, str(sim))
 
@@ -850,13 +864,15 @@ class TestCreateComments(SimfileTestCase):
 
                 # Idempotency check
                 self.assertFalse(
-                    tidy(sim, create_comments=CreateComments.LIBRARY_VERSION_PREAMBLE)
+                    tidy(
+                        sim, change_comments=ChangeComments.ADD_LIBRARY_VERSION_PREAMBLE
+                    )
                 )
 
-    def test_sm_chart_preamble_added_without_existing_preamble(self):
+    def test_add_sm_chart_preamble_added_without_existing_preamble(self):
         sim = simfile.loads(
             dedent_and_trim(
-                f"""
+                """
                 #TITLE:test;
                 #SUBTITLE:;
                 #ARTIST:;
@@ -881,19 +897,19 @@ class TestCreateComments(SimfileTestCase):
             "//---------------dance-single - authorname----------------\n#NOTES:\n",
         )
 
-        self.assertTrue(tidy(sim, create_comments=CreateComments.CHART_PREAMBLE))
+        self.assertTrue(tidy(sim, change_comments=ChangeComments.ADD_CHART_PREAMBLE))
         self.assertEqual(expected, str(sim))
 
         # Validity check
         self.assertSimfilesEqual(sim, simfile.loads(str(sim)))
 
         # Idempotency check
-        self.assertFalse(tidy(sim, create_comments=CreateComments.CHART_PREAMBLE))
+        self.assertFalse(tidy(sim, change_comments=ChangeComments.ADD_CHART_PREAMBLE))
 
-    def test_sm_chart_preamble_already_exists(self):
+    def test_add_sm_chart_preamble_already_exists(self):
         sim = simfile.loads(
             dedent_and_trim(
-                f"""
+                """
                 #TITLE:test;
                 #SUBTITLE:;
                 #ARTIST:;
@@ -915,12 +931,12 @@ class TestCreateComments(SimfileTestCase):
             ).lstrip()
         )
 
-        self.assertFalse(tidy(sim, create_comments=CreateComments.CHART_PREAMBLE))
+        self.assertFalse(tidy(sim, change_comments=ChangeComments.ADD_CHART_PREAMBLE))
 
-    def test_sm_chart_preamble_updated(self):
+    def test_add_sm_chart_preamble_updated(self):
         sim = simfile.loads(
             dedent_and_trim(
-                f"""
+                """
                 #TITLE:test;
                 #SUBTITLE:;
                 #ARTIST:;
@@ -946,19 +962,19 @@ class TestCreateComments(SimfileTestCase):
             "//---------------dance-single - authorname----------------\n",
         )
 
-        self.assertTrue(tidy(sim, create_comments=CreateComments.CHART_PREAMBLE))
+        self.assertTrue(tidy(sim, change_comments=ChangeComments.ADD_CHART_PREAMBLE))
         self.assertEqual(expected, str(sim))
 
         # Validity check
         self.assertSimfilesEqual(sim, simfile.loads(str(sim)))
 
         # Idempotency check
-        self.assertFalse(tidy(sim, create_comments=CreateComments.CHART_PREAMBLE))
+        self.assertFalse(tidy(sim, change_comments=ChangeComments.ADD_CHART_PREAMBLE))
 
-    def test_ssc_chart_preamble_added_without_existing_preamble(self):
+    def test_add_ssc_chart_preamble_added_without_existing_preamble(self):
         sim = simfile.loads(
             dedent_and_trim(
-                f"""
+                """
                 #VERSION:0.83;
                 #TITLE:test;
                 #SUBTITLE:;
@@ -985,19 +1001,19 @@ class TestCreateComments(SimfileTestCase):
             "//---------------dance-single - authorname----------------\n#NOTEDATA:;\n",
         )
 
-        self.assertTrue(tidy(sim, create_comments=CreateComments.CHART_PREAMBLE))
+        self.assertTrue(tidy(sim, change_comments=ChangeComments.ADD_CHART_PREAMBLE))
         self.assertEqual(expected, str(sim))
 
         # Validity check
         self.assertSimfilesEqual(sim, simfile.loads(str(sim)))
 
         # Idempotency check
-        self.assertFalse(tidy(sim, create_comments=CreateComments.CHART_PREAMBLE))
+        self.assertFalse(tidy(sim, change_comments=ChangeComments.ADD_CHART_PREAMBLE))
 
-    def test_ssc_chart_preamble_already_exists(self):
+    def test_add_ssc_chart_preamble_already_exists(self):
         sim = simfile.loads(
             dedent_and_trim(
-                f"""
+                """
                 #VERSION:0.83;
                 #TITLE:test;
                 #SUBTITLE:;
@@ -1021,12 +1037,12 @@ class TestCreateComments(SimfileTestCase):
             ).lstrip()
         )
 
-        self.assertFalse(tidy(sim, create_comments=CreateComments.CHART_PREAMBLE))
+        self.assertFalse(tidy(sim, change_comments=ChangeComments.ADD_CHART_PREAMBLE))
 
-    def test_ssc_chart_preamble_updated(self):
+    def test_add_ssc_chart_preamble_updated(self):
         sim = simfile.loads(
             dedent_and_trim(
-                f"""
+                """
                 #VERSION:0.83;
                 #TITLE:test;
                 #SUBTITLE:;
@@ -1054,16 +1070,16 @@ class TestCreateComments(SimfileTestCase):
             "//---------------dance-single - authorname----------------\n",
         )
 
-        self.assertTrue(tidy(sim, create_comments=CreateComments.CHART_PREAMBLE))
+        self.assertTrue(tidy(sim, change_comments=ChangeComments.ADD_CHART_PREAMBLE))
         self.assertEqual(expected, str(sim))
 
         # Validity check
         self.assertSimfilesEqual(sim, simfile.loads(str(sim)))
 
         # Idempotency check
-        self.assertFalse(tidy(sim, create_comments=CreateComments.CHART_PREAMBLE))
+        self.assertFalse(tidy(sim, change_comments=ChangeComments.ADD_CHART_PREAMBLE))
 
-    def test_sm_chart_measures_already_exist(self):
+    def test_add_sm_chart_measures_already_exist(self):
         sim = simfile.open("testdata/Backup/backup.sm")
         assert isinstance(sim, SMSimfile)
 
@@ -1080,11 +1096,11 @@ class TestCreateComments(SimfileTestCase):
 
         original = simfile.loads(str(sim))
 
-        self.assertFalse(tidy(sim, create_comments=CreateComments.CHART_MEASURES))
+        self.assertFalse(tidy(sim, change_comments=ChangeComments.ADD_CHART_MEASURES))
 
         self.assertSimfilesEqual(original, sim)
 
-    def test_sm_chart_measures_added_without_existing_chart_measures(self):
+    def test_add_sm_chart_measures_added_without_existing_chart_measures(self):
         sim = simfile.open("testdata/Backup/backup.sm")
         assert isinstance(sim, SMSimfile)
 
@@ -1099,7 +1115,7 @@ class TestCreateComments(SimfileTestCase):
         sim.charts.clear()
         sim.charts.append(chart)
 
-        self.assertTrue(tidy(sim, create_comments=CreateComments.CHART_MEASURES))
+        self.assertTrue(tidy(sim, change_comments=ChangeComments.ADD_CHART_MEASURES))
         mn = 0
         for line in str(sim.charts[0]).splitlines():
             if mn == 0 and line.lstrip().startswith("// "):
@@ -1109,7 +1125,7 @@ class TestCreateComments(SimfileTestCase):
                 self.assertEqual(f",  // measure {mn}", line)
                 mn += 1
 
-    def test_ssc_chart_measures_already_exist(self):
+    def test_add_ssc_chart_measures_already_exist(self):
         sim = simfile.open("testdata/Backup/backup.ssc")
         assert isinstance(sim, SSCSimfile)
 
@@ -1124,9 +1140,9 @@ class TestCreateComments(SimfileTestCase):
         sim.charts.clear()
         sim.charts.append(chart)
 
-        self.assertFalse(tidy(sim, create_comments=CreateComments.CHART_MEASURES))
+        self.assertFalse(tidy(sim, change_comments=ChangeComments.ADD_CHART_MEASURES))
 
-    def test_ssc_chart_measures_added_without_existing_chart_measures(self):
+    def test_add_ssc_chart_measures_added_without_existing_chart_measures(self):
         sim = simfile.open("testdata/Backup/backup.ssc")
         assert isinstance(sim, SSCSimfile)
 
@@ -1141,7 +1157,7 @@ class TestCreateComments(SimfileTestCase):
         sim.charts.clear()
         sim.charts.append(chart)
 
-        self.assertTrue(tidy(sim, create_comments=CreateComments.CHART_MEASURES))
+        self.assertTrue(tidy(sim, change_comments=ChangeComments.ADD_CHART_MEASURES))
         mn = 0
         for line in str(sim.charts[0]).splitlines():
             if mn == 0 and line.lstrip().startswith("// "):
