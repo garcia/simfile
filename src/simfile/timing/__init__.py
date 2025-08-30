@@ -10,7 +10,7 @@ from typing import Any, Optional, Type, NamedTuple, Union
 from ._private.timingsource import timing_source
 from .._private.strictness import enforce_float_str, extract_float_str, strictness
 from simfile._private.generic import ListWithRepr
-from simfile.types import AttachedChart, Simfile, Chart
+from simfile.types import AttachedChart, Simfile
 
 
 __all__ = ["Beat", "BeatValue", "BeatValues", "TimingData"]

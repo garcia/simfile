@@ -1,9 +1,7 @@
-from collections import defaultdict
-from typing import Optional, Union
+from typing import Union
 
-from simfile.sm import SMChart
-from simfile.ssc import AttachedSSCChart, SSCSimfile, SSCChart
-from simfile.types import AttachedChart, Simfile, Chart
+from simfile.ssc import AttachedSSCChart, SSCChart
+from simfile.types import AttachedChart, Simfile
 
 
 # Fun fact: SSC versions are stored as floats internally

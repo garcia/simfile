@@ -7,7 +7,6 @@ from typing import NamedTuple, Optional, Tuple, Union
 
 from . import BeatValues
 from ._private.timingsource import timing_source
-from ..ssc import SSCChart
 from ..types import AttachedChart, Simfile
 
 
@@ -122,9 +121,9 @@ def displaybpm(
     :class:`StaticDisplayBPM`; if there are multiple, the minimum and
     maximum will be identified and passed to :class:`RangeDisplayBPM`.
 
-    If both an :class:`.SSCSimfile` (version 0.7 or higher) and an
-    :class:`.SSCChart` are provided, and if the chart contains any
-    timing fields, the chart will be used as the source of timing.
+    If an :class:`.AttachedChart` belonging to an :class:`.SSCSimfile`
+    (version 0.7 or higher) is provided and contains timing fields, the
+    the chart will be used as the source of timing.
     """
     properties = timing_source(source)
     if "DISPLAYBPM" in properties and not ignore_specified:

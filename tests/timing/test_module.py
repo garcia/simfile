@@ -3,7 +3,7 @@ import unittest
 
 import simfile
 from simfile.ssc import SSCSimfile
-from simfile.timing import *
+from simfile.timing import Beat, BeatValue, BeatValues, TimingData
 from .helpers import testing_timing_data
 
 
@@ -162,7 +162,7 @@ class TestTimingData(unittest.TestCase):
         ssc = simfile.open("testdata/Springtime/Springtime.ssc")
         assert isinstance(ssc, SSCSimfile)
         ssc.version = "0.69"
-        ssc_chart = next(
+        next(
             filter(
                 lambda c: c.stepstype == "pump-single" and c.difficulty == "Challenge",
                 ssc.charts,
