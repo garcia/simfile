@@ -220,9 +220,13 @@ class NoteData:
                 push_measure(list(measure))
                 last_measure = m
 
-            # if there were no notes at all, write a blank measure
+            # if this player had no notes, write a blank measure
             if last_measure == -1:
                 push_measure()
+
+        # finally, if there were no notes at all, write a blank measure
+        if last_player == -1:
+            push_measure()
 
         return cls(notedata.getvalue())
 
