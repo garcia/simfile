@@ -9,10 +9,11 @@ between parameters.
 
 from contextlib import contextmanager
 from io import StringIO, TextIOWrapper
-from itertools import tee
+from itertools import chain
 from typing import Iterator, List, Optional, TextIO, Tuple, cast
 
 from msdparser import parse_msd
+from msdparser.lexer import lex_msd, MSDToken
 
 from simfile._private.fs import FS, NativeOSFS
 from simfile.dir import SimfileDirectory, SimfilePack
@@ -38,34 +39,24 @@ __all__ = [
 ENCODINGS = ["utf-8", "cp1252", "cp932", "cp949"]
 
 
-def _detect_ssc(file: TextIO, strict: bool = False) -> Tuple[TextIO, bool]:
-    # TODO(ash): this branch is probably a remnant of `file` being allowed
-    # to be List[str], but I'm not sure how much of it is safe to remove
+def _detect_ssc(file: TextIO, strict: bool = False) -> Tuple[Iterator[Tuple[MSDToken, str]], bool]:
+    # Don't peek into the file if we can use the filename's extension
     if isinstance(file, TextIOWrapper) or isinstance(file, TextIO):
         if type(file.name) is str:
             _, _, suffix = file.name.lower().rpartition(".")
             if suffix == "ssc":
-                return (file, True)
+                return (lex_msd(file=file), True)
             elif suffix == "sm":
-                return (file, False)
-        parser = parse_msd(file=file, strict=strict)
-    else:
-        file, peek_file = [StringIO("".join(f)) for f in tee(file)]
-        parser = parse_msd(
-            string="".join(peek_file),
-            strict=strict,
-        )
+                return (lex_msd(file=file), False)
 
-    # Check if the first property is an SSC version
-    try:
-        first_param = next(parser)
-    except StopIteration:
-        return (file, False)
-
-    if isinstance(file, TextIO):
-        file.seek(0)
-
-    return (file, first_param.key is not None and first_param.key.upper() == "VERSION")
+    # Peek into the file, then piece back together a complete lexer stream
+    lexer = lex_msd(file=file)
+    peeked_tokens = []
+    while len(peeked_tokens) == 0 or peeked_tokens[-1][0] != MSDToken.END_PARAMETER:
+        peeked_tokens.append(next(lexer))
+    peeked_params = list(parse_msd(string="".join(token[1] for token in peeked_tokens)))
+    is_ssc = peeked_params and peeked_params[0].key.upper() == "VERSION"
+    return (chain(peeked_tokens, lexer), is_ssc)
 
 
 def load(file: TextIO, strict: bool = False, errors: Optional[str] = None) -> Simfile:
@@ -78,11 +69,11 @@ def load(file: TextIO, strict: bool = False, errors: Optional[str] = None) -> Si
     the file is treated as an SSC simfile; otherwise, it's treated as
     an SM simfile.
     """
-    file, is_ssc = _detect_ssc(file, strict=strict)
+    lexer, is_ssc = _detect_ssc(file, strict=strict)
     if is_ssc:
-        return SSCSimfile(file=file, strict=strict)
+        return SSCSimfile(tokens=lexer, strict=strict)
     else:
-        return SMSimfile(file=file, strict=strict)
+        return SMSimfile(tokens=lexer, strict=strict)
 
 
 def loads(string: str, strict: bool = False) -> Simfile:
