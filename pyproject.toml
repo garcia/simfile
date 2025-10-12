@@ -40,3 +40,7 @@ dev = [
     "black>=24.8.0",
     "pytest-subtests>=0.13.1",
 ]
+
+[tool.pyright]
+include = ["src", "tests"]
+reportPrivateUsage = false
