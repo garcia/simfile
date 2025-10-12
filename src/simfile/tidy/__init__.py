@@ -1,9 +1,16 @@
 from dataclasses import replace
-from typing import Literal, Optional
+from typing import Literal
 
 from simfile.types import Simfile
-from .behaviors import *
-from .behaviors import DefaultBehaviors
+from .behaviors import (
+    Preset,
+    Whitespace,
+    LineEndings,
+    ChangeComments,
+    CreateMissingProperties,
+    DestructivelyRemoveProperties,
+    SortProperties,
+)
 
 
 __all__ = [
@@ -20,18 +27,16 @@ __all__ = [
 
 def tidy(
     sim: Simfile,
-    preset: Optional[Preset] = None,
+    preset: Preset | None = None,
     *,
-    whitespace: Optional[Whitespace | Literal[False]] = None,
-    line_endings: Optional[LineEndings | Literal[False]] = None,
-    change_comments: Optional[ChangeComments | Literal[False]] = None,
-    create_missing_properties: Optional[
-        CreateMissingProperties | Literal[False]
-    ] = None,
-    destructively_remove_properties: Optional[
-        DestructivelyRemoveProperties | Literal[False]
-    ] = None,
-    sort_properties: Optional[SortProperties | Literal[False]] = None,
+    whitespace: Whitespace | Literal[False] | None = None,
+    line_endings: LineEndings | Literal[False] | None = None,
+    change_comments: ChangeComments | Literal[False] | None = None,
+    create_missing_properties: CreateMissingProperties | Literal[False] | None = None,
+    destructively_remove_properties: DestructivelyRemoveProperties
+    | Literal[False]
+    | None = None,
+    sort_properties: SortProperties | Literal[False] | None = None,
 ):
     """
     Tidy up a simfile for future serialization, mutating it in-memory.
@@ -72,7 +77,7 @@ def tidy(
     ):
         raise ValueError(
             "Must specify a preset or at least one behavior"
-            " (pass `Preset.NO_OP` as the second argument to silence this error)"
+            + " (pass `Preset.NO_OP` as the second argument to silence this error)"
         )
 
     changed = False

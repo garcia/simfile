@@ -1,7 +1,9 @@
+from collections import OrderedDict
+from collections.abc import Iterator, Sequence
 from dataclasses import dataclass, replace
 import enum
 import re
-from typing import Iterator, Optional, OrderedDict, Sequence
+from typing import cast
 from typing_extensions import assert_never
 
 from msdparser import MSDParameter, parse_msd
@@ -39,7 +41,7 @@ def reencode_msd(
         msd_string = msd.stringify(exact=True)
     elif isinstance(msd, MSDSerializable):
         msd_string = str(msd)
-    elif isinstance(msd, str):
+    elif isinstance(msd, str):  # pyright: ignore[reportUnnecessaryIsInstance]
         msd_string = msd
     else:
         assert_never(msd)
@@ -142,7 +144,9 @@ class Whitespace(enum.Enum):
             nl = "\r\n" if "\r\n" in sim._default_parameter.suffix else "\n"
 
             # Normalize suffix & (optionally) preamble whitespace
-            def normalize_ws(param: MSDParameter, preamble=False) -> MSDParameter:
+            def normalize_ws(
+                param: MSDParameter, preamble: bool = False
+            ) -> MSDParameter:
                 if preamble:
                     # Blank / empty -> single newline
                     if not param.preamble or param.preamble.isspace():
@@ -176,7 +180,6 @@ class Whitespace(enum.Enum):
                     changed = True
 
             for chart in sim.charts:
-
                 # This is tricky to get right on SMChart
                 # because of the way it abuses the _properties dict.
                 if isinstance(chart, SMChart):
@@ -219,7 +222,7 @@ class Whitespace(enum.Enum):
 
                         changed |= sm_chart_changed
 
-                elif isinstance(chart, SSCChart):
+                elif isinstance(chart, SSCChart):  # pyright: ignore[reportUnnecessaryIsInstance]
                     # Normalize whitespace before the chart
                     notedata = chart._properties["NOTEDATA"]
                     normalized_ws = normalize_ws(notedata.msd_parameter, preamble=True)
@@ -278,21 +281,20 @@ class LineEndings(enum.Enum):
                 changed |= LineEndings._normalize_property(nl, property)
 
             for chart in sim.charts:
-
                 # _normalize_property doesn't work well with fake SMChart
                 # properties, so instead serialize the whole chart into a
                 # fresh MSDParameter, then update the chart in-place.
                 if isinstance(chart, SMChart):
                     parameter = reencode_msd(chart)
                     fake_property = Property("", parameter)
-                    LineEndings._normalize_property(nl, fake_property)
+                    changed |= LineEndings._normalize_property(nl, fake_property)
                     normalized_chart = SMChart.from_msd_parameter(
                         fake_property.msd_parameter
                     )
                     chart._real_parameter = normalized_chart._real_parameter
                     chart._properties = normalized_chart._properties
 
-                elif isinstance(chart, SSCChart):
+                elif isinstance(chart, SSCChart):  # pyright: ignore[reportUnnecessaryIsInstance]
                     for property in chart._properties.values():
                         changed |= LineEndings._normalize_property(nl, property)
 
@@ -312,13 +314,13 @@ class LineEndings(enum.Enum):
             assert_never(self)
 
     @staticmethod
-    def _normalize_string(nl, string: str) -> str:
+    def _normalize_string(nl: str, string: str) -> str:
         # Short-circuit if no newlines to change
         if "\r" not in string and "\n" not in string:
             return string
 
         split = string.splitlines(keepends=True)
-        normalized = []
+        normalized: list[str] = []
         for line in split:
             if line.endswith("\n") or line.endswith("\r"):
                 normalized.append(line.rstrip("\r\n") + nl)
@@ -328,7 +330,7 @@ class LineEndings(enum.Enum):
         return "".join(normalized)
 
     @staticmethod
-    def _normalize_property(nl, property: Property) -> bool:
+    def _normalize_property(nl: str, property: Property) -> bool:
         # Serialize using msdparser so that we can perform the newline swap
         # on everything (preamble, key, value(s), suffix) at once.
         # This also means we get correct escape_positions for free.
@@ -377,7 +379,7 @@ class PropertyForComments(enum.Enum):
             yield next(iter(sim._properties.values()))
         elif self is PropertyForComments.SIMFILE_OTHER_PROPS:
             iterator = iter(sim._properties.values())
-            next(iterator)
+            _ = next(iterator)  # skip first prop
             yield from iterator
         elif self is PropertyForComments.SMCHART_REAL_PARAM:
             for chart in sim.charts:
@@ -394,7 +396,7 @@ class PropertyForComments(enum.Enum):
             for chart in sim.charts:
                 if isinstance(chart, SSCChart):
                     iterator = iter(chart._properties.values())
-                    next(iterator)
+                    _ = next(iterator)  # skip first prop
                     yield from iterator
         else:
             assert_never(self)
@@ -531,7 +533,7 @@ class ChangeComments(enum.Flag):
 
     @staticmethod
     def _remove_comments(string: str) -> str:
-        output_lines = []
+        output_lines: list[str] = []
         for line in string.splitlines(keepends=True):
             # Completely drop the line if it only contains a comment
             if not line.lstrip().startswith("//"):
@@ -548,7 +550,7 @@ class ChangeComments(enum.Flag):
         changed = False
 
         if prop.msd_parameter.preamble:
-            updated_preamble_lines = []
+            updated_preamble_lines: list[str] = []
             match_found = False
 
             for line in prop.msd_parameter.preamble.splitlines(keepends=True):
@@ -574,7 +576,7 @@ class ChangeComments(enum.Flag):
 
     @staticmethod
     def _generate_measure_comments(
-        chart: Chart, *, line_offset=0
+        chart: Chart, *, line_offset: int = 0
     ) -> Sequence[tuple[int, str]]:
         comments: dict[int, str] = {}
         notes_with_preamble = (
@@ -613,7 +615,6 @@ class ChangeComments(enum.Flag):
         for prop_type in PropertyForComments:
             # Iterate over all properties of a given type
             for prop in prop_type.iter_props(sim):
-
                 original_msd_parameter = prop.msd_parameter
                 remove_msd_fields = prop_type.remove_msd_fields(self)
                 msd_field_names = {
@@ -627,8 +628,8 @@ class ChangeComments(enum.Flag):
                         if field in (
                             MsdFieldForComments.PREAMBLE | MsdFieldForComments.SUFFIX
                         ):
-                            field_value: Optional[str] = getattr(
-                                prop.msd_parameter, field_name
+                            field_value = cast(
+                                str | None, getattr(prop.msd_parameter, field_name)
                             )
                             if field_value and "//" in field_value:
                                 field_value_no_comments = (
@@ -700,7 +701,7 @@ class ChangeComments(enum.Flag):
                         )
                         changed = True
 
-                elif isinstance(chart, SSCChart):
+                elif isinstance(chart, SSCChart):  # pyright: ignore[reportUnnecessaryIsInstance]
                     first_sscchart_property = next(iter(chart._properties.values()))
                     changed |= ChangeComments._update_or_create_preamble_line(
                         first_sscchart_property,
@@ -747,7 +748,7 @@ class ChangeComments(enum.Flag):
                             chart._properties = normalized_chart._properties
                             changed = True
 
-                elif isinstance(chart, SSCChart):
+                elif isinstance(chart, SSCChart):  # pyright: ignore[reportUnnecessaryIsInstance]
                     if chart.notes and not chart.notes.isspace():
                         comments = ChangeComments._generate_measure_comments(chart)
 
@@ -832,7 +833,7 @@ class DestructivelyRemoveProperties(enum.Enum):
                     del sim._properties[key]
                     changed = True
 
-        elif isinstance(sim, SSCSimfile):
+        elif isinstance(sim, SSCSimfile):  # pyright: ignore[reportUnnecessaryIsInstance]
             for key in [*sim._properties.keys()]:
                 # Extract the real key from any duplicate keys
                 real_key = sim._get_real_key(key)
@@ -869,7 +870,6 @@ class SortProperties(enum.Enum):
 
     @staticmethod
     def _sort_object_keys(obj: BaseObject, key_order: Sequence[str]) -> bool:
-
         def sort_key(key: str):
             # Extract the real key from any duplicate keys; keep them together
             real_key, _, duplicate_index = key.partition(":")
@@ -906,7 +906,7 @@ class SortProperties(enum.Enum):
 
         if isinstance(sim, SMSimfile):
             key_order = SM_SIMFILE_PROPERTIES
-        elif isinstance(sim, SSCSimfile):
+        elif isinstance(sim, SSCSimfile):  # pyright: ignore[reportUnnecessaryIsInstance]
             key_order = SSC_SIMFILE_PROPERTIES
         else:
             assert_never(sim)
@@ -922,11 +922,11 @@ class SortProperties(enum.Enum):
 
 @dataclass
 class DefaultBehaviors:
-    preset: Optional[Preset] = None
-    whitespace: Optional[Whitespace] = None
-    line_endings: Optional[LineEndings] = None
-    change_comments: Optional[ChangeComments] = None
-    create_comments: Optional[ChangeComments] = None
-    create_missing_properties: Optional[CreateMissingProperties] = None
-    destructively_remove_properties: Optional[DestructivelyRemoveProperties] = None
-    sort_properties: Optional[SortProperties] = None
+    preset: Preset | None = None
+    whitespace: Whitespace | None = None
+    line_endings: LineEndings | None = None
+    change_comments: ChangeComments | None = None
+    create_comments: ChangeComments | None = None
+    create_missing_properties: CreateMissingProperties | None = None
+    destructively_remove_properties: DestructivelyRemoveProperties | None = None
+    sort_properties: SortProperties | None = None
