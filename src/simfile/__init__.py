@@ -7,10 +7,11 @@ the underlying parser will throw an exception if it finds any stray text
 between parameters.
 """
 
+from collections.abc import Iterator
 from contextlib import contextmanager
-from io import StringIO, TextIOWrapper
+from io import StringIO
 from itertools import chain
-from typing import Iterator, List, Optional, TextIO, Tuple, cast
+from typing import TextIO, cast
 
 from msdparser import parse_msd
 from msdparser.lexer import lex_msd, MSDToken
@@ -39,27 +40,30 @@ __all__ = [
 ENCODINGS = ["utf-8", "cp1252", "cp932", "cp949"]
 
 
-def _detect_ssc(file: TextIO, strict: bool = False) -> Tuple[Iterator[Tuple[MSDToken, str]], bool]:
+def _detect_ssc(
+    file: TextIO, strict: bool = False
+) -> tuple[Iterator[tuple[MSDToken, str]], bool]:
     # Don't peek into the file if we can use the filename's extension
-    if isinstance(file, TextIOWrapper) or isinstance(file, TextIO):
-        if type(file.name) is str:
-            _, _, suffix = file.name.lower().rpartition(".")
-            if suffix == "ssc":
-                return (lex_msd(file=file), True)
-            elif suffix == "sm":
-                return (lex_msd(file=file), False)
+    if hasattr(file, "name") and type(file.name) is str:
+        _, _, suffix = file.name.lower().rpartition(".")
+        if suffix == "ssc":
+            return (lex_msd(file=file), True)
+        elif suffix == "sm":
+            return (lex_msd(file=file), False)
 
     # Peek into the file, then piece back together a complete lexer stream
     lexer = lex_msd(file=file)
-    peeked_tokens = []
+    peeked_tokens: list[tuple[MSDToken, str]] = []
     while len(peeked_tokens) == 0 or peeked_tokens[-1][0] != MSDToken.END_PARAMETER:
         peeked_tokens.append(next(lexer))
-    peeked_params = list(parse_msd(string="".join(token[1] for token in peeked_tokens)))
-    is_ssc = peeked_params and peeked_params[0].key.upper() == "VERSION"
+    peeked_params = list(
+        parse_msd(string="".join(token[1] for token in peeked_tokens), strict=strict)
+    )
+    is_ssc: bool = peeked_params[0].key.upper() == "VERSION" if peeked_params else False
     return (chain(peeked_tokens, lexer), is_ssc)
 
 
-def load(file: TextIO, strict: bool = False, errors: Optional[str] = None) -> Simfile:
+def load(file: TextIO, strict: bool = False, errors: str | None = None) -> Simfile:
     """
     Load a text file object as a simfile.
 
@@ -93,7 +97,7 @@ def open(
     If no encoding is specified, this function will defer to
     :func:`open_with_detected_encoding`.
     """
-    try_encodings = ENCODINGS
+    try_encodings: list[str] = ENCODINGS
     if "encoding" in kwargs:
         try_encodings = [kwargs.pop("encoding")]
 
@@ -108,11 +112,11 @@ def open(
 
 def open_with_detected_encoding(
     filename: str,
-    try_encodings: List[str] = ENCODINGS,
+    try_encodings: list[str] = ENCODINGS,
     strict: bool = False,
     filesystem: FS = NativeOSFS(),
     **kwargs,
-) -> Tuple[Simfile, str]:
+) -> tuple[Simfile, str]:
     """
     Load a simfile by filename; returns the simfile and detected encoding.
 
@@ -137,7 +141,7 @@ def open_with_detected_encoding(
     if "encoding" in kwargs:
         raise TypeError("unexpected encoding argument - use try_encodings instead")
 
-    exception: Optional[UnicodeDecodeError] = None
+    exception: UnicodeDecodeError | None = None
 
     # No newline conversion unless specified
     newline = kwargs.pop("newline", "")
@@ -173,7 +177,7 @@ def open_with_detected_encoding(
 
 def opendir(
     simfile_dir: str, filesystem: FS = NativeOSFS(), **kwargs
-) -> Tuple[Simfile, str]:
+) -> tuple[Simfile, str]:
     """
     Open a simfile from its directory path;
     returns a (simfile, filename) tuple.
@@ -194,7 +198,7 @@ def opendir(
 
 def openpack(
     pack_dir: str, filesystem: FS = NativeOSFS(), **kwargs
-) -> Iterator[Tuple[Simfile, str]]:
+) -> Iterator[tuple[Simfile, str]]:
     """
     Open a pack of simfiles from the pack's directory path;
     yields (simfile, filename) tuples.
@@ -228,9 +232,9 @@ class CancelMutation(BaseException):
 @contextmanager
 def mutate(
     input_filename: str,
-    output_filename: Optional[str] = None,
-    backup_filename: Optional[str] = None,
-    try_encodings: List[str] = ENCODINGS,
+    output_filename: str | None = None,
+    backup_filename: str | None = None,
+    try_encodings: list[str] = ENCODINGS,
     strict: bool = True,
     filesystem: FS = NativeOSFS(),
     **kwargs,
